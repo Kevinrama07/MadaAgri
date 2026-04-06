@@ -1,0 +1,7 @@
+git init
+git add .
+git commit -m "commit n"
+
+git remote add origin https://github.com/Kevinrama07/MadaAgri.git
+git branch -M main
+git push -u origin main
