@@ -1,0 +1,126 @@
+/* Modern Footer Styles */
+.modern-footer {
+  background: linear-gradient(135deg, #0a1f0a 0%, #0f2d0f 100%);
+  border-top: 1px solid rgba(74, 222, 128, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 60px 20px 20px;
+}
+
+.footer-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+.footer-section {
+  position: relative;
+}
+
+.footer-branding .footer-logo {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-light);
+  margin: 0 0 10px 0;
+  background: linear-gradient(135deg, var(--light-green), var(--text-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.footer-description {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 20px 0;
+  line-height: 1.6;
+}
+
+.footer-social {
+  display: flex;
+  gap: 12px;
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.social-link:hover {
+  color: var(--light-green);
+  border-color: var(--light-green);
+  background: rgba(46, 125, 50, 0.1);
+}
+
+.footer-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin: 0 0 20px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.footer-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.footer-links li {
+  margin-bottom: 12px;
+}
+
+.footer-links a {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.footer-links a:hover {
+  color: var(--light-green);
+  padding-left: 5px;
+}
+
+/* Footer Bottom */
+.footer-bottom {
+  border-top: 1px solid rgba(74, 222, 128, 0.1);
+  padding-top: 30px;
+  text-align: center;
+}
+
+.footer-copyright {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .footer-branding {
+    border-bottom: 1px solid rgba(74, 222, 128, 0.1);
+    padding-bottom: 30px;
+  }
+
+  .modern-footer {
+    padding: 40px 15px 15px;
+  }
+}
