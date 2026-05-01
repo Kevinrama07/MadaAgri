@@ -5,11 +5,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 // Register ScrollTrigger plugin
 gsap.registerPlugin(ScrollTrigger);
 
-/**
- * Hook for fade-in animation on mount
- * @param {number} duration - Animation duration in seconds
- * @param {number} delay - Animation delay in seconds
- */
 export function useFadeIn(duration = 0.6, delay = 0) {
   const ref = useRef(null);
 
@@ -36,11 +31,6 @@ export function useFadeIn(duration = 0.6, delay = 0) {
   return ref;
 }
 
-/**
- * Hook for slide-in animation (from left)
- * @param {number} duration - Animation duration in seconds
- * @param {number} delay - Animation delay in seconds
- */
 export function useSlideInLeft(duration = 0.6, delay = 0) {
   const ref = useRef(null);
 
@@ -67,11 +57,6 @@ export function useSlideInLeft(duration = 0.6, delay = 0) {
   return ref;
 }
 
-/**
- * Hook for slide-in animation (from right)
- * @param {number} duration - Animation duration in seconds
- * @param {number} delay - Animation delay in seconds
- */
 export function useSlideInRight(duration = 0.6, delay = 0) {
   const ref = useRef(null);
 
@@ -98,11 +83,6 @@ export function useSlideInRight(duration = 0.6, delay = 0) {
   return ref;
 }
 
-/**
- * Hook for slide-in animation (from bottom/up)
- * @param {number} duration - Animation duration in seconds
- * @param {number} delay - Animation delay in seconds
- */
 export function useSlideInUp(duration = 0.6, delay = 0) {
   const ref = useRef(null);
 
@@ -129,11 +109,6 @@ export function useSlideInUp(duration = 0.6, delay = 0) {
   return ref;
 }
 
-/**
- * Hook for scroll-reveal animation (element animates when scrolling to it)
- * @param {object} fromVars - Starting animation state
- * @param {object} toVars - Ending animation state + trigger config
- */
 export function useScrollReveal(fromVars = {}, toVars = {}) {
   const ref = useRef(null);
 
@@ -164,7 +139,6 @@ export function useScrollReveal(fromVars = {}, toVars = {}) {
     gsap.fromTo(ref.current, defaultFromVars, defaultToVars);
 
     return () => {
-      // Cleanup ScrollTrigger instance
       const trigger = gsap.getProperty(ref.current, 'data-scrolltrigger');
       if (trigger) {
         trigger.kill();
@@ -175,10 +149,6 @@ export function useScrollReveal(fromVars = {}, toVars = {}) {
   return ref;
 }
 
-/**
- * Animate like button on click
- * @param {HTMLElement} element - Element to animate
- */
 export function animateLikeButton(element) {
   if (!element) return;
 
@@ -196,11 +166,6 @@ export function animateLikeButton(element) {
   );
 }
 
-/**
- * Animate hover effect on card
- * @param {HTMLElement} element - Element to animate
- * @param {boolean} isHovering - Whether mouse is hovering
- */
 export function animateCardHover(element, isHovering) {
   if (!element) return;
 
@@ -215,12 +180,6 @@ export function animateCardHover(element, isHovering) {
   });
 }
 
-/**
- * Animate counter increase (like count, etc)
- * @param {HTMLElement} element - Element showing the count
- * @param {number} from - Starting number
- * @param {number} to - Ending number
- */
 export function animateCounter(element, from, to) {
   if (!element) return;
 
@@ -235,10 +194,6 @@ export function animateCounter(element, from, to) {
   });
 }
 
-/**
- * Animate element appearance (pop in effect)
- * @param {HTMLElement} element - Element to animate
- */
 export function animatePopIn(element) {
   if (!element) return;
 

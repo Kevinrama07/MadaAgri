@@ -1,13 +1,6 @@
-/**
- * Validateurs d'entrée avec express-validator
- */
-
 const { body, param, query, validationResult } = require('express-validator');
 const { VALIDATION, PAGINATION } = require('../constants');
 
-/**
- * Middleware pour gérer les erreurs de validation
- */
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -24,9 +17,6 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-/**
- * Validateurs pour l'authentification
- */
 const authValidators = {
   signup: [
     body('email')
@@ -58,9 +48,6 @@ const authValidators = {
   ],
 };
 
-/**
- * Validateurs pour les publications
- */
 const postValidators = {
   create: [
     body('content')
@@ -90,9 +77,6 @@ const postValidators = {
   ],
 };
 
-/**
- * Validateurs pour les profils utilisateurs
- */
 const userValidators = {
   updateProfile: [
     body('displayName')
@@ -116,9 +100,6 @@ const userValidators = {
   ],
 };
 
-/**
- * Validateurs pour les produits
- */
 const productValidators = {
   create: [
     body('name')
@@ -144,9 +125,6 @@ const productValidators = {
   ],
 };
 
-/**
- * Validateurs de pagination
- */
 const paginationValidators = [
   query('page')
     .optional()

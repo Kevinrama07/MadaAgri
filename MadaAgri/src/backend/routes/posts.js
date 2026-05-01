@@ -145,36 +145,100 @@ router.delete('/:postId/like', authMiddleware, asyncHandler(async (req, res) => 
   res.json({ ok: true });
 }));
 
-// GET /api/posts/:postId/comments - Récupérer les commentaires
+// GET /api/posts/:postId/comments - Récupérer les commentaires (avec réponses imbriquées)
 router.get('/:postId/comments', authMiddleware, asyncHandler(async (req, res) => {
   const postId = req.params.postId;
   const [rows] = await pool.query(
-    `SELECT pc.*, u.display_name, u.profile_image_url FROM post_comments pc
+    `SELECT pc.*, u.display_name, u.profile_image_url,
+     (SELECT COUNT(*) FROM post_comments pc2 WHERE pc2.parent_id = pc.id) as replies_count
+     FROM post_comments pc
      JOIN users u ON u.id = pc.user_id
-     WHERE pc.post_id = ?
+     WHERE pc.post_id = ? AND pc.parent_id IS NULL
      ORDER BY pc.created_at ASC`,
     [postId]
   );
-  res.json({ comments: rows });
+  
+  // Pour chaque commentaire, charger les réponses
+  const commentsWithReplies = await Promise.all(rows.map(async (comment) => {
+    const [replies] = await pool.query(
+      `SELECT pc.*, u.display_name, u.profile_image_url,
+       (SELECT COUNT(*) FROM post_comments pc2 WHERE pc2.parent_id = pc.id) as replies_count
+       FROM post_comments pc
+       JOIN users u ON u.id = pc.user_id
+       WHERE pc.parent_id = ?
+       ORDER BY pc.created_at ASC`,
+      [comment.id]
+    );
+    return { ...comment, replies: replies };
+  }));
+  
+  res.json({ comments: commentsWithReplies });
 }));
 
-// POST /api/posts/:postId/comments - Ajouter un commentaire
+// POST /api/posts/:postId/comments - Ajouter un commentaire ou une réponse
 router.post('/:postId/comments', authMiddleware, asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const postId = req.params.postId;
-  const { content } = req.body;
+  const { content, parent_id } = req.body;
   if (!content || !content.trim()) return res.status(400).json({ error: 'content required' });
+
+  // Vérifier que le parent_id est valide si fourni
+  if (parent_id) {
+    const [parent] = await pool.query('SELECT id FROM post_comments WHERE id = ? AND post_id = ?', [parent_id, postId]);
+    if (parent.length === 0) {
+      return res.status(400).json({ error: 'parent comment not found' });
+    }
+  }
 
   const id = randomUUID();
   await pool.query(
-    'INSERT INTO post_comments (id, post_id, user_id, content, created_at) VALUES (?, ?, ?, ?, NOW())',
-    [id, postId, userId, content.trim()]
+    'INSERT INTO post_comments (id, post_id, user_id, parent_id, content, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
+    [id, postId, userId, parent_id || null, content.trim()]
   );
   const [rows] = await pool.query(
     'SELECT pc.*, u.display_name, u.profile_image_url FROM post_comments pc JOIN users u ON u.id = pc.user_id WHERE pc.id = ?',
     [id]
   );
   res.json({ comment: rows[0] });
+}));
+
+// POST /api/posts/comments/:commentId/replies - Ajouter une réponse à un commentaire
+router.post('/comments/:commentId/replies', authMiddleware, asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const commentId = req.params.commentId;
+  const { content } = req.body;
+  if (!content || !content.trim()) return res.status(400).json({ error: 'content required' });
+
+  // Récupérer le post_id du commentaire parent pour vérifier l'accès
+  const [parentComment] = await pool.query('SELECT post_id FROM post_comments WHERE id = ?', [commentId]);
+  if (parentComment.length === 0) {
+    return res.status(404).json({ error: 'comment not found' });
+  }
+
+  const id = randomUUID();
+  const postId = parentComment[0].post_id;
+  await pool.query(
+    'INSERT INTO post_comments (id, post_id, user_id, parent_id, content, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
+    [id, postId, userId, commentId, content.trim()]
+  );
+  const [rows] = await pool.query(
+    'SELECT pc.*, u.display_name, u.profile_image_url FROM post_comments pc JOIN users u ON u.id = pc.user_id WHERE pc.id = ?',
+    [id]
+  );
+  res.json({ comment: rows[0] });
+}));
+
+// GET /api/posts/comments/:commentId/replies - Récupérer les réponses d'un commentaire
+router.get('/comments/:commentId/replies', authMiddleware, asyncHandler(async (req, res) => {
+  const commentId = req.params.commentId;
+  const [rows] = await pool.query(
+    `SELECT pc.*, u.display_name, u.profile_image_url FROM post_comments pc
+     JOIN users u ON u.id = pc.user_id
+     WHERE pc.parent_id = ?
+     ORDER BY pc.created_at ASC`,
+    [commentId]
+  );
+  res.json({ replies: rows });
 }));
 
 module.exports = router;

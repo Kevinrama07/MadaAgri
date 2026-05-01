@@ -5,12 +5,6 @@ const logger = require('../utils/logger');
 
 const router = express.Router();
 
-/**
- * POST /api/upload - Télécharger une image
- * 
- * Gère le téléchargement d'images via Cloudinary.
- * Accepte FormData avec un champ 'image' contenant le fichier à uploader.
- */
 router.post('/', 
   authMiddleware,
   (req, res, next) => {

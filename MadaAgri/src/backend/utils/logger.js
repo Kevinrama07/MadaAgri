@@ -1,7 +1,3 @@
-/**
- * Logger structuré avec Winston
- */
-
 const winston = require('winston');
 const path = require('path');
 
@@ -43,17 +39,19 @@ if (process.env.NODE_ENV !== 'production') {
         winston.format.printf(({ level, message, timestamp, error, stack, ...meta }) => {
           let output = `${timestamp} [${level}]: ${message}`;
           
-          // Ajouter les métadonnées
-          if (Object.keys(meta).length > 0 && JSON.stringify(meta) !== '{"service":"madaagri-backend"}') {
-            output += ` ${JSON.stringify(meta, null, 2)}`;
-          }
-          
-          // Ajouter l'erreur et la stack si présents
-          if (error) {
-            output += ` - Error: ${error}`;
-          }
+          // Afficher la stack si disponible
           if (stack) {
             output += `\n${stack}`;
+          }
+          
+          // Ajouter les métadonnées (avec serialisation appropriée)
+          if (Object.keys(meta).length > 0 && JSON.stringify(meta) !== '{"service":"madaagri-backend"}') {
+            output += `\n${JSON.stringify(meta, (key, value) => {
+              if (value instanceof Error) {
+                return { name: value.name, message: value.message, stack: value.stack };
+              }
+              return value;
+            }, 2)}`;
           }
           
           return output;

@@ -1,6 +1,3 @@
-/**
- * Classe d'erreur personnalisée pour l'API
- */
 class ApiError extends Error {
   constructor(message, statusCode = 500) {
     super(message);
@@ -10,9 +7,6 @@ class ApiError extends Error {
   }
 }
 
-/**
- * Erreur de validation
- */
 class ValidationError extends ApiError {
   constructor(message, errors = {}) {
     super(message, 400);
@@ -21,9 +15,6 @@ class ValidationError extends ApiError {
   }
 }
 
-/**
- * Erreur d'authentification
- */
 class AuthenticationError extends ApiError {
   constructor(message = 'Authentication failed') {
     super(message, 401);
@@ -31,9 +22,6 @@ class AuthenticationError extends ApiError {
   }
 }
 
-/**
- * Erreur d'autorisation
- */
 class AuthorizationError extends ApiError {
   constructor(message = 'Access denied') {
     super(message, 403);
@@ -41,9 +29,6 @@ class AuthorizationError extends ApiError {
   }
 }
 
-/**
- * Erreur ressource non trouvée
- */
 class NotFoundError extends ApiError {
   constructor(message = 'Resource not found') {
     super(message, 404);
@@ -51,9 +36,6 @@ class NotFoundError extends ApiError {
   }
 }
 
-/**
- * Erreur de conflit
- */
 class ConflictError extends ApiError {
   constructor(message = 'Resource already exists') {
     super(message, 409);

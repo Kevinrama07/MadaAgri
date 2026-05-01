@@ -1,0 +1,53 @@
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  --nav-width: 80px;
+  --nav-transition: 0.3s ease;
+}
+
+.app-layout.nav-expanded {
+  --nav-width: 280px;
+}
+
+.app-layout.settings-page {
+  flex-direction: row;
+  padding: 0;
+  background: var(--bg-primary, #ffffff);
+}
+
+.app-layout-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: var(--nav-width);
+  width: calc(100% - var(--nav-width));
+  transition: all 0.3s ease;
+  overflow-x: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .app-layout-main {
+    animation: mainLoad 0.3s ease-in-out;
+  }
+}
+
+@keyframes mainLoad {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-layout {
+    min-height: 100vh;
+  }
+
+  .app-layout-main {
+    padding: 0;
+  }
+}

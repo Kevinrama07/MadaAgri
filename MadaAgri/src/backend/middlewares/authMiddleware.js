@@ -2,10 +2,6 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
 
-/**
- * Middleware d'authentification - Vérifie le token JWT
- * À utiliser sur les routes protégées
- */
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
   
@@ -24,10 +20,6 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-/**
- * Middleware pour les erreurs async
- * Wrapper pour capturer les erreurs des fonctions async
- */
 const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };

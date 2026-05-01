@@ -10,9 +10,6 @@ class MessageSocketClient {
     this.isConnected = false;
   }
 
-  /**
-   * Connecter au serveur WebSocket
-   */
   connect(userId) {
     if (this.socket?.connected) {
       console.log('[Socket] Already connected');
@@ -38,7 +35,6 @@ class MessageSocketClient {
           console.log('[Socket] Connected:', this.socket.id);
           this.isConnected = true;
           
-          // Envoyer l'ID utilisateur au serveur
           this.socket.emit('user:connect', userId);
           
           resolve();
@@ -81,9 +77,6 @@ class MessageSocketClient {
     });
   }
 
-  /**
-   * Rejoindre une conversation
-   */
   joinConversation(conversationId) {
     if (this.socket?.connected) {
       this.socket.emit('conversation:join', conversationId);
@@ -91,9 +84,6 @@ class MessageSocketClient {
     }
   }
 
-  /**
-   * Quitter une conversation
-   */
   leaveConversation(conversationId) {
     if (this.socket?.connected) {
       this.socket.emit('conversation:leave', conversationId);
@@ -101,9 +91,6 @@ class MessageSocketClient {
     }
   }
 
-  /**
-   * Envoyer un message
-   */
   sendMessage(conversationId, message) {
     if (this.socket?.connected) {
       this.socket.emit('message:send', {
@@ -116,27 +103,18 @@ class MessageSocketClient {
     }
   }
 
-  /**
-   * Notifier que l'utilisateur commence à taper
-   */
   notifyTypingStart(conversationId) {
     if (this.socket?.connected) {
       this.socket.emit('typing:start', conversationId);
     }
   }
 
-  /**
-   * Notifier que l'utilisateur arrête de taper
-   */
   notifyTypingStop(conversationId) {
     if (this.socket?.connected) {
       this.socket.emit('typing:stop', conversationId);
     }
   }
 
-  /**
-   * S'abonner à un événement
-   */
   on(event, callback) {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, []);
@@ -145,9 +123,6 @@ class MessageSocketClient {
     console.log(`[Socket] Listener registered for ${event}`);
   }
 
-  /**
-   * Se désabonner d'un événement
-   */
   off(event, callback) {
     if (this.listeners.has(event)) {
       const listeners = this.listeners.get(event);
@@ -158,9 +133,6 @@ class MessageSocketClient {
     }
   }
 
-  /**
-   * Notifier tous les listeners
-   */
   _notifyListeners(event, data) {
     if (this.listeners.has(event)) {
       this.listeners.get(event).forEach(callback => {
@@ -173,9 +145,6 @@ class MessageSocketClient {
     }
   }
 
-  /**
-   * Déconnecter
-   */
   disconnect() {
     if (this.socket?.connected) {
       this.socket.disconnect();
@@ -184,9 +153,6 @@ class MessageSocketClient {
     }
   }
 
-  /**
-   * Garder la connexion active
-   */
   keepAlive() {
     if (this.socket?.connected) {
       this.socket.emit('ping');

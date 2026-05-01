@@ -1,0 +1,126 @@
+
+.mobile-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: rgba(10,16,25,0.95);
+  border-bottom: 1px solid var(--mg-glass-border);
+  z-index: 1000;
+  padding: 0 12px;
+}
+
+.mobile-topbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+}
+
+/* HAMBURGER */
+.mobile-hamburger {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.hamburger-line {
+  width: 22px;
+  height: 2px;
+  background: var(--mg-text);
+  border-radius: 2px;
+  transition: 0.3s ease;
+}
+
+/* OVERLAY */
+.mobile-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  opacity: 0;
+  visibility: hidden;
+  transition: 0.3s ease;
+  z-index: 1001;
+}
+
+.mobile-drawer-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* DRAWER */
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  max-width: 85vw;
+  background: rgba(10,16,25,0.98);
+  border-right: 1px solid var(--mg-glass-border);
+  transform: translateX(-100%);
+  transition: 0.3s ease;
+  z-index: 1002;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-drawer.open {
+  transform: translateX(0);
+}
+
+/* HEADER */
+.mobile-drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid var(--mg-glass-border);
+}
+
+.mobile-drawer-logo {
+  width: 36px;
+  height: 36px;
+}
+
+/* NAV */
+.mobile-nav-list {
+  list-style: none;
+  padding: 10px;
+}
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  color: var(--mg-text);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.mobile-nav-link:hover {
+  background: rgba(0,255,136,0.08);
+}
+
+.mobile-nav-link.active {
+  background: rgba(0,255,136,0.15);
+  color: var(--mg-primary);
+}
+
+/* FOOTER */
+.mobile-drawer-footer {
+  margin-top: auto;
+  padding: 16px;
+  border-top: 1px solid var(--mg-glass-border);
+}

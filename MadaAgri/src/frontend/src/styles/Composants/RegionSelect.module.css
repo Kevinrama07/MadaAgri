@@ -1,0 +1,218 @@
+/* Region Select - Modern & Minimalist Design */
+
+.region-select-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  z-index: 999;
+}
+
+.region-select-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  gap: 12px;
+}
+
+.region-select-header:hover {
+  border-color: rgba(0, 255, 136, 0.4);
+  background: rgba(0, 255, 136, 0.05);
+}
+
+.region-select-header:active {
+  border-color: var(--mg-primary-light);
+  background: rgba(0, 255, 136, 0.08);
+  box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.1);
+}
+
+.region-select-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--mg-text);
+  font-weight: 500;
+  font-size: 0.95rem;
+  flex: 1;
+}
+
+.region-select-content i {
+  color: var(--mg-primary-light);
+  font-size: 1.1rem;
+}
+
+.region-select-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mg-primary-light);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+}
+
+.region-select-icon.open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown */
+.region-select-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: var(--mg-glass-bg);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3), var(--mg-shadow-lg);
+  z-index: 9999;
+  overflow: visible;
+  animation: slideDownRegion 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+}
+
+@keyframes slideDownRegion {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.region-select-search {
+  position: relative;
+  padding: 12px;
+  border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+  overflow: visible;
+}
+
+.region-search-input {
+  width: 100%;
+  padding: 10px 14px 10px 36px;
+  background: rgba(0, 255, 136, 0.05);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 8px;
+  color: var(--mg-text);
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.region-search-input::placeholder {
+  color: var(--mg-text-muted);
+}
+
+.region-search-input:focus {
+  background: rgba(0, 255, 136, 0.08);
+  border-color: rgba(0, 255, 136, 0.4);
+  box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.1);
+}
+
+.region-select-search i {
+  position: absolute;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--mg-text-muted);
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.region-options {
+  max-height: 340px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.region-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  margin: 4px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--mg-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  pointer-events: auto;
+  position: relative;
+  z-index: 10001;
+}
+
+.region-option:hover {
+  background: rgba(0, 255, 136, 0.08);
+  border-color: rgba(0, 255, 136, 0.25);
+  transform: translateX(4px);
+}
+
+.region-option.selected {
+  background: rgba(0, 255, 136, 0.15);
+  border-color: rgba(0, 255, 136, 0.4);
+  color: var(--mg-primary-light);
+  font-weight: 600;
+}
+
+.region-option i {
+  color: var(--mg-primary-light);
+  font-size: 0.75rem;
+  margin-left: 8px;
+}
+
+.region-option-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--mg-text-muted);
+  font-size: 0.9rem;
+}
+
+/* Scrollbar */
+.region-options::-webkit-scrollbar {
+  width: 6px;
+}
+
+.region-options::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.region-options::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 136, 0.2);
+  border-radius: 3px;
+}
+
+.region-options::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 136, 0.35);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .region-select-wrapper {
+    max-width: 100%;
+  }
+
+  .region-options {
+    max-height: 280px;
+  }
+
+  .region-option {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+}

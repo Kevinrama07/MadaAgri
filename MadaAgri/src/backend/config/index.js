@@ -1,7 +1,3 @@
-/**
- * Configuration centralisée de l'application
- */
-
 require('dotenv').config();
 
 const config = {

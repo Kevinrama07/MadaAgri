@@ -1,39 +1,25 @@
 const express = require('express');
-const { randomUUID } = require('crypto');
-const pool = require('../db');
-const { kmpContains } = require('../algos/kmp');
-const { authMiddleware, asyncHandler } = require('../middlewares/authMiddleware');
-
 const router = express.Router();
+const ProductController = require('../controllers/productController');
+const ReservationController = require('../controllers/reservationController');
+const { authMiddleware } = require('../middlewares/authMiddleware');
 
-// GET /api/products - Récupérer les produits
-router.get('/', asyncHandler(async (req, res) => {
-  const q = (req.query.q || '').toString().trim();
-  const [rows] = await pool.query('SELECT * FROM products WHERE visibility = "public" ORDER BY created_at DESC');
-
-  if (!q) return res.json({ products: rows });
-
-  const filtered = rows.filter((p) => kmpContains(p.title, q) || kmpContains(p.description, q));
-  res.json({ products: filtered });
-}));
-
-// POST /api/products - Créer un produit
-router.post('/', authMiddleware, asyncHandler(async (req, res) => {
-  const userId = req.user.id;
-  const { title, description, price, quantity, unit, region_id, culture_id, image_url } = req.body;
-
-  if (!title || !price || !quantity || !unit) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-
-  const id = randomUUID();
-  await pool.query(
-    'INSERT INTO products (id, farmer_id, culture_id, title, description, price, quantity, unit, region_id, image_url, is_available, visibility, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, "public", NOW(), NOW())',
-    [id, userId, culture_id || null, title, description || null, price, quantity, unit, region_id || null, image_url || null]
-  );
-
-  const [productRows] = await pool.query('SELECT * FROM products WHERE id = ?', [id]);
-  res.json({ product: productRows[0] });
-}));
+router.post('/', authMiddleware, ProductController.createProduct);
+router.get('/my', authMiddleware, ProductController.getMyProducts);
+router.put('/:id', authMiddleware, ProductController.updateProduct);
+router.delete('/:id', authMiddleware, ProductController.deleteProduct);
+router.patch('/:id/toggle', authMiddleware, ProductController.toggleProductAvailability);
+router.get('/', ProductController.getMarketplaceProducts);
+router.get('/marketplace/all', ProductController.getMarketplaceProducts);
+router.get('/:id', ProductController.getProductDetails);
+router.post('/cart', authMiddleware, ReservationController.addToCart);
+router.get('/cart', authMiddleware, ReservationController.getCart);
+router.patch('/cart/:cartItemId', authMiddleware, ReservationController.updateCartItem);
+router.delete('/cart/:cartItemId', authMiddleware, ReservationController.removeFromCart);
+router.post('/reservations', authMiddleware, ReservationController.createReservation);
+router.get('/reservations/my', authMiddleware, ReservationController.getMyReservations);
+router.get('/reservations/received', authMiddleware, ReservationController.getReceivedReservations);
+router.patch('/reservations/:id/confirm', authMiddleware, ReservationController.confirmReservation);
+router.patch('/reservations/:id/cancel', authMiddleware, ReservationController.cancelReservation);
 
 module.exports = router;

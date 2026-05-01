@@ -14,7 +14,7 @@ router.post('/signup', authLimiter, asyncHandler(async (req, res) => {
   
   // Validation complète
   if (!email || !password || !displayName || !role) {
-    return res.status(400).json({ error: 'Missing fields' });
+    return res.status(400).json({ error: ' Veuillez insérer vos informations' });
   }
   
   // Validation du rôle
@@ -49,7 +49,7 @@ router.post('/signup', authLimiter, asyncHandler(async (req, res) => {
 // POST /api/auth/login
 router.post('/login', authLimiter, asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Missing fields' });
+  if (!email || !password) return res.status(400).json({ error: 'Veuillez insérer vos informations' });
 
   const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email.toLowerCase()]);
   if (rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
@@ -65,12 +65,25 @@ router.post('/login', authLimiter, asyncHandler(async (req, res) => {
 // GET /api/auth/me
 router.get('/me', authMiddleware, asyncHandler(async (req, res) => {
   const userId = req.user.id;
-  const [rows] = await pool.query(
-    'SELECT id, email, display_name, role, profile_image_url, bio, region_id, phone, created_at, updated_at FROM users WHERE id = ?',
-    [userId]
-  );
-  if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
-  res.json({ user: rows[0] });
+  console.log('[auth/me] Request from user:', userId);
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, email, display_name, role, profile_image_url, bio, region_id, phone, created_at, updated_at,
+        (SELECT COUNT(*) FROM follows WHERE followee_id = ?) AS followers_count,
+        (SELECT COUNT(*) FROM follows WHERE follower_id = ?) AS following_count
+      FROM users WHERE id = ?`,
+      [userId, userId, userId]
+    );
+    if (rows.length === 0) {
+      console.log('[auth/me] User not found for id:', userId);
+      return res.status(404).json({ error: 'User not found' });
+    }
+    console.log('[auth/me] User found:', rows[0].email);
+    res.json({ user: rows[0] });
+  } catch (err) {
+    console.error('[auth/me] Database error:', err.message, err.code);
+    throw err;
+  }
 }));
 
 module.exports = { router, authMiddleware };

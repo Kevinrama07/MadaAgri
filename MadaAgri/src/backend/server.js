@@ -1,8 +1,4 @@
-﻿/**
- * Serveur principal - Point d'entrée de l'application
- */
-
-const express = require('express');
+﻿const express = require('express');
 const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -32,36 +28,23 @@ const io = socketIo(server, {
   },
 });
 
-// ========================
-// CONFIGURATION GLOBALE
-// ========================
-
 // Middleware de sécurité
 app.use(helmetConfig);
-
 // CORS
 app.use(cors(config.cors));
-
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
-
 // Logging des requêtes
 app.use(requestLogger);
-
 // Rate limiting : lectures (GET) plus lenient, écritures standard
 app.use(readLimiter);
 app.use(generalLimiter);
-
 // Injecter socket.io dans les requêtes
 app.use((req, res, next) => {
   req.io = io;
   next();
 });
-
-// ========================
-// ROUTES
-// ========================
 
 // Route de santé
 app.get('/health', (req, res) => {
@@ -75,10 +58,6 @@ app.get('/health', (req, res) => {
 // Enregistrer tous les routes
 registerRoutes(app);
 
-// ========================
-// GESTION DES ERREURS
-// ========================
-
 // Route 404
 app.use((req, res) => {
   res.status(404).json({
@@ -91,15 +70,7 @@ app.use((req, res) => {
 // Middleware de gestion globale des erreurs (doit être en dernier)
 app.use(globalErrorHandler);
 
-// ========================
-// WEBSOCKET & MESSAGERIE EN TEMPS RÉEL
-// ========================
-
 messageSocketService.init(io);
-
-// ========================
-// DÉMARRAGE DU SERVEUR
-// ========================
 
 const PORT = config.server.port;
 const HOST = config.server.host;
@@ -128,10 +99,6 @@ const startServer = () => {
     process.exit(1);
   });
 };
-
-// ========================
-// ARRÊT GRACIEUX
-// ========================
 
 const gracefulShutdown = (signal) => {
   logger.info(`Received ${signal}, shutting down gracefully...`);

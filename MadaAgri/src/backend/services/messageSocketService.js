@@ -1,6 +1,3 @@
-/**
- * Service de gestion des sockets pour la messagerie temps réel
- */
 
 const logger = require('../utils/logger');
 
@@ -11,18 +8,12 @@ class MessageSocketService {
     this.activeConversations = new Map(); // conversationId -> Set of socket.ids
   }
 
-  /**
-   * Initialiser le service avec l'instance socket.io
-   */
   init(io) {
     this.io = io;
     this.setupSocketHandlers();
     logger.info('MessageSocketService initialized');
   }
 
-  /**
-   * Configurer les handlers pour les événements socket
-   */
   setupSocketHandlers() {
     this.io.on('connection', (socket) => {
       logger.info(`Socket connected: ${socket.id}`);
@@ -114,9 +105,6 @@ class MessageSocketService {
     });
   }
 
-  /**
-   * Envoyer un message à une conversation
-   */
   emitMessageToConversation(conversationId, message) {
     if (this.io) {
       this.io.to(conversationId).emit('message:received', message);
@@ -124,25 +112,16 @@ class MessageSocketService {
     }
   }
 
-  /**
-   * Notifier une conversation que quelqu'un tape
-   */
   notifyTyping(conversationId, userId) {
     if (this.io) {
       this.io.to(conversationId).emit('user:typing', { userId });
     }
   }
 
-  /**
-   * Vérifier si une conversation a des utilisateurs actifs
-   */
   isConversationActive(conversationId) {
     return this.activeConversations.has(conversationId);
   }
 
-  /**
-   * Obtenir le nombre de participants actifs
-   */
   getActiveUserCount(conversationId) {
     const conv = this.activeConversations.get(conversationId);
     return conv ? conv.size : 0;

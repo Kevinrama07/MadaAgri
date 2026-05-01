@@ -1,12 +1,5 @@
-/**
- * Utilitaires de réponse API standardisée
- */
-
 const { HTTP_STATUS } = require('../constants');
 
-/**
- * Réponse de succès
- */
 const sendSuccess = (res, data, statusCode = HTTP_STATUS.OK, message = 'Success') => {
   res.status(statusCode).json({
     success: true,
@@ -16,9 +9,6 @@ const sendSuccess = (res, data, statusCode = HTTP_STATUS.OK, message = 'Success'
   });
 };
 
-/**
- * Réponse d'erreur
- */
 const sendError = (res, error, statusCode = HTTP_STATUS.INTERNAL_ERROR) => {
   res.status(statusCode).json({
     success: false,
@@ -29,9 +19,6 @@ const sendError = (res, error, statusCode = HTTP_STATUS.INTERNAL_ERROR) => {
   });
 };
 
-/**
- * Réponse paginée
- */
 const sendPaginatedSuccess = (res, data, pagination, statusCode = HTTP_STATUS.OK) => {
   res.status(statusCode).json({
     success: true,

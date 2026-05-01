@@ -1,0 +1,321 @@
+/* ================================================
+   GLASS COMPONENTS - Styles
+   ================================================ */
+
+/* ================================================
+   GLASS CARD - Variants & Styles
+   ================================================ */
+
+.glass-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.glass-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--mg-primary);
+  flex-shrink: 0;
+}
+
+.glass-card-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.glass-card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin: 0;
+}
+
+.glass-card-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.glass-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Card Variants */
+.glass-card-primary {
+  background: var(--gradient-button);
+  border-color: var(--border-glow);
+}
+
+.glass-card-primary:hover {
+  border-color: var(--mg-primary);
+  box-shadow: var(--shadow-glass);
+}
+
+.glass-card-floating {
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.4);
+}
+
+.glass-card-flat {
+  box-shadow: none;
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Card Sizes */
+.glass-card-sm {
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.glass-card-lg {
+  padding: 32px;
+  border-radius: 20px;
+}
+
+/* ================================================
+   GLASS BUTTON - Variants & Styles
+   ================================================ */
+
+.glass-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  font-size: 1rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  border-top-color: var(--mg-primary);
+  animation: spin 0.8s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Button Variants */
+.glass-btn-primary {
+  background: var(--gradient-button);
+  border-color: var(--border-glow);
+  color: var(--primary-green);
+}
+
+.glass-btn-primary:hover {
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.3);
+}
+
+.glass-btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.glass-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.glass-btn-danger {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ff6b6b;
+}
+
+.glass-btn-danger:hover {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+}
+
+/* Button Sizes */
+.glass-btn-sm {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  border-radius: 10px;
+}
+
+.glass-btn-lg {
+  padding: 14px 32px;
+  font-size: 1rem;
+  border-radius: 14px;
+}
+
+/* ================================================
+   GLASS INPUT - Groups & Styles
+   ================================================ */
+
+.glass-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.glass-input-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+.glass-input-label .required {
+  color: #ff6b6b;
+}
+
+.glass-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.glass-input-icon {
+  position: absolute;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.glass-input.with-icon {
+  padding-left: 40px;
+}
+
+.glass-input-error {
+  font-size: 0.8rem;
+  color: #ff6b6b;
+  font-weight: 500;
+}
+
+.glass-input-hint {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.glass-input.error {
+  border-color: #ff6b6b !important;
+  background: rgba(255, 107, 107, 0.05) !important;
+}
+
+/* ================================================
+   GLASS GRID
+   ================================================ */
+
+.glass-grid-1 {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.glass-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.glass-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.glass-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 768px) {
+  .glass-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .glass-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .glass-grid-2,
+  .glass-grid-3,
+  .glass-grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ================================================
+   GLASS SECTION
+   ================================================ */
+
+.glass-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.glass-header h1 {
+  color: var(--text-light);
+  font-size: clamp(1.5rem, 5vw, 2.5rem);
+  font-weight: 800;
+  margin: 0;
+}
+
+.glass-header h2 {
+  color: var(--text-light);
+  font-size: clamp(1.25rem, 4vw, 2rem);
+  font-weight: 700;
+  margin: 0;
+}
+
+.glass-header .subtitle {
+  color: var(--text-muted);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* ================================================
+   RESPONSIVE
+   ================================================ */
+
+@media (max-width: 768px) {
+  .glass-card-lg {
+    padding: 24px;
+  }
+
+  .glass-card-header {
+    gap: 10px;
+  }
+
+  .glass-btn {
+    width: 100%;
+  }
+
+  .glass-input,
+  .glass-textarea,
+  .glass-select {
+    font-size: 16px; /* Prévient zoom mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .glass-card {
+    padding: 16px;
+  }
+
+  .glass-card-lg {
+    padding: 20px;
+  }
+
+  .glass-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .glass-header h2 {
+    font-size: 1.25rem;
+  }
+}

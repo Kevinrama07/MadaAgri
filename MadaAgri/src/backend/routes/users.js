@@ -70,7 +70,7 @@ router.get('/:userId', authMiddleware, asyncHandler(async (req, res) => {
 // GET /api/users - Lister les utilisateurs
 router.get('/', authMiddleware, asyncHandler(async (req, res) => {
   const { id } = req.user;
-  const [rows] = await pool.query('SELECT id, email, display_name, role FROM users WHERE id != ?', [id]);
+  const [rows] = await pool.query('SELECT id, email, display_name, role, profile_image_url FROM users WHERE id != ?', [id]);
   res.json({ users: rows });
 }));
 

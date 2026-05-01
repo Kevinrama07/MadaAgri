@@ -1,14 +1,7 @@
-/**
- * Middleware de sécurité
- */
-
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { RATE_LIMIT } = require('../constants');
 
-/**
- * Limiter général
- */
 const generalLimiter = rateLimit({
   windowMs: RATE_LIMIT.WINDOW_MS,
   max: RATE_LIMIT.MAX_REQUESTS,
@@ -17,9 +10,6 @@ const generalLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-/**
- * Limiter pour les requêtes GET (lecture, plus lenient)
- */
 const readLimiter = rateLimit({
   windowMs: RATE_LIMIT.WINDOW_MS,
   max: RATE_LIMIT.MAX_REQUESTS * 2, // 2x plus de requêtes pour les GET
@@ -29,9 +19,6 @@ const readLimiter = rateLimit({
   skip: (req) => req.method !== 'GET', // Seulement pour GET
 });
 
-/**
- * Limiter pour l'authentification (plus restrictif)
- */
 const authLimiter = rateLimit({
   windowMs: RATE_LIMIT.AUTH_WINDOW_MS,
   max: RATE_LIMIT.AUTH_MAX_REQUESTS,
@@ -41,9 +28,6 @@ const authLimiter = rateLimit({
   skipSuccessfulRequests: true, // Ne compte que les échos
 });
 
-/**
- * Configuration Helmet
- */
 const helmetConfig = helmet({
   contentSecurityPolicy: {
     directives: {

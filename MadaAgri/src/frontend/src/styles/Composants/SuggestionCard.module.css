@@ -1,0 +1,147 @@
+@import '../GlobalStyles.css';
+
+/* ==========================================
+   THEME VARIABLES
+   ========================================== */
+
+:root {
+  --social-primary: #22c55e;
+  --social-primary-light: #4ade80;
+  --social-primary-dark: #166534;
+  --social-white: #18191a;
+  --social-light-gray: #242526;
+  --social-gray: #3a3b3c;
+  --social-dark-gray: #b0bec5;
+  --social-text: #e4e6eb;
+  --social-text-secondary: #b0bec5;
+  --social-border: #3a3b3c;
+}
+
+[data-theme="light"] {
+  --social-primary: #22c55e;
+  --social-primary-light: #4ade80;
+  --social-primary-dark: #16a34a;
+  --social-white: #ffffff;
+  --social-light-gray: #f3f4f6;
+  --social-gray: #e5e7eb;
+  --social-dark-gray: #6b7280;
+  --social-text: #111827;
+  --social-text-secondary: #6b7280;
+  --social-border: #d1d5db;
+}
+
+/* ==========================================
+   SUGGESTION CARD
+   ========================================== */
+
+.suggestion-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--social-light-gray);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  animation: slideInLeft 0.3s ease-out;
+}
+
+.suggestion-card:hover {
+  background: var(--social-gray);
+}
+
+.suggestion-content {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  cursor: pointer;
+}
+
+.suggestion-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--social-primary-light);
+  flex-shrink: 0;
+}
+
+.suggestion-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.suggestion-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--social-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suggestion-region,
+.suggestion-culture,
+.suggestion-badge {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: var(--social-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.follow-btn {
+  background: var(--social-primary);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.follow-btn:hover:not(:disabled) {
+  background: var(--social-primary-dark);
+  transform: scale(1.05);
+}
+
+.follow-btn.following {
+  background: var(--social-gray);
+  color: var(--social-text);
+}
+
+.follow-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Suggestions */
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.suggestions-loading,
+.suggestions-empty {
+  text-align: center;
+  padding: 20px 10px;
+  color: var(--social-text-secondary);
+  font-size: 14px;
+}
+
+[data-theme='light'] .suggestions-loading,
+[data-theme='light'] .suggestions-empty {
+  color: #6b7280;
+}
+
+[data-theme='dark'] .suggestions-loading,
+[data-theme='dark'] .suggestions-empty {
+  color: #b0bec5;
+}

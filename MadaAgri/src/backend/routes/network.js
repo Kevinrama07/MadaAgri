@@ -3,9 +3,7 @@ const pool = require('../db');
 const { randomUUID } = require('crypto');
 const { buildAdjacency, bfsReachable } = require('../algos/graph');
 const { authMiddleware, asyncHandler } = require('../middlewares/authMiddleware');
-
 const router = express.Router();
-
 // ============================================
 // ROUTES D'INVITATIONS COLLABORATEURS
 // ============================================
@@ -21,6 +19,28 @@ router.post('/invitations/send', authMiddleware, asyncHandler(async (req, res) =
   
   if (senderId === recipientId) {
     return res.status(400).json({ error: 'cannot invite yourself' });
+  }
+
+  // Vérifier si une invitation existe déjà
+  const [existing] = await pool.query(
+    'SELECT id, status FROM collaboration_invitations WHERE sender_id = ? AND recipient_id = ?',
+    [senderId, recipientId]
+  );
+
+  if (existing.length > 0) {
+    // Si déjà acceptée ou en attente, ne pas recréer
+    if (existing[0].status === 'accepted') {
+      return res.status(200).json({ id: existing[0].id, ok: true, message: 'Already collaborators' });
+    }
+    if (existing[0].status === 'pending') {
+      return res.status(200).json({ id: existing[0].id, ok: true, message: 'Invitation already sent' });
+    }
+    // Si déclinée, mettre à jour avec nouveau message
+    await pool.query(
+      'UPDATE collaboration_invitations SET status = "pending", message = ?, updated_at = NOW() WHERE id = ?',
+      [message || null, existing[0].id]
+    );
+    return res.status(200).json({ id: existing[0].id, ok: true, message: 'Invitation resent' });
   }
 
   const invitationId = randomUUID();
@@ -102,15 +122,11 @@ router.put('/invitations/:invitationId/accept', authMiddleware, asyncHandler(asy
     [invitationId]
   );
 
-  // Create mutual follow relationship
+  // Create follow relationship: recipient follows the sender
+  // (The sender already follows the recipient via the invitation)
   await pool.query(
-    'INSERT IGNORE INTO follows (follower_id, followee_id, status, created_at) VALUES (?, ?, "friends", NOW())',
+    'INSERT IGNORE INTO follows (follower_id, followee_id, status, created_at) VALUES (?, ?, "following", NOW())',
     [userId, senderId]
-  );
-  
-  await pool.query(
-    'INSERT IGNORE INTO follows (follower_id, followee_id, status, created_at) VALUES (?, ?, "friends", NOW())',
-    [senderId, userId]
   );
 
   res.json({ ok: true, message: 'Invitation accepted' });
@@ -186,30 +202,138 @@ router.delete('/:userId', authMiddleware, asyncHandler(async (req, res) => {
 // GET /api/network/suggestions ou /api/follows/suggestions - Suggester des utilisateurs avec état d'invitation
 router.get('/suggestions', authMiddleware, asyncHandler(async (req, res) => {
   const userId = req.user.id;
-  const [followRows] = await pool.query('SELECT follower_id, followee_id FROM follows');
-  const adj = buildAdjacency(followRows);
-  const reachable = bfsReachable(adj, userId, 2);
 
+  // Récupérer tous les utilisateurs sauf soi-même
   const [users] = await pool.query('SELECT id, email, display_name, role, profile_image_url FROM users WHERE id != ?', [userId]);
-  
-  // Get pending invitations
+
+  // Récupérer les relations de suivi existantes
+  const [followRelations] = await pool.query(
+    `SELECT
+      CASE WHEN follower_id = ? THEN followee_id ELSE follower_id END as other_user_id,
+      CASE WHEN follower_id = ? THEN 'following' ELSE 'follower' END as relation_type,
+      CASE WHEN follower_id = ? AND followee_id = ? THEN 'mutual' ELSE 'one_way' END as mutual_status
+    FROM follows
+    WHERE (follower_id = ? OR followee_id = ?) AND status IN ('following', 'friends')`,
+    [userId, userId, userId, userId, userId, userId]
+  );
+
+  // Créer une map des relations existantes
+  const relationsMap = new Map();
+  followRelations.forEach(rel => {
+    relationsMap.set(rel.other_user_id, {
+      type: rel.relation_type,
+      mutual: rel.mutual_status === 'mutual'
+    });
+  });
+
+  // Récupérer les invitations en attente
   const [sentInvitations] = await pool.query(
     'SELECT recipient_id FROM collaboration_invitations WHERE sender_id = ? AND status = "pending"',
     [userId]
   );
-  
   const sentInvitationIds = new Set(sentInvitations.map(inv => inv.recipient_id));
-  
-  const suggestions = users
-    .filter((u) => reachable.has(u.id))
-    .map((u) => ({
-      ...u,
-      invitationSent: sentInvitationIds.has(u.id)
-    }))
-    .sort((a, b) => reachable.get(a.id) - reachable.get(b.id))
-    .slice(0, 10);
 
-  res.json({ suggestions });
+  // Récupérer les invitations reçues en attente
+  const [receivedInvitations] = await pool.query(
+    'SELECT sender_id FROM collaboration_invitations WHERE recipient_id = ? AND status = "pending"',
+    [userId]
+  );
+  const receivedInvitationIds = new Set(receivedInvitations.map(inv => inv.sender_id));
+
+  // Construire les suggestions avec les relations
+  const suggestions = users.map(user => {
+    const relation = relationsMap.get(user.id);
+    let suggestionType = 'stranger';
+    let priority = 3; // 1 = highest priority
+
+    if (relation) {
+      if (relation.mutual) {
+        suggestionType = 'collaborator';
+        priority = 1;
+      } else if (relation.type === 'following') {
+        suggestionType = 'following';
+        priority = 2;
+      } else if (relation.type === 'follower') {
+        suggestionType = 'follower';
+        priority = 1;
+      }
+    }
+
+    return {
+      ...user,
+      suggestionType,
+      priority,
+      invitationSent: sentInvitationIds.has(user.id),
+      invitationReceived: receivedInvitationIds.has(user.id),
+      isFollowing: relation?.type === 'following' || relation?.mutual,
+      isFollowedBy: relation?.type === 'follower' || relation?.mutual,
+      isCollaborator: relation?.mutual
+    };
+  });
+
+  // Trier par priorité puis par nom
+  suggestions.sort((a, b) => {
+    if (a.priority !== b.priority) return a.priority - b.priority;
+    return (a.display_name || a.email).localeCompare(b.display_name || b.email);
+  });
+
+  // Limiter à 20 suggestions maximum
+  const limitedSuggestions = suggestions.slice(0, 20);
+
+  res.json({ suggestions: limitedSuggestions });
+}));
+
+// GET /api/network/followers/:userId - Récupérer les followers d'un utilisateur
+router.get('/followers/:userId', authMiddleware, asyncHandler(async (req, res) => {
+  const targetUserId = req.params.userId;
+  const [rows] = await pool.query(
+    `SELECT f.follower_id, f.created_at, u.display_name, u.email, u.profile_image_url, u.role
+     FROM follows f
+     JOIN users u ON f.follower_id = u.id
+     WHERE f.followee_id = ? AND f.status IN ('following', 'friends')`,
+    [targetUserId]
+  );
+  res.json({ followers: rows });
+}));
+
+// GET /api/network/following/:userId - Récupérer les utilisateurs suivis
+router.get('/following/:userId', authMiddleware, asyncHandler(async (req, res) => {
+  const targetUserId = req.params.userId;
+  const [rows] = await pool.query(
+    `SELECT f.followee_id, f.created_at, u.display_name, u.email, u.profile_image_url, u.role
+     FROM follows f
+     JOIN users u ON f.followee_id = u.id
+     WHERE f.follower_id = ? AND f.status IN ('following', 'friends')`,
+    [targetUserId]
+  );
+  res.json({ following: rows });
+}));
+
+// GET /api/network/follow/status/:userId - Vérifier l'état de suivi entre l'utilisateur connecté et un autre utilisateur
+router.get('/follow/status/:userId', authMiddleware, asyncHandler(async (req, res) => {
+  const currentUserId = req.user.id;
+  const targetUserId = req.params.userId;
+  
+  const [following] = await pool.query(
+    'SELECT status FROM follows WHERE follower_id = ? AND followee_id = ?',
+    [currentUserId, targetUserId]
+  );
+  
+  const [followers] = await pool.query(
+    'SELECT status FROM follows WHERE follower_id = ? AND followee_id = ?',
+    [targetUserId, currentUserId]
+  );
+  
+  let status = 'none';
+  if (following.length > 0 && followers.length > 0) {
+    status = 'friends';
+  } else if (following.length > 0) {
+    status = 'following';
+  } else if (followers.length > 0) {
+    status = 'followers';
+  }
+  
+  res.json({ status, isFollowing: following.length > 0, isFollowedBy: followers.length > 0 });
 }));
 
 module.exports = router;

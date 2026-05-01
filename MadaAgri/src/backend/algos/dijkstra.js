@@ -11,7 +11,6 @@ function haversineKm(a, b) {
   return 2 * R * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
 }
 
-// Graphe complet entre régions (prototype). Retourne chemin + distance totale.
 function dijkstra(nodes, startId, endId) {
   const dist = new Map();
   const prev = new Map();

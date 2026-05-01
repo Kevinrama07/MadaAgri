@@ -1,21 +1,11 @@
-/**
- * Middleware de gestion globale des erreurs
- */
-
 const logger = require('../utils/logger');
 const { ApiError } = require('../errors/ApiError');
 const { sendError } = require('../utils/responseHandler');
 
-/**
- * Middleware pour capturer les erreurs async
- */
 const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };
 
-/**
- * Middleware de gestion globale des erreurs (doit être en dernier)
- */
 const globalErrorHandler = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
 

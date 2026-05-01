@@ -6,10 +6,6 @@ const { authMiddleware, asyncHandler } = require('../middlewares/authMiddleware'
 
 const router = express.Router();
 
-// ========================
-// RÉGIONS & CULTURES (PUBLIC)
-// ========================
-
 // GET / ou /regions - Récupérer les régions
 router.get(['/regions', '/'], asyncHandler(async (req, res) => {
   try {

@@ -2,21 +2,18 @@ const { router: authRouter } = require('./auth');
 const postsRouter = require('./posts');
 const usersRouter = require('./users');
 const productsRouter = require('./products');
+const reservationsRouter = require('./reservations');
 const messagesRouter = require('./messages');
 const networkRouter = require('./network');
 const analysisRouter = require('./analysis');
 const uploadRouter = require('./upload');
 const healthRouter = require('./health');
+const optimizationRouter = require('./optimization');
 
 const logger = require('../utils/logger');
 const { authLimiter } = require('../middlewares/security');
 const { handleValidationErrors } = require('../middlewares/validators');
 
-/**
- * Enregistre toutes les routes avec le serveur Express
- * @param {Express} app - Instance Express
- * @param {Object} uploadServices - Services d'upload (optionnel)
- */
 function registerRoutes(app, uploadServices) {
   // ========================
   // INJECTION DE CONTEXTE
@@ -43,10 +40,10 @@ function registerRoutes(app, uploadServices) {
   });
 
   // ========================
-  // ROUTES D'AUTHENTIFICATION (AVEC RATE LIMITING)
+  // ROUTES D'AUTHENTIFICATION
   // ========================
 
-  app.use('/api/auth', authLimiter, authRouter);
+  app.use('/api/auth', authRouter);
 
   // ========================
   // ROUTES PRINCIPALES
@@ -61,6 +58,9 @@ function registerRoutes(app, uploadServices) {
   // Routes produits
   app.use('/api/products', productsRouter);
 
+  // Routes réservations
+  app.use('/api/reservations', reservationsRouter);
+
   // Routes messagerie
   app.use('/api/messages', messagesRouter);
 
@@ -68,6 +68,9 @@ function registerRoutes(app, uploadServices) {
   app.use('/api/analysis', analysisRouter);
   app.use('/api/regions', analysisRouter);
   app.use('/api/routes', analysisRouter);
+
+  // Routes optimisation de routes
+  app.use('/api/optimization', optimizationRouter);
 
   // Routes utilitaires
   app.use('/api/upload', uploadRouter);

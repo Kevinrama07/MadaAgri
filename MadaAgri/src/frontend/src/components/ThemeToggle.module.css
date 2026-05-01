@@ -1,0 +1,61 @@
+.theme-toggle-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--mg-glass-border);
+  background-color: var(--mg-glass-bg);
+  color: var(--mg-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: var(--mg-shadow);
+  padding: 0;
+  font-family: var(--font-body);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.theme-toggle-btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.theme-toggle-btn:hover {
+  background-color: rgba(13, 148, 136, 0.15);
+  border-color: var(--mg-primary);
+  transform: scale(1.1);
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.25);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+/* Light theme specific */
+[data-theme="light"] .theme-toggle-btn {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(13, 148, 136, 0.3);
+  color: var(--mg-primary);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
+}
+
+[data-theme="light"] .theme-toggle-btn:hover {
+  background-color: rgba(13, 148, 136, 0.1);
+  box-shadow: 0 6px 20px rgba(13, 148, 136, 0.2);
+}
+
+@media (max-width: 768px) {
+  .theme-toggle-btn {
+    top: 15px;
+    right: 15px;
+    width: 44px;
+    height: 44px;
+  }
+}

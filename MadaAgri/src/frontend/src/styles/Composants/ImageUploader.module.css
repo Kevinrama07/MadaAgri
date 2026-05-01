@@ -1,0 +1,78 @@
+@import '../GlobalStyles.css';
+
+.image-uploader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.image-uploader input[type="file"] {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.image-uploader input[type="file"]:hover {
+  background-color: #f5f5f5;
+  border-color: #999;
+}
+
+.image-uploader div {
+  margin: 0.5rem 0;
+}
+
+.image-uploader p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.image-uploader img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 10px;
+  object-fit: cover;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.image-uploader .mg-tab-btn {
+  padding: 0.75rem 1.5rem;
+  background-color: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.image-uploader .mg-tab-btn:hover:not(:disabled) {
+  background-color: #16a34a;
+}
+
+.image-uploader .mg-tab-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.image-uploader .mg-tab-btn:active:not(:disabled) {
+  background-color: #15803d;
+  transform: scale(0.98);
+}
+
+.image-uploader p[style*="color: #ff6b6b"] {
+  color: #ff6b6b !important;
+  padding: 0.5rem;
+  background-color: #ffe0e0;
+  border-left: 3px solid #ff6b6b;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}

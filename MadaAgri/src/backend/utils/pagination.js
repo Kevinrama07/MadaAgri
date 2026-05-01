@@ -1,12 +1,5 @@
-/**
- * Utilitaires pour la pagination
- */
-
 const { PAGINATION } = require('../constants');
 
-/**
- * Parser les paramètres de pagination
- */
 const parsePagination = (query) => {
   const page = Math.max(1, parseInt(query.page) || PAGINATION.DEFAULT_PAGE);
   const limit = Math.min(
@@ -21,9 +14,6 @@ const parsePagination = (query) => {
   };
 };
 
-/**
- * Créer la réponse paginée
- */
 const createPaginationMeta = (page, limit, total) => {
   return {
     page,

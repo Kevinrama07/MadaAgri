@@ -94,10 +94,12 @@ CREATE TABLE IF NOT EXISTS post_comments (
   id VARCHAR(36) PRIMARY KEY,
   post_id VARCHAR(36) NOT NULL,
   user_id VARCHAR(36) NOT NULL,
+  parent_id VARCHAR(36) DEFAULT NULL,
   content TEXT NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (parent_id) REFERENCES post_comments(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS follows (
@@ -165,18 +167,66 @@ CREATE TABLE IF NOT EXISTS collaboration_invitations (
   FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- 🛒 MARKETPLACE: RESERVATIONS TABLE
+CREATE TABLE IF NOT EXISTS reservations (
+  id VARCHAR(36) PRIMARY KEY,
+  product_id VARCHAR(36) NOT NULL,
+  client_id VARCHAR(36) NOT NULL,
+  farmer_id VARCHAR(36) NOT NULL,
+  quantity INT NOT NULL,
+  unit_price DECIMAL(10,2) NOT NULL,
+  total_price DECIMAL(12,2) GENERATED ALWAYS AS (quantity * unit_price) STORED,
+  status ENUM('pending','confirmed','cancelled','completed') DEFAULT 'pending',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+  FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (farmer_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_client (client_id),
+  INDEX idx_farmer (farmer_id),
+  INDEX idx_product (product_id),
+  INDEX idx_status (status)
+);
+
+-- Cart/Panier temporaire pour les clients
+CREATE TABLE IF NOT EXISTS cart_items (
+  id VARCHAR(36) PRIMARY KEY,
+  user_id VARCHAR(36) NOT NULL,
+  product_id VARCHAR(36) NOT NULL,
+  quantity INT NOT NULL DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_cart_item (user_id, product_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
 -- Seed sample data
 INSERT IGNORE INTO regions (id, name, description, latitude, longitude, soil_type, climate) VALUES
   ('r-1','Haute Matsiatra','Region montagneuse, sols riches','-21.2167','47.0833','argile','montagne'),
-  ('r-2','Itasy','Région lacustre','-19.0833','46.6333','limon','tropical');
+  ('r-2','Itasy','Région lacustre','-19.0833','46.6333','limon','tropical'),
+  ('r-3','Vakinankaratra','Plateaux centraux','-19.9333','47.5167','basalte','tempéré'),
+  ('r-4','Amoron\'i Mania','Région agricole','-20.5833','47.1667','latérite','subtropical');
 
 INSERT IGNORE INTO cultures (id, name, description, ideal_soil, ideal_climate, growing_period_days, yield_potential) VALUES
-  ('c-1','Riz','Culture de riz traditionnelle','argile','tropical',120,'élevé'),
-  ('c-2','Maïs','Céréale pour alimentation','sableux','tropical',90,'moyen');
+  ('c-1','Riz','Culture de riz traditionnelle très productive','argile','tropical',120,'élevé'),
+  ('c-2','Maïs','Céréale résistante pour alimentation','sableux','tropical',90,'moyen'),
+  ('c-3','Manioc','Racine riche en amidon','limon','tropical',270,'élevé'),
+  ('c-4','Arachide','Légumineuse riche en protéines','sableux','tropical',120,'moyen'),
+  ('c-5','Haricot','Légumineuse nutritive','limon','tempéré',70,'moyen'),
+  ('c-6','Patate Douce','Tubercule riche en vitamines','argile','tropical',100,'moyen');
 
 INSERT IGNORE INTO region_cultures (region_id, culture_id, suitability_score) VALUES
   ('r-1','c-1',92),
   ('r-1','c-2',70),
+  ('r-1','c-5',88),
   ('r-2','c-1',88),
-  ('r-2','c-2',85);
+  ('r-2','c-2',85),
+  ('r-2','c-3',80),
+  ('r-3','c-5',95),
+  ('r-3','c-2',82),
+  ('r-3','c-4',75),
+  ('r-4','c-3',92),
+  ('r-4','c-4',88),
+  ('r-4','c-6',85);
 

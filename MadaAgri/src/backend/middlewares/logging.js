@@ -1,12 +1,5 @@
-/**
- * Middleware de logging des requêtes
- */
-
 const logger = require('../utils/logger');
 
-/**
- * Logger les requêtes HTTP
- */
 const requestLogger = (req, res, next) => {
   const startTime = Date.now();
 
