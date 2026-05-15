@@ -4,6 +4,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import gsap from 'gsap';
 import * as THREE from 'three';
 import styles from '../../styles/Publique/HeroSection.module.css';
+import ThemeToggle from '../../components/ThemeToggle';
 
 // Icon components with SVG
 const LeafIcon = () => (
@@ -144,8 +145,8 @@ function ParticleField() {
 
   useFrame(() => {
     if (pointsRef.current) {
-      pointsRef.current.rotation.y += 0.00005;
-      pointsRef.current.rotation.x += 0.00002;
+      pointsRef.current.rotation.y += 0.00010;
+      pointsRef.current.rotation.x += 0.00005;
     }
   });
 
@@ -161,7 +162,6 @@ function ParticleField() {
     </points>
   );
 }
-
 
 // Camera Controller Component
 function CameraController() {
@@ -357,13 +357,16 @@ export default function HeroSection({ onSignUp, onLogin }) {
   }, []);
 
   return (
-    <section className={clsx(styles['hero-section'])}>
+    <>
+      <div className={clsx(styles['theme-toggle-container'])}>
+        <ThemeToggle />
+      </div>
+      <section className={clsx(styles['hero-section'])}>
       <HeroCanvas />
 
       <div className={clsx(styles['hero-glow'], styles['hero-glow-1'])}></div>
       <div className={clsx(styles['hero-glow'], styles['hero-glow-2'])}></div>
       <div className={clsx(styles['hero-glow'], styles['hero-glow-3'])}></div>
-
       <div className={clsx(styles['hero-content'])} ref={textRef}>
         <div className={clsx(styles['hero-badge'])}>
           <span>Mada Agri</span>
@@ -543,5 +546,6 @@ export default function HeroSection({ onSignUp, onLogin }) {
         ))}
       </div>
     </section>
+    </>
   );
 }

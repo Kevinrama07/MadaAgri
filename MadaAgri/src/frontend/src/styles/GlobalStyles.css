@@ -1,3 +1,4 @@
+@import './theme-variables.css';
 
 .mobile-topbar {
   position: fixed;
@@ -5,8 +6,11 @@
   left: 0;
   right: 0;
   height: 56px;
-  background: rgba(10,16,25,0.95);
-  border-bottom: 1px solid var(--mg-glass-border);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--backdrop-blur));
+  backdrop-filter: blur(var(--backdrop-blur));
+  border-bottom: var(--glass-border);
+  box-shadow: var(--shadow-sm);
   z-index: 1000;
   padding: 0 12px;
 }
@@ -34,9 +38,9 @@
 .hamburger-line {
   width: 22px;
   height: 2px;
-  background: var(--mg-text);
+  background: var(--text-primary);
   border-radius: 2px;
-  transition: 0.3s ease;
+  transition: var(--transition-smooth);
 }
 
 /* OVERLAY */
@@ -46,7 +50,7 @@
   background: rgba(0,0,0,0.6);
   opacity: 0;
   visibility: hidden;
-  transition: 0.3s ease;
+  transition: var(--transition-smooth);
   z-index: 1001;
 }
 
@@ -63,10 +67,13 @@
   bottom: 0;
   width: 280px;
   max-width: 85vw;
-  background: rgba(10,16,25,0.98);
-  border-right: 1px solid var(--mg-glass-border);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--backdrop-blur));
+  backdrop-filter: blur(var(--backdrop-blur));
+  border-right: var(--glass-border);
+  box-shadow: var(--shadow-lg);
   transform: translateX(-100%);
-  transition: 0.3s ease;
+  transition: var(--transition-smooth);
   z-index: 1002;
   display: flex;
   flex-direction: column;
@@ -82,7 +89,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  border-bottom: 1px solid var(--mg-glass-border);
+  border-bottom: var(--glass-border);
 }
 
 .mobile-drawer-logo {
@@ -101,26 +108,98 @@
   align-items: center;
   gap: 12px;
   padding: 12px;
-  border-radius: 10px;
-  color: var(--mg-text);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: 0.2s ease;
+  transition: var(--transition-smooth);
 }
 
 .mobile-nav-link:hover {
-  background: rgba(0,255,136,0.08);
+  background: var(--bg-hover);
 }
 
 .mobile-nav-link.active {
-  background: rgba(0,255,136,0.15);
-  color: var(--mg-primary);
+  background: var(--bg-hover);
+  color: var(--accent-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 /* FOOTER */
 .mobile-drawer-footer {
   margin-top: auto;
   padding: 16px;
-  border-top: 1px solid var(--mg-glass-border);
+  border-top: var(--glass-border);
+}
+
+/* ==========================================
+   MODERN SCROLLBAR - Hidden by default, appears on scroll/hover
+   Scrollbars are invisible by default and show on:
+   - Active scrolling
+   - Hover
+   Uses modern green accent color with smooth transitions
+   ========================================== */
+
+/* Firefox */
+.modern-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+
+/* Firefox - Show on hover */
+.modern-scrollbar:hover {
+  scrollbar-color: rgba(74, 222, 128, 0.6) transparent;
+}
+
+/* Firefox - Show when scrolling */
+.modern-scrollbar.scrolling {
+  scrollbar-color: rgba(74, 222, 128, 0.7) transparent;
+}
+
+/* Chrome, Safari, Edge - Scrollbar dimensions */
+.modern-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/* Chrome, Safari, Edge - Track (background) */
+.modern-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+/* Chrome, Safari, Edge - Thumb (default - hidden) */
+.modern-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+/* Chrome, Safari, Edge - Thumb on hover */
+.modern-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(74, 222, 128, 0.6);
+  border-radius: 4px;
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.3);
+}
+
+/* Chrome, Safari, Edge - Thumb when scrolling */
+.modern-scrollbar.scrolling::-webkit-scrollbar-thumb {
+  background: rgba(74, 222, 128, 0.7);
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
+}
+
+/* Chrome, Safari, Edge - Thumb on hover while scrolling */
+.modern-scrollbar.scrolling:hover::-webkit-scrollbar-thumb {
+  background: rgba(74, 222, 128, 0.85);
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+}
+
+/* Chrome, Safari, Edge - Thumb active state */
+.modern-scrollbar::-webkit-scrollbar-thumb:active {
+  background: rgba(74, 222, 128, 0.9);
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.6);
 }

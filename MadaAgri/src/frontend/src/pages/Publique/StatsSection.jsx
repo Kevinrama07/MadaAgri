@@ -46,6 +46,7 @@ const getStatIcon = (iconKey) => {
 
 export default function StatsSection() {
   const sectionRef = useRef(null);
+  const cardRefs = useRef([]);
   const [animatedNumbers, setAnimatedNumbers] = useState(
     stats.reduce((acc, stat) => ({ ...acc, [stat.id]: 0 }), {})
   );
@@ -90,22 +91,24 @@ export default function StatsSection() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Animation des cartes
-    gsap.fromTo('.stat-card',
-      { opacity: 0, y: 40 },
-      {
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top 80%',
-        },
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: 'power3.out',
-        stagger: 0.15,
-        force3D: true,
-      }
-    );
+    // Animation des cartes avec refs
+    if (cardRefs.current.length > 0) {
+      gsap.fromTo(cardRefs.current,
+        { opacity: 0, y: 40 },
+        {
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 80%',
+          },
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: 'power3.out',
+          stagger: 0.15,
+          force3D: true,
+        }
+      );
+    }
   }, []);
 
   return (
@@ -115,8 +118,12 @@ export default function StatsSection() {
         <p className={clsx(styles['stats-subtitle'])}>Une communauté agricole en croissance constante</p>
 
         <div className={clsx(styles['stats-grid'])}>
-          {stats.map((stat) => (
-            <div key={stat.id} className={clsx(styles['stat-card'])}>
+          {stats.map((stat, index) => (
+            <div
+              key={stat.id}
+              ref={(el) => (cardRefs.current[index] = el)}
+              className={clsx(styles['stat-card'])}
+            >
               <div className={clsx(styles['stat-icon'])}>{getStatIcon(stat.icon)}</div>
               <div className={clsx(styles['stat-number-display'])}>
                 {animatedNumbers[stat.id]?.toLocaleString()}

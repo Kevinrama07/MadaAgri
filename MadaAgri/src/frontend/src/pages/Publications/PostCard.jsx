@@ -4,7 +4,7 @@ import { FiMoreVertical, FiCornerDownLeft, FiEdit, FiTrash2, FiXCircle, FiCheck,
 import { useAuth } from '../../contexts/ContextAuthentification';
 import { useFadeIn, animateLikeButton, animateCounter } from '../../lib/animations';
 import { dataApi } from '../../lib/api';
-import styles from '../../styles/Publications/SocialFeed.module.css';
+import styles from '../../styles/Publications/PostCard.module.css';
 
 // Composant pour un commentaire individuel (récursif pour les réponses)
 function CommentItem({ comment, onReply, onUserProfileClick, level = 0 }) {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import './App.css';
 import Accueil from './pages/Publique/Accueil';
 import styles from './styles/Publique/Accueil.module.css';
@@ -6,9 +7,9 @@ import FormulaireAuth from './pages/Connection/FormulaireAuth';
 import TableauDeBord from './pages/Composants/TableauDeBord';
 import { AuthProvider, useAuth } from './contexts/ContextAuthentification';
 import { LoadingProvider } from './contexts/LoadingContext';
-import { ThemeProvider } from './contexts/ThemeContext';
 import GlobalLoader from './components/GlobalLoader';
 import { FiAlertTriangle } from "react-icons/fi";
+import { useGlobalModernScrollbar } from './hooks/useModernScrollbar';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -73,15 +74,23 @@ function AppContent() {
 }
 
 function App() {
+  // Appliquer les scrollbars modernes globalement
+  useGlobalModernScrollbar(2000); // Cache après 2 secondes d'inactivité
+
+  useEffect(() => {
+    // Forcer le thème sombre par défaut
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }, []);
+
   return (
-    <ThemeProvider>
+    <BrowserRouter>
       <AuthProvider>
         <LoadingProvider>
           <GlobalLoader />
           <AppContent />
         </LoadingProvider>
       </AuthProvider>
-    </ThemeProvider>
+    </BrowserRouter>
   );
 }
 

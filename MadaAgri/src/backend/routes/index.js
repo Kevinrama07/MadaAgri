@@ -4,7 +4,9 @@ const usersRouter = require('./users');
 const productsRouter = require('./products');
 const reservationsRouter = require('./reservations');
 const messagesRouter = require('./messages');
+const conversationsRouter = require('./conversations');
 const networkRouter = require('./network');
+const notificationsRouter = require('./notifications');
 const analysisRouter = require('./analysis');
 const uploadRouter = require('./upload');
 const healthRouter = require('./health');
@@ -63,6 +65,10 @@ function registerRoutes(app, uploadServices) {
 
   // Routes messagerie
   app.use('/api/messages', messagesRouter);
+  app.use('/api/conversations', conversationsRouter);
+
+  // Routes notifications
+  app.use('/api/notifications', notificationsRouter);
 
   // Routes d'analyse
   app.use('/api/analysis', analysisRouter);

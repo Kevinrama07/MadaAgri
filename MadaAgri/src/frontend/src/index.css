@@ -1,4 +1,7 @@
+@import './styles/design-tokens.css';
 @import './styles/GlobalStyles.css';
+@import './styles/theme-global.css';
+@import './styles/modern-styles.css';
 
 :root {
   font-family: var(--font-body);
@@ -6,6 +9,21 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Legacy variables mapping */
+:root {
+  --bg-primary: var(--theme-background);
+  --bg-secondary: var(--theme-surface);
+  --glass-bg: var(--theme-glass-background);
+  --glass-border: var(--theme-glass-border);
+  --text-primary: var(--theme-text);
+  --text-secondary: var(--theme-text-secondary);
+  --text-muted: var(--theme-text-muted);
+  --accent-green: var(--theme-primary);
+  --accent-earth: var(--theme-secondary);
+  --shadow-soft: var(--theme-shadow-md);
+  --backdrop-blur: 12px;
 }
 
 @keyframes slideInUp {

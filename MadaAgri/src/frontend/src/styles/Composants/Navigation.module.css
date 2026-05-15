@@ -1,7 +1,4 @@
 @import '../GlobalStyles.css';
-
-/* Navigation Styling - Using Global Variables */
-
 .mg-input {
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -156,11 +153,12 @@
 .mg-sidebar.expanded .mg-nav-link span {
   opacity: 1;
   transform: translateX(0);
+  position:relative;
+  margin-top: 10px;
 }
 
 .mg-nav-link:hover {
   background: rgba(0, 255, 217, 0.14);
-  transform: translateX(5px);
 }
 
 .mg-nav-link.active {
@@ -404,9 +402,25 @@
   width: 8px;
 }
 
+.mg-modal-content .product-form::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
 .mg-modal-content .product-form::-webkit-scrollbar-thumb {
-  background: rgba(64, 255, 126, 0.35);
-  border-radius: 999px;
+  background: transparent;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.mg-modal-content .product-form:hover::-webkit-scrollbar-thumb {
+  background: rgba(74, 222, 128, 0.6);
+  border-radius: 4px;
+}
+
+.mg-modal-content .product-form::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 222, 128, 0.8);
+  box-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
 }
 
 .mg-modal-content .product-form::-webkit-scrollbar-track {
@@ -573,36 +587,39 @@
   opacity: 1;
 }
 
-/* Navigation Utils */
 .all {
   display: flex;
   flex-direction: column;
   gap: 0;
-  /* Prend tout l'espace vertical dispo et scroll si trop d'items */
   flex: 1;
   min-height: 0;
-  /* indispensable pour que flex:1 + overflow fonctionne */
   overflow-y: auto;
   overflow-x: hidden;
-  /* Scrollbar discrète */
-
 }
 
 .all::-webkit-scrollbar {
-  width: 3px;
+  width: 8px;
 }
 
 .all::-webkit-scrollbar-track {
   background: transparent;
+  border-radius: 4px;
 }
 
 .all::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 217, 0.25);
-  border-radius: 999px;
+  background: transparent;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.all:hover::-webkit-scrollbar-thumb {
+  background: rgba(74, 222, 128, 0.6);
+  border-radius: 4px;
 }
 
 .all::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 255, 217, 0.45);
+  background: rgba(74, 222, 128, 0.8);
+  box-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
 }
 
 .mg-transparent-btn {
@@ -1259,14 +1276,26 @@
 
 /* Scrollbar for drawer */
 .mobile-drawer-nav::-webkit-scrollbar {
-  width: 4px;
+  width: 8px;
 }
 
 .mobile-drawer-nav::-webkit-scrollbar-track {
   background: transparent;
+  border-radius: 4px;
 }
 
 .mobile-drawer-nav::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 136, 0.2);
-  border-radius: 2px;
+  background: transparent;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.mobile-drawer-nav:hover::-webkit-scrollbar-thumb {
+  background: rgba(74, 222, 128, 0.6);
+  border-radius: 4px;
+}
+
+.mobile-drawer-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 222, 128, 0.8);
+  box-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
 }

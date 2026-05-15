@@ -8,7 +8,7 @@
   height: 32px;
   padding: 0;
   border: none;
-  background: rgba(255, 107, 107, 0.08);
+  background: rgba(244, 67, 54, 0.1);
   border-radius: 50%;
   box-shadow: none;
   display: flex;
@@ -16,11 +16,11 @@
   justify-content: center;
   cursor: pointer;
   z-index: 100;
-  transition: all 0.2s ease;
+  transition: var(--transition-smooth);
 }
 
 .mg-modal-close:hover {
-  background: rgba(255, 107, 107, 0.15);
+  background: rgba(244, 67, 54, 0.2);
   transform: scale(1.1);
 }
 
@@ -29,21 +29,29 @@
   height: 20px;
   object-fit: contain;
 }
+
 .mg-card {
-  background: var(--mg-glass-bg);
-  border: var(--mg-glass-border);
-  border-radius: 16px;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--backdrop-blur));
+  backdrop-filter: blur(var(--backdrop-blur));
+  border: var(--glass-border);
+  border-radius: var(--radius-lg);
   padding: 24px;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: var(--mg-shadow);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  margin: 20px;
+  transition: var(--transition-smooth);
+  box-shadow: var(--shadow-md);
 }
+
+.mg-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
 .mg-shell {
   display: flex;
   width: 100%;
   height: 100vh;
-  background: var(--mg-bg-body);
+  background: var(--bg-primary);
   overflow: hidden;
 }
 
@@ -54,24 +62,25 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* Synchronisé avec la transition de .mg-sidebar (0.3s ease) */
   transition: margin-left 0.3s ease;
 }
 
 /* Top Navigation Bar */
 .mg-topbar {
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 16px;
   padding: 16px 24px;
-  background: var(--mg-glass-bg);
-  border-bottom: 1px solid var(--mg-glass-border);
-  box-shadow: var(--mg-shadow);
+  margin: 20px;
+  width: calc(100% - 60px);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--backdrop-blur));
+  backdrop-filter: blur(var(--backdrop-blur));
+  border-bottom: var(--glass-border);
+  box-shadow: var(--shadow-md);
   flex-shrink: 0;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
 }
 
 .mg-top-navbar {
@@ -100,12 +109,12 @@
   align-items: center;
   gap: 12px;
   padding: 8px 16px;
-  background: rgba(29, 151, 108, 0.1);
-  border: 1px solid rgba(29, 151, 108, 0.2);
-  border-radius: 8px;
-  color: var(--mg-text);
+  background: var(--bg-hover);
+  border: var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-smooth);
   font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
@@ -113,9 +122,11 @@
 }
 
 .mg-profile-button:hover {
-  background: rgba(29, 151, 108, 0.15);
-  border-color: rgba(29, 151, 108, 0.4);
-  box-shadow: 0 4px 12px rgba(29, 151, 108, 0.15);
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
 }
 
 .mg-profile-button:active {
@@ -127,7 +138,8 @@
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--mg-primary);
+  border: 2px solid var(--accent-primary);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
 }
 
 /* Search Input */
@@ -135,24 +147,26 @@
   flex: 1;
   max-width: 400px;
   padding: 10px 16px;
-  background: rgba(26, 45, 26, 0.4);
-  border: 1px solid rgba(29, 151, 108, 0.2);
-  border-radius: 8px;
-  color: var(--mg-text);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--backdrop-blur));
+  backdrop-filter: blur(var(--backdrop-blur));
+  border: var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
   font-family: inherit;
   font-size: 13px;
-  transition: all 0.3s ease;
+  transition: var(--transition-smooth);
 }
 
 .mg-search::placeholder {
-  color: var(--mg-text-muted);
+  color: var(--text-muted);
 }
 
 .mg-search:focus {
   outline: none;
-  background: rgba(26, 45, 26, 0.6);
-  border-color: rgba(29, 151, 108, 0.5);
-  box-shadow: 0 0 0 3px rgba(29, 151, 108, 0.1);
+  background: var(--bg-card);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
 /* Icon Button */
@@ -164,24 +178,26 @@
   height: 40px;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 8px;
-  color: var(--mg-text-muted);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
   cursor: pointer;
   font-size: 1rem;
-  transition: all 0.3s ease;
+  transition: var(--transition-smooth);
   font-family: inherit;
 }
 
 .mg-icon-btn:hover {
-  background: rgba(29, 151, 108, 0.1);
-  color: var(--mg-text);
-  border-color: rgba(29, 151, 108, 0.2);
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-light);
+  transform: translateY(-1px);
 }
 
 .mg-icon-btn.active {
-  background: rgba(29, 151, 108, 0.15);
-  color: var(--mg-primary-light);
-  border-color: var(--mg-primary);
+  background: var(--bg-hover);
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Simple Button */
@@ -831,15 +847,23 @@
 
 .mg-panel::-webkit-scrollbar-track {
   background: transparent;
+  border-radius: 4px;
 }
 
 .mg-panel::-webkit-scrollbar-thumb {
-  background: rgba(29, 151, 108, 0.2);
+  background: transparent;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.mg-panel:hover::-webkit-scrollbar-thumb {
+  background: rgba(74, 222, 128, 0.6);
   border-radius: 4px;
 }
 
 .mg-panel::-webkit-scrollbar-thumb:hover {
-  background: rgba(29, 151, 108, 0.4);
+  background: rgba(74, 222, 128, 0.8);
+  box-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
 }
 
 /* Tab Buttons */
@@ -984,16 +1008,28 @@
 }
 
 .profile-products-scroll::-webkit-scrollbar {
-  height: 6px;
+  height: 8px;
 }
 
 .profile-products-scroll::-webkit-scrollbar-track {
   background: transparent;
+  border-radius: 4px;
 }
 
 .profile-products-scroll::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 136, 0.2);
-  border-radius: 3px;
+  background: transparent;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.profile-products-scroll:hover::-webkit-scrollbar-thumb {
+  background: rgba(74, 222, 128, 0.6);
+  border-radius: 4px;
+}
+
+.profile-products-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 222, 128, 0.8);
+  box-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
 }
 
 .profile-product-card {
@@ -1177,21 +1213,28 @@
 }
 
 .modal-body::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .modal-body::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.04);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .modal-body::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 136, 0.2);
-  border-radius: 3px;
+  background: transparent;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.modal-body:hover::-webkit-scrollbar-thumb {
+  background: rgba(74, 222, 128, 0.6);
+  border-radius: 4px;
 }
 
 .modal-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 255, 136, 0.4);
+  background: rgba(74, 222, 128, 0.8);
+  box-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
 }
 
 .modal-close {

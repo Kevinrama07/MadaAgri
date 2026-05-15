@@ -52,20 +52,28 @@
 }
 
 .modal-details::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .modal-details::-webkit-scrollbar-track {
   background: transparent;
+  border-radius: 4px;
 }
 
 .modal-details::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 136, 0.2);
-  border-radius: 3px;
+  background: transparent;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.modal-details:hover::-webkit-scrollbar-thumb {
+  background: rgba(74, 222, 128, 0.6);
+  border-radius: 4px;
 }
 
 .modal-details::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 255, 136, 0.3);
+  background: rgba(74, 222, 128, 0.8);
+  box-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
 }
 
 .modal-close-btn {

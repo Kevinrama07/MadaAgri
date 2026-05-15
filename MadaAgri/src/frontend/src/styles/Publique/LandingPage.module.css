@@ -11,18 +11,14 @@ html {
   scroll-behavior: smooth;
 }
 
-body {
+.landing-page {
+  width: 100%;
+  overflow-x: hidden;
   background: var(--bg-dark);
   color: var(--text-light);
   font-family: var(--font-body);
   line-height: 1.6;
   overflow-x: hidden;
-}
-
-.landing-page {
-  width: 100%;
-  overflow-x: hidden;
-  background: transparent;
 }
 
 ::-webkit-scrollbar {

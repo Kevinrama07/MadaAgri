@@ -1,0 +1,100 @@
+.menu {
+  position: fixed;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  z-index: 2000;
+  min-width: 200px;
+  animation: menuSlideIn 0.2s ease;
+}
+
+@keyframes menuSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.quickReactions {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  justify-content: space-around;
+}
+
+.reactionBtn {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reactionBtn:hover {
+  background: #f3f4f6;
+  transform: scale(1.2);
+}
+
+.reactionBtn:active {
+  transform: scale(1.1);
+}
+
+.divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 8px 0;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #1f2937;
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+}
+
+.actionBtn:hover {
+  background: #f3f4f6;
+}
+
+.actionBtn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.actionBtn span {
+  flex: 1;
+}
+
+.actionBtn.danger {
+  color: #ef4444;
+}
+
+.actionBtn.danger:hover {
+  background: #fee2e2;
+}

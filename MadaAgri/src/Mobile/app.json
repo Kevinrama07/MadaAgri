@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "Mada Agri",
+    "slug": "madaagri-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/logo.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./src/assets/logo.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#2E7D32"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Permettez-nous d'accéder à vos photos pour votre profil",
+        "NSCameraUsageDescription": "Permettez-nous d'accéder à votre caméra pour prendre des photos"
+      },
+      "bundleIdentifier": "com.madaagri.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/logo.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "enableHermes": true,
+      "minSdkVersion": 23,
+      "targetSdkVersion": 34,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "CAMERA"
+      ],
+      "package": "com.madaagri.mobile",
+      "softwareKeyboardLayoutMode": "pan"
+    },
+    "web": {
+      "favicon": "./src/assets/logo.png"
+    },
+    "extra": {
+      "API_URL": "http://10.75.106.116:4000",
+      "SOCKET_URL": "http://10.75.106.116:4000",
+      "DEBUG_NETWORK": true,
+      "ENABLE_DARK_MODE": true,
+      "_comment": "Mise à jour via .env - ne pas modifier directement"
+    },
+    "owner": "madaagri",
+    "plugins": [
+      "expo-font"
+    ]
+  }
+}

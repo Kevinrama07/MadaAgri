@@ -1,0 +1,111 @@
+Les pages suivante manquent dans mon projet application mobile mais déjà existant dans frontend web
+Je veux les implémenter dans le mobile éxactement comme cans la version web
+Recherche (Agriculteur et client)
+InvitationsCollaborateurs (Agriculteur et client)
+
+AnalyseCulture(agriculteur seulement)
+Commande(agriculteur seulement)
+DetailsProduit(agriculteur seulement)
+Meteo(agriculteur seulement)
+ListeProduits(agriculteur seulement)
+AjouterProduit(agriculteur seulement)
+GestionProduits(agriculteur seulement)
+ModificationProduit(agriculteur seulement)
+OptimisationItineraire(agriculteur seulement)
+
+Panier(client seulement)
+
+
+
+Réorganise complètement la navigation mobile de Mada Agri pour obtenir une expérience moderne, fluide et professionnelle similaire à Facebook Lite, tout en intégrant toutes les fonctionnalités déjà présentes dans la version web.
+
+IMPORTANT :
+La bottom navigation actuelle est trop saturée.
+Ne pas ajouter toutes les pages directement dans la barre du bas.
+Créer une architecture mobile intelligente, claire et scalable.
+STRUCTURE PRINCIPALE :
+Bottom Navigation (5 onglets) :
+* Accueil
+* Invitations
+* Discussions
+* Notifications
+* Profil
+
+La navigation doit être :
+* moderne
+* minimaliste
+* fluide
+* légère
+* inspirée de Facebook Lite
+
+STYLE :
+* animations légères
+* transitions fluides
+* icônes modernes
+* barre fixe en bas
+* design responsive
+* excellente gestion des espaces
+* optimisée petits Android
+
+AJOUTER UN MENU SECONDAIRE :
+Créer un menu hiden qui est accessible depuis un bouton Chevron down ▾(/▴) près du bouton ☰
+Ce menu affichera les fonctionnalités secondaires horizontalement afin d’éviter de surcharger la bottom navigation.
+
+ORGANISATION DES MENUS SECONDAIRES :
+Marketplace (réservé aux clients)
+Mes Commandes (réservé aux clients)
+Meteo (pour les clients et agriculteurs)
+
+AnalyseCulture (réservé aux agriculteurs)
+OptimisationItineraire (réservé aux agriculteurs)
+GestionProduits (réservé aux agriculteurs)
+Commandes recues(réservé aux agriculteurs)
+
+Le dashboard doit utiliser :
+* cartes modernes
+* widgets
+* statistiques
+* accès rapides
+* sections organisées
+* design type Meta Business Suite
+
+🛒 Marketplace Client
+Dans Marketplace :
+* DetailsProduit
+* Panier
+* Favoris
+* recherche produits
+Le Panier doit être dans un bouton flottant moderne
+
+SYSTÈME DE RÔLES :
+Implémenter exactement les mêmes permissions que la version web :
+* certaines pages agriculteur uniquement
+* certaines pages client uniquement
+* masquer automatiquement les pages interdites
+* sécuriser la navigation selon le rôle utilisateur
+
+OBJECTIF FINAL :
+Le résultat doit donner l’impression d’une véritable application sociale agricole professionnelle internationale :
+
+* navigation propre
+* aucune surcharge visuelle
+* UX moderne
+* organisation intelligente
+* expérience similaire à Facebook Lite
+* architecture scalable et maintenable.
+=========================================================================================
+=========================================================================================
+=========================================================================================
+=========================================================================================
+Je vais te décrire le fonctionnementu système de suivi et d' ajout de collaborateur .
+
+A: un Utilisateur 
+B: un autre utilisateur
+
+Lorce que A clique sur le bouton 'Ajouter' , B recoit une invitation de collaboration . Puis B Accepte ou reffuse l'invitation . 
+Si accepté , ils deviendront collaborateurs et A reçoit une notification . 
+Si non , A recevra juste une notification de refus de collaboration .
+
+A peut suivre B , et B peut suivre A .
+Si A suit B , A devient bonné à B.
+Si B suit A en retour , A et B deviendront collaborateurs automatiquement.

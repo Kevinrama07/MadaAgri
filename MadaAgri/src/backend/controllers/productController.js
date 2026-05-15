@@ -1,7 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const db = require('../db');
 const logger = require('../utils/logger');
-const ApiError = require('../errors/ApiError');
+const { ApiError } = require('../errors/ApiError');
 
 class ProductController {
   static async createProduct(req, res, next) {

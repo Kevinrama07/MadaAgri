@@ -1,7 +1,7 @@
 import { useLoading } from '../contexts/LoadingContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
-import styles from './GlobalLoader.module.css';
+import styles from '../styles/ui/GlobalLoader.module.css';
 
 export const GlobalLoader = () => {
   const { isLoading, progress } = useLoading();

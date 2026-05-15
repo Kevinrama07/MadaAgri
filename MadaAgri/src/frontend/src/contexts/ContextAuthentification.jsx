@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useRef } from 'react';
-import { authApi } from '../lib/api';
+import { authApi, UserDeletedError } from '../lib/api';
 
 const ContextAuthentification = createContext(undefined);
 
@@ -43,10 +43,17 @@ export function AuthProvider({ children }) {
       } catch (err) {
         if (!cancelled && isMountedRef.current) {
           setUser(null);
+          
+          // Cas spécial: L'utilisateur a été supprimé de la base de données
+          if (err instanceof UserDeletedError) {
+            console.warn('[AuthProvider] 🗑️ Le compte utilisateur a été supprimé');
+            // Auto-logout l'utilisateur
+            authApi.signOut();
+            setError('Votre compte a été supprimé. Vous avez été déconnecté.');
+          }
           // Afficher une erreur seulement si ce n'est pas une erreur d'authentification
-          if (err.message !== 'Unauthorized' && !err.message.includes('401') && !err.message.includes('Unauthorized')) {
+          else if (err.message !== 'Unauthorized' && !err.message.includes('401') && !err.message.includes('Unauthorized')) {
             setError(err.message);
-          } else {
           }
         }
       } finally {

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
-import styles from './PageTransition.module.css';
+import styles from '../styles/ui/PageTransition.module.css';
 
 export const PageTransition = ({ 
   children, 

@@ -9,7 +9,7 @@ const config = {
   // Serveur
   server: {
     port: Number(process.env.PORT || 4000),
-    host: process.env.HOST || 'localhost',
+    host: process.env.HOST || '0.0.0.0',
   },
 
   // Base de données

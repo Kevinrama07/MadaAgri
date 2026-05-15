@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { dataApi } from '../../lib/api';
-import { FiSearch, FiUser, FiFileText, FiBox, FiFilter, FiX } from 'react-icons/fi';
+import { FiPackage, FiSearch, FiUser, FiFileText, FiBox, FiFilter, FiX } from 'react-icons/fi';
 import { SkeletonCard, SkeletonAvatar } from '../../components/Skeleton';
 import styles from '../../styles/Composants/Recherche.module.css'
 

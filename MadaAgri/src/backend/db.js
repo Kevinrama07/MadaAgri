@@ -10,10 +10,16 @@ const dbConfig = {
   user: process.env.MYSQL_USER || 'root',
   password: process.env.MYSQL_PASSWORD || '',
   database: process.env.MYSQL_DATABASE || 'madaagri',
+
+  // Pool + timeouts to prevent requests hanging (fixes 10s API timeouts)
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  connectTimeout: Number(process.env.MYSQL_CONNECT_TIMEOUT_MS || 5000), // ms
+  // acquireTimeout is not supported by current mysql2 version; keep pool from hanging via connectTimeout
+
 };
+
 
 logger.info('[DB Config]', { 
   host: dbConfig.host, 

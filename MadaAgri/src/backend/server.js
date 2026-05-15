@@ -2,6 +2,7 @@
 const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
+const os = require('os');
 require('dotenv').config();
 
 // Imports des configurations et utilitaires
@@ -15,23 +16,65 @@ const { helmetConfig, generalLimiter, readLimiter } = require('./middlewares/sec
 const { globalErrorHandler, asyncHandler } = require('./middlewares/errorHandler');
 const { requestLogger } = require('./middlewares/logging');
 
+// ============================================
+// 🔧 CONFIGURATION CORS AMÉLIORÉE
+// ============================================
+const getAllowedOrigins = () => {
+  const allowed = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
+    'http://localhost:3000',
+    'http://localhost:8081', // Expo development
+    'http://localhost:19000', // Expo Go
+    'http://localhost:19001', // Expo Go
+    process.env.CORS_ORIGIN,
+  ].filter(Boolean);
+
+  // Ajouter toutes les adresses IP locales pour Android
+  const interfaces = os.networkInterfaces();
+  Object.values(interfaces).forEach((iface) => {
+    iface.forEach((config) => {
+      if (config.family === 'IPv4' && !config.internal) {
+        allowed.push(`http://${config.address}:4000`);
+        allowed.push(`http://${config.address}:${process.env.PORT || 4000}`);
+      }
+    });
+  });
+
+  return allowed;
+};
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowed = getAllowedOrigins();
+    if (!origin || allowed.includes(origin)) {
+      callback(null, true);
+    } else {
+      logger.warn(`[CORS] Origin not allowed: ${origin}`);
+      callback(null, true); // Autoriser mais loguer
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  maxAge: 600,
+};
+
 // Initialiser Express
 const app = express();
 const server = http.createServer(app);
 
-// Configurer socket.io
+// Configurer socket.io avec CORS
 const io = socketIo(server, {
-  cors: {
-    origin: config.cors.origin,
-    methods: ['GET', 'POST'],
-    credentials: true,
-  },
+  cors: corsOptions,
 });
 
 // Middleware de sécurité
 app.use(helmetConfig);
 // CORS
-app.use(cors(config.cors));
+app.use(cors(corsOptions));
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
@@ -46,12 +89,37 @@ app.use((req, res, next) => {
   next();
 });
 
-// Route de santé
+// Route de santé - avec infos de debug
 app.get('/health', (req, res) => {
+  const interfaces = os.networkInterfaces();
+  const networkAddresses = [];
+  
+  Object.values(interfaces).forEach((iface) => {
+    iface.forEach((addr) => {
+      if (addr.family === 'IPv4' && !addr.internal) {
+        networkAddresses.push({
+          interface: addr.family,
+          address: addr.address,
+          url: `http://${addr.address}:${config.server.port}`,
+        });
+      }
+    });
+  });
+
   res.json({
     status: 'running',
     environment: config.env,
     timestamp: new Date(),
+    server: {
+      host: config.server.host,
+      port: config.server.port,
+      localhost: `http://localhost:${config.server.port}`,
+      androidEmulator: `http://10.0.2.2:${config.server.port}`,
+      networkAddresses,
+    },
+    cors: {
+      allowedOrigins: getAllowedOrigins(),
+    },
   });
 });
 
@@ -75,18 +143,59 @@ messageSocketService.init(io);
 const PORT = config.server.port;
 const HOST = config.server.host;
 
+// Fonction pour obtenir toutes les adresses IP locales
+const getNetworkInfo = () => {
+  const interfaces = os.networkInterfaces();
+  const addresses = [];
+  
+  Object.values(interfaces).forEach((iface) => {
+    iface.forEach((addr) => {
+      if (addr.family === 'IPv4' && !addr.internal) {
+        addresses.push(addr.address);
+      }
+    });
+  });
+  
+  return addresses;
+};
+
 const startServer = () => {
   server.listen(PORT, HOST, () => {
-    logger.info(`
-╔═════════════════════════════════════════════╗
-║       MadaAgri Backend Server Started       ║
-╠═════════════════════════════════════════════╣
-║  Environment: ${config.env.padEnd(30)}║
-║  Host: ${HOST.padEnd(36)} ║
-║  Port: ${PORT.toString().padEnd(36)} ║
-║  WebSocket: Active (Socket.io)              ║
-╚═════════════════════════════════════════════╝
-    `);
+    const networkAddresses = getNetworkInfo();
+    const androidEmulatorUrl = `http://10.0.2.2:${PORT}`;
+    
+    let serverLog = `
+╔════════════════════════════════════════════════════════════╗
+║       🌾 MadaAgri Backend Server Started 🌾                ║
+╠════════════════════════════════════════════════════════════╣
+║  Environment: ${config.env.padEnd(44)} ║
+║  Host: ${HOST.padEnd(49)}   ║
+║  Port: ${PORT.toString().padEnd(49)}   ║
+║  WebSocket: ✅ Active (Socket.io)                          ║
+╠════════════════════════════════════════════════════════════╣
+║  📱 URLS FOR MOBILE/CLIENT CONNECTIONS:                    ║
+║────────────────────────────────────────────────────────────║
+║  Android Emulator:${androidEmulatorUrl.padEnd(39)}  ║
+║  Localhost:http://localhost:${PORT.toString().padEnd(31)}║`;
+
+    networkAddresses.forEach((addr) => {
+      serverLog += `
+║  Network IP:        http://${addr}:${PORT.toString().padEnd(18)} ║`;
+    });
+
+    serverLog += `
+║────────────────────────────────────────────────────────────║
+║  Health Check: GET http://localhost:${PORT}/health${' '.repeat(12)}║
+╠════════════════════════════════════════════════════════════╣
+║  CORS Enabled for:                                         ║
+║  - Localhost & Network IPs                                 ║
+║  - Android Emulator (10.0.2.2)                             ║
+║  - Expo Go                                                 ║
+╚════════════════════════════════════════════════════════════╝
+    `;
+    
+    logger.info(serverLog);
+    logger.debug('Allowed CORS origins:', getAllowedOrigins());
   });
 
   // Gérer les erreurs de démarrage

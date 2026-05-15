@@ -5,7 +5,6 @@ import { FaFacebook, FaInstagram, FaGoogle } from 'react-icons/fa';
 import styles from '../../styles/Connection/FormulaireAuth.module.css';
 import { useAuth } from '../../contexts/ContextAuthentification';
 import ThemeToggle from '../../components/ThemeToggle';
-import { ThemeProvider } from '../../contexts/ThemeContext';
 
 export default function FormulaireAuth({ onBack }) {
   const { signIn, signUp } = useAuth();
@@ -74,19 +73,18 @@ export default function FormulaireAuth({ onBack }) {
     }
   };
   return (
-    <ThemeProvider>
-      <>
+    <>
+      <div className={clsx(styles['theme-toggle-container'])}>
         <ThemeToggle />
-        <button
-          type="button"
-          className={clsx(styles['back-home-btn'])}
-          onClick={onBack}
-          title="Retourner à l'accueil"
-        >
-          ← Retour
-        </button>
-        
-        {/* Mobile Tab Switcher */}
+      </div>
+      <button
+        type="button"
+        className={clsx(styles['back-home-btn'])}
+        onClick={onBack}
+        title="Retourner à l'accueil"
+      >
+        ← Retour
+      </button>
         <div className={clsx(styles['mobile-tab-switcher'])}>
           <button 
             type="button"
@@ -277,6 +275,5 @@ export default function FormulaireAuth({ onBack }) {
           </div>
         </div>
       </>
-    </ThemeProvider>
-  );
-}
+    );
+  }

@@ -11,8 +11,12 @@ class ReservationController {
       const user_id = req.user.id;
 
       // Validation
-      if (!product_id || quantity < 1) {
-        throw new ApiError('Données invalides', 400);
+      if (!product_id) {
+        throw new ApiError('Le champ \'product_id\' est requis', 400);
+      }
+
+      if (!quantity || !Number.isInteger(quantity) || quantity < 1) {
+        throw new ApiError('Le champ \'quantity\' doit être un entier positif', 400);
       }
 
       // Vérifier que le produit existe et est disponible

@@ -10,6 +10,15 @@ export function clearToken() {
   localStorage.removeItem('madaagri_token');
 }
 
+// Custom error class for deleted user account
+export class UserDeletedError extends Error {
+  constructor(message = 'Votre compte a été supprimé') {
+    super(message);
+    this.name = 'UserDeletedError';
+    this.statusCode = 404;
+  }
+}
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
 
 // Cache simple pour les requêtes utilisateurs
@@ -60,7 +69,10 @@ async function apiFetch(path, options = {}, retries = 0) {
   
   if (!response.ok) {
     const message = body && body.error ? body.error : `Erreur API ${response.status}`;
-    throw new Error(message);
+    const error = new Error(message);
+    error.statusCode = response.status;
+    error.path = path;
+    throw error;
   }
 
   return body;
@@ -121,6 +133,12 @@ export const authApi = {
         };
         return data.user;
       } catch (error) {
+        // Détecter si l'utilisateur a été supprimé (404 Not Found)
+        if (error.statusCode === 404 || error.message.includes('User not found')) {
+          console.error('[authApi.me] 🗑️ Utilisateur supprimé de la base de données');
+          const userDeletedError = new UserDeletedError();
+          throw userDeletedError;
+        }
         console.error('[authApi.me] ❌ Erreur lors du fetch:', error.message);
         throw error;
       } finally {
@@ -159,13 +177,13 @@ export const dataApi = {
   },
 
   async fetchRegions() {
-    const data = await apiFetch('/regions');
-    return data.regions;
+    const data = await apiFetch('/analysis/regions');
+    return data.regions || [];
   },
 
   async fetchCultures() {
-    const data = await apiFetch('/regions/cultures');
-    return data.cultures;
+    const data = await apiFetch('/analysis/cultures');
+    return data.cultures || [];
   },
 
   async fetchProducts() {
@@ -254,26 +272,101 @@ export const dataApi = {
     return data;
   },
 
-  async fetchMessages(conversationId) {
-    console.log('[api] fetchMessages debut:', conversationId);
-    const data = await apiFetch(`/messages?conversationId=${encodeURIComponent(conversationId)}`);
-    console.log('[api] fetchMessages result:', data);
-    return data.messages;
+  async fetchConversations() {
+    console.log('[api] fetchConversations debut');
+    const data = await apiFetch('/conversations');
+    console.log('[api] fetchConversations result:', data);
+    return data || [];
   },
 
-  async sendMessage(recipient_id, content) {
-    console.log('[api] sendMessage debut:', { recipient_id, content });
+  async fetchMessages(conversationId, offset = 0, limit = 50) {
+    console.log('[api] fetchMessages debut:', conversationId, 'offset:', offset, 'limit:', limit);
+    const data = await apiFetch(`/messages?conversationId=${encodeURIComponent(conversationId)}&limit=${limit}&offset=${offset}`);
+    console.log('[api] fetchMessages result:', data);
+    return data;
+  },
+
+  async sendMessage(recipient_id, content, attachment_url = null, attachment_type = null) {
+    console.log('[api] sendMessage debut:', { recipient_id, content, attachment_url, attachment_type });
     const data = await apiFetch('/messages', {
       method: 'POST',
-      body: JSON.stringify({ recipient_id, content })
+      body: JSON.stringify({ recipient_id, content, attachment_url, attachment_type })
     });
     console.log('[api] sendMessage result:', data);
     return data.message;
   },
 
+  async markMessageAsRead(messageId) {
+    console.log('[api] markMessageAsRead:', messageId);
+    const data = await apiFetch(`/messages/${encodeURIComponent(messageId)}/read`, {
+      method: 'PUT'
+    });
+    console.log('[api] markMessageAsRead result:', data);
+    return data;
+  },
+
+  async markConversationAsRead(conversationId) {
+    console.log('[api] markConversationAsRead:', conversationId);
+    // Marquer tous les messages non lus de la conversation
+    const messages = await this.fetchMessages(conversationId);
+    const unreadMessages = messages.filter(m => !m.is_read);
+    
+    await Promise.all(
+      unreadMessages.map(msg => this.markMessageAsRead(msg.id))
+    );
+    
+    return { success: true, markedCount: unreadMessages.length };
+  },
+
+  async deleteMessage(messageId) {
+    console.log('[api] deleteMessage:', messageId);
+    const data = await apiFetch(`/messages/${encodeURIComponent(messageId)}`, {
+      method: 'DELETE'
+    });
+    console.log('[api] deleteMessage result:', data);
+    return data;
+  },
+
+  async editMessage(messageId, content) {
+    console.log('[api] editMessage:', messageId, content);
+    const data = await apiFetch(`/messages/${encodeURIComponent(messageId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ content })
+    });
+    console.log('[api] editMessage result:', data);
+    return data;
+  },
+
+  async addReaction(messageId, emoji) {
+    console.log('[api] addReaction:', messageId, emoji);
+    const data = await apiFetch(`/messages/${encodeURIComponent(messageId)}/reactions`, {
+      method: 'POST',
+      body: JSON.stringify({ emoji })
+    });
+    console.log('[api] addReaction result:', data);
+    return data;
+  },
+
+  async removeReaction(messageId, emoji) {
+    console.log('[api] removeReaction:', messageId, emoji);
+    const data = await apiFetch(`/messages/${encodeURIComponent(messageId)}/reactions/${encodeURIComponent(emoji)}`, {
+      method: 'DELETE'
+    });
+    console.log('[api] removeReaction result:', data);
+    return data;
+  },
+
+  async getReactions(messageId) {
+    console.log('[api] getReactions:', messageId);
+    const data = await apiFetch(`/messages/${encodeURIComponent(messageId)}/reactions`);
+    console.log('[api] getReactions result:', data);
+    return data;
+  },
+
   async fetchRegionCultures(regionId) {
     const data = await apiFetch(`/analysis/region-cultures?regionId=${encodeURIComponent(regionId)}`);
-    return data.region_cultures;
+    console.log('[fetchRegionCultures] Response:', data);
+    return data.region_cultures || [];
   },
 
   async fetchDeliveries(farmerId) {
@@ -375,27 +468,39 @@ export const dataApi = {
     return data;
   },
 
-  async fetchNetworkSuggestions() {
-    const data = await apiFetch('/network/suggestions');
+  async fetchNetworkSuggestions(search = '') {
+    const query = search ? `?search=${encodeURIComponent(search)}` : '';
+    const data = await apiFetch(`/network/suggestions${query}`);
     return data.suggestions;
   },
 
-  async fetchFollowers(userId) {
-    const data = await apiFetch(`/network/followers/${encodeURIComponent(userId)}`);
+  async fetchFollowers(limit = 50, offset = 0) {
+    const data = await apiFetch(`/network/followers?limit=${limit}&offset=${offset}`);
     return data.followers;
   },
 
-  async fetchFollowing(userId) {
-    const data = await apiFetch(`/network/following/${encodeURIComponent(userId)}`);
+  async fetchFollowing(limit = 50, offset = 0) {
+    const data = await apiFetch(`/network/following?limit=${limit}&offset=${offset}`);
     return data.following;
   },
 
+  async fetchCollaborators(limit = 50, offset = 0) {
+    const data = await apiFetch(`/network/collaborators?limit=${limit}&offset=${offset}`);
+    return data.collaborators;
+  },
+
+  async fetchInvitationStatus(targetUserId) {
+    const data = await apiFetch(`/network/invitations/status/${encodeURIComponent(targetUserId)}`);
+    return data;
+  },
+
   async fetchFollowStatus(userId) {
-    const data = await apiFetch(`/network/follow/status/${encodeURIComponent(userId)}`);
+    const data = await apiFetch(`/network/follows/status/${encodeURIComponent(userId)}`);
     return data;
   },
 
   async sendCollaborationInvitation(recipientId, message) {
+
     const data = await apiFetch('/network/invitations/send', {
       method: 'POST',
       body: JSON.stringify({ recipientId, message })
@@ -427,6 +532,13 @@ export const dataApi = {
     return data;
   },
 
+  async cancelInvitation(invitationId) {
+    const data = await apiFetch(`/network/invitations/${encodeURIComponent(invitationId)}/cancel`, {
+      method: 'DELETE'
+    });
+    return data;
+  },
+
   async searchUsers(q) {
     const data = await apiFetch(`/users/search?q=${encodeURIComponent(q || '')}`);
     return data.users;
@@ -434,7 +546,8 @@ export const dataApi = {
 
   async fetchKnnCultures(regionId, k = 5) {
     const data = await apiFetch(`/analysis/knn-cultures?regionId=${encodeURIComponent(regionId)}&k=${encodeURIComponent(k)}`);
-    return data.recommendations;
+    console.log('[fetchKnnCultures] Response:', data);
+    return data.recommendations || [];
   },
 
   async fetchDijkstraRoute(startRegionId, endRegionId) {

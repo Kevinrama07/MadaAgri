@@ -1,27 +1,28 @@
 import { useState, useMemo } from 'react';
 import clsx from 'clsx';
-import { FiUser, FiTarget, FiMessageCircle, FiSearch, FiInbox } from 'react-icons/fi';
+import { FiUser, FiTarget, FiMessageCircle, FiSearch, FiInbox, FiCircle } from 'react-icons/fi';
 import styles from '../../styles/Messages/MessagerieStyles.module.css';
 
 export default function ChatSidebar({
-  users,
-  selectedUser,
-  onSelectUser,
+  conversations,
+  selectedConversation,
+  onSelectConversation,
   loading,
+  isConnected,
   onBack = null,
   className = ''
 }) {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredUsers = useMemo(() => {
-    if (!searchQuery.trim()) return users;
+  const filteredConversations = useMemo(() => {
+    if (!searchQuery.trim()) return conversations;
     const query = searchQuery.toLowerCase();
-    return users.filter(
-      (u) =>
-        u.display_name?.toLowerCase().includes(query) ||
-        u.email?.toLowerCase().includes(query)
+    return conversations.filter(
+      (conv) =>
+        conv.other_user_name?.toLowerCase().includes(query) ||
+        conv.last_message?.toLowerCase().includes(query)
     );
-  }, [users, searchQuery]);
+  }, [conversations, searchQuery]);
 
   const getAvatarInitials = (name) => {
     return name
@@ -32,32 +33,44 @@ export default function ChatSidebar({
       .slice(0, 2);
   };
 
-  const getPreviewText = (user) => {
-    return user.role === 'farmer' ? (
-      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <FiTarget size={14} /> Agriculteur
-      </span>
-    ) : (
-      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <FiUser size={14} /> Client
-      </span>
-    );
+  const formatTimestamp = (dateString) => {
+    if (!dateString) return '';
+    
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'À l\'instant';
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays < 7) return `${diffDays}j`;
+
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
 
   return (
     <div className={clsx(styles['chat-sidebar'], className)}>
       <div className={clsx(styles['chat-sidebar-header'])}>
-        <h2 className={clsx(styles['chat-sidebar-title'])}>
-          <FiMessageCircle />
-          Messages
-        </h2>
+        <div className={clsx(styles['sidebar-title-row'])}>
+          <h2 className={clsx(styles['chat-sidebar-title'])}>
+            <FiMessageCircle />
+            Messages
+          </h2>
+          <div className={clsx(styles['connection-indicator'], { [styles['connected']]: isConnected })}>
+            <FiCircle size={8} />
+            {isConnected ? 'En ligne' : 'Hors ligne'}
+          </div>
+        </div>
 
         <div className={clsx(styles['chat-search-wrapper'])}>
           <FiSearch className={clsx(styles['chat-search-icon'])} />
           <input
             type="text"
             className={clsx(styles['chat-search'])}
-            placeholder="Rechercher..."
+            placeholder="Rechercher une conversation..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -65,51 +78,67 @@ export default function ChatSidebar({
       </div>
 
       <div className={clsx(styles['chat-conversations-list'])}>
-        {filteredUsers.length === 0 && !loading ? (
+        {filteredConversations.length === 0 && !loading ? (
           <div className={clsx(styles['empty-conversations'])}>
-            <FiInbox />
+            <FiInbox size={48} />
             <p>
-              {users.length === 0
-                ? 'Aucun utilisateur disponible'
+              {conversations.length === 0
+                ? 'Aucune conversation'
                 : 'Aucun résultat'}
             </p>
+            <span className={clsx(styles['empty-hint'])}>
+              {conversations.length === 0
+                ? 'Vos conversations apparaîtront ici'
+                : 'Essayez un autre terme de recherche'}
+            </span>
           </div>
         ) : (
-          filteredUsers.map((user) => (
+          filteredConversations.map((conv) => (
             <button
-              key={user.id}
-              onClick={() => onSelectUser(user)}
-              className={clsx(styles['conversation-item'], { [styles['active']]: selectedUser?.id === user.id })}
+              key={conv.id}
+              onClick={() => onSelectConversation(conv)}
+              className={clsx(styles['conversation-item'], { 
+                [styles['active']]: selectedConversation?.id === conv.id 
+              })}
             >
-              <div className={clsx(styles['conversation-avatar'])}>
-                {user.profile_image_url ? (
-                  <img
-                    src={user.profile_image_url}
-                    alt={user.display_name}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      borderRadius: '50%',
-                      objectFit: 'cover'
-                    }}
-                  />
-                ) : (
-                  getAvatarInitials(user.display_name || 'U')
+              <div className={clsx(styles['conversation-avatar-wrapper'])}>
+                <div className={clsx(styles['conversation-avatar'])}>
+                  {conv.other_user_image ? (
+                    <img
+                      src={conv.other_user_image}
+                      alt={conv.other_user_name}
+                      className={clsx(styles['avatar-img'])}
+                    />
+                  ) : (
+                    getAvatarInitials(conv.other_user_name || 'U')
+                  )}
+                </div>
+                {conv.other_user_online && (
+                  <div className={clsx(styles['online-badge'])} />
                 )}
               </div>
 
               <div className={clsx(styles['conversation-info'])}>
-                <div className={clsx(styles['conversation-name'])}>{user.display_name}</div>
-                <div className={clsx(styles['conversation-preview'])}>
-                  {getPreviewText(user)}
+                <div className={clsx(styles['conversation-header'])}>
+                  <div className={clsx(styles['conversation-name'])}>
+                    {conv.other_user_name}
+                  </div>
+                  <div className={clsx(styles['conversation-time'])}>
+                    {formatTimestamp(conv.last_message_at)}
+                  </div>
                 </div>
-              </div>
-
-              <div className={clsx(styles['conversation-time'])}>
-                {new Date().toLocaleTimeString('fr-FR', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                <div className={clsx(styles['conversation-footer'])}>
+                  <div className={clsx(styles['conversation-preview'], {
+                    [styles['unread']]: conv.unread_count > 0
+                  })}>
+                    {conv.last_message || 'Aucun message'}
+                  </div>
+                  {conv.unread_count > 0 && (
+                    <div className={clsx(styles['unread-badge'])}>
+                      {conv.unread_count > 9 ? '9+' : conv.unread_count}
+                    </div>
+                  )}
+                </div>
               </div>
             </button>
           ))

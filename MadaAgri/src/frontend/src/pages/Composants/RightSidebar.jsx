@@ -1,175 +1,185 @@
-import { useState, useEffect, useRef } from 'react';
-import { FiTarget } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { FiSearch, FiCheck, FiX, FiUserPlus } from 'react-icons/fi';
 import clsx from 'clsx';
-import { SkeletonCard, SkeletonAvatar } from '../../components/Skeleton';
 import { useAuth } from '../../contexts/ContextAuthentification';
 import { dataApi } from '../../lib/api';
-import { useSlideInRight } from '../../lib/animations';
-import SuggestionCard from './SuggestionCard';
 import styles from '../../styles/Composants/RightSidebar.module.css';
 
 export default function RightSidebar({ onUserProfileClick }) {
   const { user } = useAuth();
-  const sidebarRef = useSlideInRight(0.6, 0.2);
-  const [suggestedUsers, setSuggestedUsers] = useState([]);
-  const [allPosts, setAllPosts] = useState([]);
-  const [userStats, setUserStats] = useState({
-    followers_count: user?.followers_count || 0,
-    following_count: user?.following_count || 0,
-    posts_count: 0
-  });
+  const [invitations, setInvitations] = useState([]);
+  const [collaborators, setCollaborators] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const debounceTimerRef = useRef(null);
 
   useEffect(() => {
-    // Debounce les appels fetch pour éviter les requêtes trop fréquentes
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
+    if (user?.id) {
+      fetchData();
     }
-
-    debounceTimerRef.current = setTimeout(() => {
-      fetchSuggestions();
-      fetchAllPostsAndCalculateStats();
-    }, 500); // Attendre 500ms avant d'appeler
-
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
   }, [user?.id]);
 
-  async function fetchSuggestions() {
+  async function fetchData() {
     setLoading(true);
     try {
-      // Récupérer les vrais utilisateurs de la base de données
-      const users = await dataApi.fetchUsers();
+      const receivedInvitations = await dataApi.fetchReceivedInvitations();
+      setInvitations(receivedInvitations || []);
+
+      // Charger followers et following pour calculer les collaborateurs (suivi mutuel)
+      const [followersData, followingData] = await Promise.all([
+        dataApi.fetchFollowers(user.id),
+        dataApi.fetchFollowing(user.id)
+      ]);
       
-      // Filtrer pour éviter l'utilisateur courant
-      const suggestions = users
-        .filter(u => u.id !== user?.id)
-        .slice(0, 5); // Limiter à 5 suggestions
+      // Collaborateurs = ceux qui me suivent ET que je suis (suivi mutuel)
+      const followerIds = new Set(followersData.map(f => f.follower_id));
+      const mutualFollows = followingData.filter(f => followerIds.has(f.followee_id));
       
-      setSuggestedUsers(suggestions);
-    } catch (e) {
-      console.error('Erreur fetch utilisateurs:', e);
-      // Si l'API échoue (y compris 429), afficher vide mais continuer
-      // Le retry automatique gerera les 429
-      setSuggestedUsers([]);
+      console.log('[RightSidebar] Followers:', followersData.length, 'Following:', followingData.length, 'Collaborators (mutual):', mutualFollows.length);
+      setCollaborators(mutualFollows);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setInvitations([]);
+      setCollaborators([]);
     } finally {
       setLoading(false);
     }
   }
 
-  async function fetchAllPostsAndCalculateStats() {
-    if (!user?.id) return;
-    
+  const handleAcceptInvitation = async (invitationId) => {
     try {
-      // Récupérer tous les posts
-      const posts = await dataApi.fetchPosts({});
-      setAllPosts(posts);
-      
-      // Compter les posts de l'utilisateur courant
-      const userPostsCount = posts.filter(post => post.user_id === user.id).length;
-      
-      // Utiliser les données du user object si elles existent, sinon 0
-      setUserStats({
-        followers_count: user?.followers_count || 0,
-        following_count: user?.following_count || 0,
-        posts_count: userPostsCount
-      });
-    } catch (e) {
-      console.error('Erreur fetch posts:', e);
-      // Valeurs par défaut si erreur
-      setUserStats({
-        followers_count: user?.followers_count || 0,
-        following_count: user?.following_count || 0,
-        posts_count: 0
-      });
+      await dataApi.acceptInvitation(invitationId);
+      setInvitations(invitations.filter(inv => inv.id !== invitationId));
+      // Recharger les collaborateurs après acceptation
+      await fetchData();
+    } catch (error) {
+      console.error('Error accepting invitation:', error);
     }
-  }
+  };
+
+  const handleRejectInvitation = async (invitationId) => {
+    try {
+      await dataApi.declineInvitation(invitationId);
+      setInvitations(invitations.filter(inv => inv.id !== invitationId));
+    } catch (error) {
+      console.error('Error rejecting invitation:', error);
+    }
+  };
+
+  const filteredCollaborators = collaborators.filter(collab =>
+    collab.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    collab.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <aside className={clsx(styles['right-sidebar'])} ref={sidebarRef}>
-      {user && (
+    <aside className={clsx(styles['right-sidebar'])}>
+      {invitations.length > 0 && (
         <div className={clsx(styles['sidebar-section'])}>
-          <div className={clsx(styles['profile-card'])}>
-            <img
-              src={user.profile_image_url || '/src/images/avatar.gif'}
-              alt={user.display_name}
-              className={clsx(styles['profile-card-avatar'])}
-            />
-
-            <h3 className={clsx(styles['profile-card-name'])}>{user.display_name || user.email}</h3>
-
-            <div className={clsx(styles['profile-card-stats'])}>
-              <div className={clsx(styles['stat'])}>
-                <strong>{userStats.followers_count || 0}</strong>
-                <span>Abonnés</span>
-              </div>
-              <div className={clsx(styles['stat'])}>
-                <strong>{userStats.following_count || 0}</strong>
-                <span>Suivis</span>
-              </div>
-              <div className={clsx(styles['stat'])}>
-                <strong>{userStats.posts_count || 0}</strong>
-                <span>Posts</span>
-              </div>
-            </div>
-
-            <button className={clsx(styles['edit-profile-btn'])}>Éditer le profil</button>
+          <div className={clsx(styles['section-header'])}>  
+            <h3 className={clsx(styles['sidebar-title'])}>
+              <FiUserPlus className={clsx(styles['title-icon'])} />
+              Invitations
+            </h3>
+            <span className={clsx(styles['count-badge'])}>{invitations.length}</span>
           </div>
+
+          <div className={clsx(styles['invitations-list'])}>
+            {invitations.slice(0, 3).map((invitation) => (
+              <div key={invitation.id} className={clsx(styles['invitation-card'])}>
+                <div 
+                  className={clsx(styles['invitation-header'])}
+                  onClick={() => onUserProfileClick && onUserProfileClick(invitation.sender_id || invitation.sender?.id)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <img
+                    src={invitation.sender?.profile_image_url || invitation.profile_image_url || '/src/images/avatar.gif'}
+                    alt={invitation.sender?.display_name || invitation.display_name}
+                    className={clsx(styles['invitation-avatar'])}
+                  />
+                  <div className={clsx(styles['invitation-info'])}>
+                    <p className={clsx(styles['invitation-name'])}>
+                      {invitation.sender?.display_name || invitation.display_name || invitation.email || 'Utilisateur'}
+                    </p>
+                    {invitation.message && (
+                      <p className={clsx(styles['invitation-message'])}>
+                        {invitation.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className={clsx(styles['invitation-actions'])}>
+                  <button
+                    className={clsx(styles['btn-accept'])}
+                    onClick={() => handleAcceptInvitation(invitation.id)}
+                    title="Accepter"
+                  >
+                    <FiCheck />
+                    <span>Accepter</span>
+                  </button>
+                  <button
+                    className={clsx(styles['btn-reject'])}
+                    onClick={() => handleRejectInvitation(invitation.id)}
+                    title="Refuser"
+                  >
+                    <FiX />
+                    <span>Refuser</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {invitations.length > 3 && (
+            <button className={clsx(styles['see-more-btn'])}>
+              Voir toutes les invitations ({invitations.length})
+            </button>
+          )}
         </div>
       )}
 
       <div className={clsx(styles['sidebar-section'])}>
-        <h3 className={clsx(styles['sidebar-title'])}>Suggestions pour vous</h3>
+        <h3 className={clsx(styles['sidebar-title'])}>Collaborateurs ({collaborators.length})</h3>
 
-        {loading ? (
-          <div className={clsx(styles['suggestions-list'])}>
-            {Array.from({ length: 3 }).map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        ) : suggestedUsers.length === 0 ? (
-          <div className={clsx(styles['suggestions-empty'])}>
-            <p>Aucun utilisateur à suggérer</p>
-            <small style={{ fontSize: '11px', opacity: 0.7 }}>
-              Revenez plus tard <FiTarget style={{display: 'inline', marginLeft: '4px'}} size={12} />
-            </small>
-          </div>
-        ) : (
-          <div className={clsx(styles['suggestions-list'])}>
-            {suggestedUsers.map((suggestedUser) => (
-              <SuggestionCard
-                key={suggestedUser.id}
-                user={suggestedUser}
-                onFollow={(userId) => {
-                  console.log('Suivi:', userId);
-                }}
-                onUserProfileClick={onUserProfileClick}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className={clsx(styles['sidebar-section'])}>
-        <h4 className={clsx(styles['sidebar-info-title'])}>À propos de MadaAgri</h4>
-        <p className={clsx(styles['sidebar-info-text'])}>
-          Connectez-vous avec les agriculteurs de Madagascar, partagez vos cultures et développez votre réseau.
-        </p>
-
-        <div className={clsx(styles['sidebar-links'])}>
-          <a href="#" className={clsx(styles['sidebar-link'])}>À propos</a>
-          <a href="#" className={clsx(styles['sidebar-link'])}>Centre d'aide</a>
-          <a href="#" className={clsx(styles['sidebar-link'])}>Conditions</a>
-          <a href="#" className={clsx(styles['sidebar-link'])}>Confidentialité</a>
+        <div className={clsx(styles['search-wrapper'])}>
+          <FiSearch className={clsx(styles['search-icon'])} />
+          <input
+            type="text"
+            placeholder="Rechercher..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={clsx(styles['search-input'])}
+          />
         </div>
 
-        <p className={clsx(styles['sidebar-copyright'])}>
-          © 2026 MadaAgri. Tous droits réservés.
-        </p>
+        <div className={clsx(styles['collaborators-list'])}>
+          {loading ? (
+            <div className={clsx(styles['loading'])}>Chargement...</div>
+          ) : filteredCollaborators.length === 0 ? (
+            <div className={clsx(styles['empty-state'])}>
+              <p>{searchQuery ? 'Aucun résultat' : 'Aucun collaborateur'}</p>
+            </div>
+          ) : (
+            filteredCollaborators.map((collaborator) => (
+              <div
+                key={collaborator.id || collaborator.followee_id}
+                className={clsx(styles['collaborator-item'])}
+                onClick={() => {
+                  const userId = collaborator.followee_id || collaborator.id;
+                  console.log('[RightSidebar] Collaborator clicked:', userId, collaborator);
+                  onUserProfileClick && onUserProfileClick(userId);
+                }}
+              >
+                <img
+                  src={collaborator.profile_image_url || '/src/images/avatar.gif'}
+                  alt={collaborator.display_name}
+                  className={clsx(styles['collaborator-avatar'])}
+                />
+                <p className={clsx(styles['collaborator-name'])}>
+                  {collaborator.display_name || collaborator.email}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </aside>
   );

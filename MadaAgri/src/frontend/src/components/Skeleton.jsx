@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
-import styles from './Skeleton.module.css';
+import styles from '../styles/ui/Skeleton.module.css';
 
 export const SkeletonBox = ({ height = 20, width = '100%', className = '' }) => (
   <motion.div

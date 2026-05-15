@@ -1,0 +1,203 @@
+.filtersContainer {
+  margin-bottom: var(--space-6, 24px);
+}
+
+.filterToggle {
+  display: none;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  background: var(--mg-glass-bg);
+  border: 1px solid var(--mg-glass-border);
+  border-radius: var(--radius-lg, 12px);
+  color: var(--mg-text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.filterToggle:hover {
+  border-color: var(--mg-primary);
+  background: rgba(46, 125, 50, 0.05);
+}
+
+.filterBadge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--mg-primary);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.filtersPanel {
+  background: var(--mg-glass-bg);
+  border: 1px solid var(--mg-glass-border);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--space-5, 20px);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-glass);
+}
+
+.filterSection {
+  margin-bottom: var(--space-5, 20px);
+}
+
+.filterSection:last-child {
+  margin-bottom: 0;
+}
+
+.filterTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--mg-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 var(--space-3, 12px) 0;
+}
+
+.categoryChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+}
+
+.categoryChip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  background: var(--mg-card-bg);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-full, 999px);
+  color: var(--mg-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.categoryChip:hover {
+  border-color: var(--mg-primary);
+  background: rgba(46, 125, 50, 0.05);
+  transform: translateY(-2px);
+}
+
+.categoryChip.active {
+  background: var(--mg-primary);
+  color: white;
+  border-color: var(--mg-primary);
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+}
+
+.categoryIcon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.categoryLabel {
+  white-space: nowrap;
+}
+
+.categoryCount {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.sortOptions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+}
+
+.sortOption {
+  padding: var(--space-3, 12px);
+  background: var(--mg-card-bg);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-md, 8px);
+  color: var(--mg-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sortOption:hover {
+  border-color: var(--mg-primary);
+  background: rgba(46, 125, 50, 0.05);
+  transform: translateX(4px);
+}
+
+.sortOption.active {
+  background: rgba(46, 125, 50, 0.1);
+  border-color: var(--mg-primary);
+  color: var(--mg-primary);
+}
+
+.resetButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2, 8px);
+  width: 100%;
+  padding: var(--space-3, 12px);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md, 8px);
+  color: #dc2626;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: var(--space-4, 16px);
+}
+
+.resetButton:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .filterToggle {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .filtersPanel {
+    display: none;
+    margin-top: var(--space-3, 12px);
+  }
+
+  .filtersPanel.show {
+    display: block;
+    animation: slideDown 0.3s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .categoryChips {
+    justify-content: center;
+  }
+}

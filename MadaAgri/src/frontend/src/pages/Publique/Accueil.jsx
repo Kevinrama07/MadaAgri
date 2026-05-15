@@ -8,9 +8,7 @@ import FeaturesSection from './FeaturesSection';
 import CommunitySection from './CommunitySection';
 import StatsSection from './StatsSection';
 import CTASection from './CTASection';
-import ModernFooter from '../Composants/ModernFooter';
-import ThemeToggle from '../../components/ThemeToggle';
-import { ThemeProvider } from '../../contexts/ThemeContext';
+import ModernFooter from './ModernFooter';
 import styles from '../../styles/Publique/LandingPage.module.css';
 
 // Particle Field Component
@@ -114,20 +112,17 @@ export default function Accueil({ onConnect }) {
   };
 
   return (
-    <ThemeProvider>
-      <>
-        <ThemeToggle />
-        <BackgroundCanvas />
-        <div className={clsx(styles['landing-page'])} style={{ position: 'relative', zIndex: 1 }}>
-          <HeroSection onSignUp={handleSignUp} onLogin={handleLogin} />
-          <FeedPreview />
-          <FeaturesSection />
-          <CommunitySection />
-          <StatsSection />
-          <CTASection onSignUp={handleSignUp} onLogin={handleLogin} />
-          <ModernFooter />
-        </div>
-      </>
-    </ThemeProvider>
+    <>
+      <BackgroundCanvas />
+      <div className={clsx(styles['landing-page'])} style={{ position: 'relative', zIndex: 1 }}>
+        <HeroSection onSignUp={handleSignUp} onLogin={handleLogin} />
+        <FeedPreview />
+        <FeaturesSection />
+        <CommunitySection />
+        <StatsSection />
+        <CTASection onSignUp={handleSignUp} onLogin={handleLogin} />
+        <ModernFooter />
+      </div>
+    </>
   );
 }

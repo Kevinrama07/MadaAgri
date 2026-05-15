@@ -1,5 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap');
 
+/* Theme Toggle Container */
+.theme-toggle-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 999;
+}
+
 .hero-section {
   position: relative;
   min-height: 100vh;

@@ -1,12 +1,5 @@
-// 🔄 Utilitaire de Migration Progressive
-// Permet de switcher entre HeroSection et HeroSectionV2
-
 import { useEffect, useState } from 'react';
 
-/**
- * Hook pour détecter le support WebGL
- * @returns {boolean} true si WebGL est supporté
- */
 export function useWebGLSupport() {
   const [isSupported, setIsSupported] = useState(true);
 
@@ -23,10 +16,6 @@ export function useWebGLSupport() {
   return isSupported;
 }
 
-/**
- * Hook pour détecter la performance
- * @returns {'high' | 'medium' | 'low'} niveau de performance
- */
 export function usePerformanceLevel() {
   const [level, setLevel] = useState('medium');
 

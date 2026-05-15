@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import clsx from 'clsx';
-import { FiMapPin, FiNavigation, FiRepeat, FiClock } from 'react-icons/fi';
-import { MdClear, MdSearch, MdRoute } from 'react-icons/md';
+import { FiMapPin, FiClock } from 'react-icons/fi';
+import { MdClear, MdSearch, MdRoute, MdMyLocation, MdSwapVert } from 'react-icons/md';
 import { usePageLoading } from '../../hooks/usePageLoading';
 import { SkeletonBox } from '../../components/Skeleton';
 import { dataApi } from '../../lib/api';
@@ -30,6 +30,7 @@ export default function OptimisationItineraire() {
   const [endSuggestions, setEndSuggestions] = useState([]);
   const [showStartSuggestions, setShowStartSuggestions] = useState(false);
   const [showEndSuggestions, setShowEndSuggestions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   
   // États pour les résultats
   const [routeResult, setRouteResult] = useState(null);
@@ -38,8 +39,11 @@ export default function OptimisationItineraire() {
   // Références pour les inputs
   const startSearchRef = useRef(null);
   const endSearchRef = useRef(null);
+  
+  // Cache pour les recherches
+  const searchCacheRef = useRef({});
 
-  // Fonction de géocodage avec Nominatim
+  // Fonction de géocodage avec Nominatim et cache
   const searchLocations = useCallback(async (query, isStart = true) => {
     if (!query || query.length < 2) {
       if (isStart) {
@@ -50,10 +54,34 @@ export default function OptimisationItineraire() {
       return;
     }
 
+    // Vérifier le cache
+    const cacheKey = query.toLowerCase().trim();
+    if (searchCacheRef.current[cacheKey]) {
+      const cachedResults = searchCacheRef.current[cacheKey];
+      if (isStart) {
+        setStartSuggestions(cachedResults);
+      } else {
+        setEndSuggestions(cachedResults);
+      }
+      return;
+    }
+
+    setIsSearching(true);
+    
     try {
       const response = await fetch(
-        `${NOMINATIM_API}/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=mg`
+        `${NOMINATIM_API}/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=mg`,
+        {
+          headers: {
+            'Accept': 'application/json',
+          },
+        }
       );
+      
+      if (!response.ok) {
+        throw new Error('Erreur de recherche');
+      }
+      
       const results = await response.json();
       
       const suggestions = results.map((item) => ({
@@ -63,6 +91,9 @@ export default function OptimisationItineraire() {
         longitude: parseFloat(item.lon)
       }));
 
+      // Mettre en cache les résultats
+      searchCacheRef.current[cacheKey] = suggestions;
+
       if (isStart) {
         setStartSuggestions(suggestions);
       } else {
@@ -70,16 +101,23 @@ export default function OptimisationItineraire() {
       }
     } catch (err) {
       console.error('Erreur recherche Nominatim:', err);
+      if (isStart) {
+        setStartSuggestions([]);
+      } else {
+        setEndSuggestions([]);
+      }
+    } finally {
+      setIsSearching(false);
     }
   }, []);
 
-  // Debounce pour la recherche
+  // Debounce optimisé pour la recherche (150ms au lieu de 300ms)
   useEffect(() => {
     const timer = setTimeout(() => {
       if (startSearchQuery) {
         searchLocations(startSearchQuery, true);
       }
-    }, 300);
+    }, 150);
     return () => clearTimeout(timer);
   }, [startSearchQuery, searchLocations]);
 
@@ -88,7 +126,7 @@ export default function OptimisationItineraire() {
       if (endSearchQuery) {
         searchLocations(endSearchQuery, false);
       }
-    }, 300);
+    }, 150);
     return () => clearTimeout(timer);
   }, [endSearchQuery, searchLocations]);
 
@@ -325,7 +363,14 @@ export default function OptimisationItineraire() {
                   setStartSearchQuery(e.target.value);
                   setShowStartSuggestions(true);
                 }}
-                onFocus={() => setShowStartSuggestions(true)}
+                onFocus={() => {
+                  setShowStartSuggestions(true);
+                  if (startSearchQuery && startSuggestions.length > 0) {
+                    // Afficher immédiatement les suggestions en cache
+                    setShowStartSuggestions(true);
+                  }
+                }}
+                autoComplete="off"
               />
               {startLocation && (
                 <button
@@ -333,6 +378,7 @@ export default function OptimisationItineraire() {
                   onClick={() => {
                     setStartLocation(null);
                     setStartSearchQuery('');
+                    setStartSuggestions([]);
                   }}
                   type="button"
                   aria-label="Effacer le départ"
@@ -346,11 +392,14 @@ export default function OptimisationItineraire() {
               <div className={clsx(styles['suggestions-dropdown'])}>
                 {startSuggestions.map((suggestion, idx) => (
                   <div
-                    key={idx}
+                    key={`${suggestion.latitude}-${suggestion.longitude}-${idx}`}
                     className={clsx(styles['suggestion-item'])}
                     onClick={() => selectStartLocation(suggestion)}
                     role="button"
                     tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') selectStartLocation(suggestion);
+                    }}
                   >
                     <FiMapPin className={clsx(styles['icon'])} />
                     <div className={clsx(styles['suggestion-text'])}>
@@ -359,6 +408,15 @@ export default function OptimisationItineraire() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+            
+            {showStartSuggestions && isSearching && startSuggestions.length === 0 && startSearchQuery.length >= 2 && (
+              <div className={clsx(styles['suggestions-dropdown'])}>
+                <div className={clsx(styles['suggestion-loading'])}>
+                  <div className={clsx(styles['spinner-small'])} />
+                  <span>Recherche en cours...</span>
+                </div>
               </div>
             )}
           </div>
@@ -371,7 +429,7 @@ export default function OptimisationItineraire() {
               aria-label="Utiliser ma position"
               type="button"
             >
-              <FiNavigation />
+              <MdMyLocation />
             </button>
 
             <button
@@ -381,7 +439,7 @@ export default function OptimisationItineraire() {
               aria-label="Inverser"
               type="button"
             >
-              <FiRepeat />
+              <MdSwapVert />
             </button>
           </div>
 
@@ -396,7 +454,14 @@ export default function OptimisationItineraire() {
                   setEndSearchQuery(e.target.value);
                   setShowEndSuggestions(true);
                 }}
-                onFocus={() => setShowEndSuggestions(true)}
+                onFocus={() => {
+                  setShowEndSuggestions(true);
+                  if (endSearchQuery && endSuggestions.length > 0) {
+                    // Afficher immédiatement les suggestions en cache
+                    setShowEndSuggestions(true);
+                  }
+                }}
+                autoComplete="off"
               />
               {endLocation && (
                 <button
@@ -404,6 +469,7 @@ export default function OptimisationItineraire() {
                   onClick={() => {
                     setEndLocation(null);
                     setEndSearchQuery('');
+                    setEndSuggestions([]);
                   }}
                   type="button"
                   aria-label="Effacer la destination"
@@ -417,11 +483,14 @@ export default function OptimisationItineraire() {
               <div className={clsx(styles['suggestions-dropdown'])}>
                 {endSuggestions.map((suggestion, idx) => (
                   <div
-                    key={idx}
+                    key={`${suggestion.latitude}-${suggestion.longitude}-${idx}`}
                     className={clsx(styles['suggestion-item'])}
                     onClick={() => selectEndLocation(suggestion)}
                     role="button"
                     tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') selectEndLocation(suggestion);
+                    }}
                   >
                     <FiMapPin className={clsx(styles['icon'])} />
                     <div className={clsx(styles['suggestion-text'])}>
@@ -430,6 +499,15 @@ export default function OptimisationItineraire() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+            
+            {showEndSuggestions && isSearching && endSuggestions.length === 0 && endSearchQuery.length >= 2 && (
+              <div className={clsx(styles['suggestions-dropdown'])}>
+                <div className={clsx(styles['suggestion-loading'])}>
+                  <div className={clsx(styles['spinner-small'])} />
+                  <span>Recherche en cours...</span>
+                </div>
               </div>
             )}
           </div>

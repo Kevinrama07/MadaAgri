@@ -117,8 +117,7 @@
 
 .cta-button {
   background-color: transparent!important;
-  color:aliceblue!important;
-  top: -10px!important;
+  margin-top: 20px;
   padding: 18px 48px;
   border: none;
   border-radius: 50px;
@@ -128,7 +127,6 @@
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   font-family: 'Outfit', sans-serif;
   position: relative;
-  overflow: hidden;
 }
 
 .btn-primary-large {

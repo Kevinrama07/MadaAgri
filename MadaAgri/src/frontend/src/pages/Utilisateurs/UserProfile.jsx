@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FiArrowLeft, FiMail, FiPhone, FiUserPlus, FiUserCheck, FiUserX, FiUsers } from 'react-icons/fi';
+import { FiArrowLeft, FiMail, FiPhone, FiUserPlus, FiUserCheck, FiUserX, FiUsers, FiMapPin, FiEdit } from 'react-icons/fi';
 import clsx from 'clsx';
 import { usePageLoading } from '../../hooks/usePageLoading';
 import { SkeletonBox, SkeletonCard, SkeletonAvatar } from '../../components/Skeleton';
@@ -26,9 +26,13 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
   const [following, setFollowing] = useState([]);
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
+  const [showCollaboratorsModal, setShowCollaboratorsModal] = useState(false);
   const [invitationLoading, setInvitationLoading] = useState(false);
   const [invitationSent, setInvitationSent] = useState(false);
+  const [sentInvitationId, setSentInvitationId] = useState(null);
   const [isCollaborator, setIsCollaborator] = useState(false);
+  const [collaboratorsCount, setCollaboratorsCount] = useState(0);
+  const [collaborators, setCollaborators] = useState([]);
 
   useEffect(() => {
     if (!userId) {
@@ -47,36 +51,54 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
       setUserProfile(profileData.user);
       const posts = await dataApi.fetchUserPosts(userId);
       setUserPosts(posts || []);
+
+      // Load followers and following first
+      const [followersData, followingData] = await Promise.all([
+        dataApi.fetchFollowers(userId),
+        dataApi.fetchFollowing(userId)
+      ]);
+      setFollowers(followersData || []);
+      setFollowing(followingData || []);
+      
+      // Calculate collaborators (mutual follows)
+      const followerIds = new Set(followersData.map(f => f.follower_id));
+      const collaboratorsList = followingData.filter(f => followerIds.has(f.followee_id));
+      setCollaborators(collaboratorsList);
+      setCollaboratorsCount(collaboratorsList.length);
+
+      // Check follow status
       try {
         const followStatus = await dataApi.fetchFollowStatus(userId);
         setIsFollowing(followStatus.isFollowing || false);
-        setIsCollaborator((followStatus.isFollowing && followStatus.isFollowedBy) || false);
+        // Vérifier si on est collaborateurs (suivi mutuel)
+        const areCollaborators = followStatus.isFollowing && followStatus.isFollowedBy;
+        setIsCollaborator(areCollaborators);
+        console.log('[UserProfile] User ID:', userId);
+        console.log('[UserProfile] Follow status:', followStatus);
+        console.log('[UserProfile] isFollowing:', followStatus.isFollowing, 'isFollowedBy:', followStatus.isFollowedBy);
+        console.log('[UserProfile] Are collaborators:', areCollaborators);
       } catch (followErr) {
         console.warn('Erreur chargement suivi:', followErr);
         setIsFollowing(false);
         setIsCollaborator(false);
       }
 
-      // Check if an invitation was already sent to this user
+      // Check invitation status only if not already collaborators
       try {
-        const suggestions = await dataApi.fetchNetworkSuggestions();
-        const userSuggestion = suggestions.find(u => u.id === userId);
-        setInvitationSent(userSuggestion?.invitationSent || false);
+        const invitationStatus = await dataApi.fetchInvitationStatus(userId);
+        console.log('[UserProfile] Invitation status:', invitationStatus);
+        
+        if (invitationStatus?.status === 'pending') {
+          setInvitationSent(true);
+          setSentInvitationId(invitationStatus.id || null);
+        } else {
+          setInvitationSent(false);
+          setSentInvitationId(null);
+        }
       } catch (invErr) {
-        console.warn('Erreur chargement invitation:', invErr);
+        console.warn('Erreur chargement invitation status:', invErr);
         setInvitationSent(false);
-      }
-
-      // Load followers and following
-      try {
-        const [followersData, followingData] = await Promise.all([
-          dataApi.fetchFollowers(userId),
-          dataApi.fetchFollowing(userId)
-        ]);
-        setFollowers(followersData || []);
-        setFollowing(followingData || []);
-      } catch (followErr) {
-        console.warn('Erreur chargement followers/following:', followErr);
+        setSentInvitationId(null);
       }
     } catch (err) {
       console.error('Erreur chargement profil:', err);
@@ -96,10 +118,14 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
       } else {
         await dataApi.followUser(userId);
         setIsFollowing(true);
-        // Check if the other person also follows us
+        // Check if the other person also follows us to determine collaboration
         const followStatus = await dataApi.fetchFollowStatus(userId);
-        setIsCollaborator((followStatus.isFollowing && followStatus.isFollowedBy) || false);
+        const areCollaborators = followStatus.isFollowing && followStatus.isFollowedBy;
+        setIsCollaborator(areCollaborators);
+        console.log('[handleFollow] New follow status:', followStatus, 'Are collaborators:', areCollaborators);
       }
+      // Refresh the profile to update stats
+      await fetchUserProfile();
     } catch (err) {
       console.error('Erreur suivi:', err);
     } finally {
@@ -110,10 +136,29 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
   const handleSendInvitation = async () => {
     setInvitationLoading(true);
     try {
-      await dataApi.sendCollaborationInvitation(userId, '');
+      console.log('[handleSendInvitation] Envoi invitation à:', userId);
+      const result = await dataApi.sendCollaborationInvitation(userId, '');
+      console.log('[handleSendInvitation] Résultat:', result);
       setInvitationSent(true);
+      setSentInvitationId(result.id || null);
     } catch (err) {
       console.error('Erreur invitation:', err);
+    } finally {
+      setInvitationLoading(false);
+    }
+  };
+
+  const handleCancelInvitation = async () => {
+    if (!sentInvitationId) return;
+    setInvitationLoading(true);
+    try {
+      console.log('[handleCancelInvitation] Annulation invitation:', sentInvitationId);
+      await dataApi.cancelInvitation(sentInvitationId);
+      console.log('[handleCancelInvitation] Annulation réussie');
+      setInvitationSent(false);
+      setSentInvitationId(null);
+    } catch (err) {
+      console.error('Erreur annulation invitation:', err);
     } finally {
       setInvitationLoading(false);
     }
@@ -208,85 +253,134 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
 
           <div className={clsx(styles['profile-info'])}>
             <h1 className={clsx(styles['profile-name'])}>{userProfile.display_name}</h1>
+            
+            {/* Stats style Facebook - sous le nom */}
+            <div className={clsx(styles['profile-stats-compact'])}>
+              <span 
+                className={clsx(styles['stat-item'])} 
+                onClick={() => setShowFollowersModal(true)}
+                title="Voir les abonnés"
+              >
+                <strong>{followers.length}</strong> abonné{followers.length > 1 ? 's' : ''}
+              </span>
+              <span className={clsx(styles['stat-separator'])}>·</span>
+              <span 
+                className={clsx(styles['stat-item'])}
+                onClick={() => setShowFollowingModal(true)}
+                title="Voir les abonnements"
+              >
+                <strong>{following.length}</strong> suivi{following.length > 1 ? 's' : ''}
+              </span>
+              <span className={clsx(styles['stat-separator'])}>·</span>
+              <span 
+                className={clsx(styles['stat-item'])} 
+                onClick={() => setShowCollaboratorsModal(true)}
+                title="Voir les collaborateurs"
+              >
+                <strong>{isOwnProfile ? collaboratorsCount : (isCollaborator ? '1' : '0')}</strong> collaborateur{(isOwnProfile ? collaboratorsCount : (isCollaborator ? 1 : 0)) > 1 ? 's' : ''}
+              </span>
+            </div>
+
             <div className={clsx(styles['profile-role'])}>
               {roleDisplay[userProfile.role] || userProfile.role}
             </div>
 
+            {/* Bio */}
             {userProfile.bio && (
-              <p className={clsx(styles['profile-bio'])}>{userProfile.bio}</p>
+              <div className={clsx(styles['profile-section'])}>
+                <p className={clsx(styles['profile-bio'])}>{userProfile.bio}</p>
+              </div>
             )}
 
-            {/* Contacts Section */}
-            <div className={clsx(styles['profile-contacts'])}>
-              <div className={clsx(styles['contact-item'])}>
-                <FiMail size={18} />
+            {/* Localisation */}
+            {userProfile.location && (
+              <div className={clsx(styles['profile-section'])}>
+                <div className={clsx(styles['info-item'])}>
+                  <FiMapPin size={16} />
+                  <span>{userProfile.location}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Contact */}
+            <div className={clsx(styles['profile-section'])}>
+              <div className={clsx(styles['info-item'])}>
+                <FiMail size={16} />
                 <span>{userProfile.email || 'Non disponible'}</span>
               </div>
               {userProfile.phone && (
-                <div className={clsx(styles['contact-item'])}>
-                  <FiPhone size={18} />
+                <div className={clsx(styles['info-item'])}>
+                  <FiPhone size={16} />
                   <span>{userProfile.phone}</span>
                 </div>
               )}
             </div>
 
-            {/* Abonnés Section */}
-            <div className={clsx(styles['profile-followers-section'])}>
-              <div 
-                className={clsx(styles['followers-count'])} 
-                onClick={() => setShowFollowersModal(true)}
-                title="Voir les abonnés"
-              >
-                <FiUsers size={18} />
-                <span>{followers.length} abonnés</span>
-              </div>
-              <div 
-                className={clsx(styles['following-count'])}
-                onClick={() => setShowFollowingModal(true)}
-                title="Voir les abonnements"
-              >
-                <FiUsers size={18} />
-                <span>{following.length} abonnements</span>
-              </div>
-              {isCollaborator && (
-                <div className={clsx(styles['collaborator-badge'])} title="Collaboration mutuel (vous vous followez)">
-                  <FiUserCheck size={16} />
-                  Collaborateurs
-                </div>
-              )}
-            </div>
-
-            {!isOwnProfile && (
-              <div className={clsx(styles['profile-actions'])}>
+            {/* Boutons d'action */}
+            <div className={clsx(styles['profile-actions'])}>
+              {isOwnProfile ? (
+                // Boutons pour son propre profil
                 <button 
-                  className={clsx(styles['action-btn'], styles['add-btn'])} 
-                  onClick={handleSendInvitation}
-                  disabled={invitationLoading || invitationSent || isCollaborator}
-                  title={invitationSent ? 'Invitation déjà envoyée' : isCollaborator ? 'Vous êtes collaborateurs' : 'Envoyer une invitation'}
+                  className={clsx(styles['action-btn'], styles['edit-btn'])}
+                  onClick={() => window.location.href = '/profile/edit'}
+                  title="Modifier le profil"
                 >
-                  <FiUserPlus size={18} />
-                  <span>{invitationSent ? 'Invitation envoyée' : isCollaborator ? '✔️ Collaborateurs' : 'Ajouter'}</span>
+                  <FiEdit size={18} />
+                  <span>Modifier le profil</span>
                 </button>
-                <button
-                  className={clsx('action-btn', { 'following-btn': isFollowing, 'follow-btn': !isFollowing })}
-                  onClick={handleFollow}
-                  disabled={followLoading}
-                  title={isFollowing ? 'Arrêter de suivre' : 'Suivre'}
-                >
-                  {isFollowing ? (
-                    <>
+              ) : (
+                // Boutons pour le profil d'un autre utilisateur
+                <>
+                  {isCollaborator ? (
+                    <button 
+                      className={clsx(styles['action-btn'], styles['add-btn'])} 
+                      disabled
+                      title="Vous êtes collaborateurs (suivi mutuel)"
+                    >
                       <FiUserCheck size={18} />
-                      <span>{isCollaborator ? 'Ne plus suivre' : 'Suivi'}</span>
-                    </>
-                  ) : (
-                    <>
+                      <span>Collaborateur ✔️</span>
+                    </button>
+                  ) : invitationSent ? (
+                    <button 
+                      className={clsx(styles['action-btn'], styles['cancel-btn'])} 
+                      onClick={handleCancelInvitation}
+                      disabled={invitationLoading}
+                      title="Annuler la demande d'invitation"
+                    >
                       <FiUserX size={18} />
-                      <span>Suivre</span>
-                    </>
+                      <span>Annuler la demande</span>
+                    </button>
+                  ) : (
+                    <button 
+                      className={clsx(styles['action-btn'], styles['add-btn'])} 
+                      onClick={handleSendInvitation}
+                      disabled={invitationLoading}
+                      title="Envoyer une invitation de collaboration"
+                    >
+                      <FiUserPlus size={18} />
+                      <span>Ajouter</span>
+                    </button>
                   )}
-                </button>
-              </div>
-            )}
+                  <button
+                    className={clsx(styles['action-btn'], isFollowing ? styles['following-btn'] : styles['follow-btn'])}
+                    onClick={handleFollow}
+                    disabled={followLoading}
+                    title={isFollowing ? 'Ne plus suivre' : 'Suivre'}
+                  >
+                    {isFollowing ? (
+                      <>
+                        <FiUserCheck size={18} />
+                        <span>Ne plus suivre</span>
+                      </>
+                    ) : (
+                      <>
+                        <FiUserPlus size={18} />
+                        <span>Suivre</span>
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
           </div>
         </div>
 
@@ -359,11 +453,11 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
 
       {/* Modal Abonnements */}
       {showFollowingModal && (
-        <div className={clsx(styles['modal-overlay'])} onClick={() => setShowFollowingModal(true)}>
+        <div className={clsx(styles['modal-overlay'])} onClick={() => setShowFollowingModal(false)}>
           <div className={clsx(styles['modal-content'])} onClick={(e) => e.stopPropagation()}>
             <div className={clsx(styles['modal-header'])}>
               <h3>Abonnements ({following.length})</h3>
-              <button className={clsx(styles['modal-close'])} onClick={() => setShowFollowingModal(true)}>×</button>
+              <button className={clsx(styles['modal-close'])} onClick={() => setShowFollowingModal(false)}>×</button>
             </div>
             <div className={clsx(styles['modal-body'])}>
               {following.length === 0 ? (
@@ -375,7 +469,7 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
                       key={followed.followee_id} 
                       className={clsx(styles['user-list-item'])}
                       onClick={() => {
-                        setShowFollowingModal(true);
+                        setShowFollowingModal(false);
                         if (onUserProfileClick) onUserProfileClick(followed.followee_id);
                       }}
                     >
@@ -396,6 +490,55 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
           </div>
         </div>
       )}
+
+      {/* Modal Collaborateurs */}
+      {showCollaboratorsModal && (
+        <div className={clsx(styles['modal-overlay'])} onClick={() => setShowCollaboratorsModal(false)}>
+          <div className={clsx(styles['modal-content'])} onClick={(e) => e.stopPropagation()}>
+            <div className={clsx(styles['modal-header'])}>
+              <h3>Collaborateurs ({isOwnProfile ? collaborators.length : (isCollaborator ? 1 : 0)})</h3>
+              <button className={clsx(styles['modal-close'])} onClick={() => setShowCollaboratorsModal(false)}>×</button>
+            </div>
+            <div className={clsx(styles['modal-body'])}>
+              {isOwnProfile ? (
+                collaborators.length === 0 ? (
+                  <p className={clsx(styles['empty-message'])}>Aucun collaborateur pour le moment</p>
+                ) : (
+                  <ul className={clsx(styles['user-list'])}>
+                    {collaborators.map((collaborator) => (
+                      <li 
+                        key={collaborator.followee_id} 
+                        className={clsx(styles['user-list-item'])}
+                        onClick={() => {
+                          setShowCollaboratorsModal(false);
+                          if (onUserProfileClick) onUserProfileClick(collaborator.followee_id);
+                        }}
+                      >
+                        <img 
+                          src={collaborator.profile_image_url || '/src/images/avatar.gif'} 
+                          alt={collaborator.display_name}
+                          className={clsx(styles['user-list-avatar'])}
+                        />
+                        <div className={clsx(styles['user-list-info'])}>
+                          <span className={clsx(styles['user-list-name'])}>{collaborator.display_name}</span>
+                          <span className={clsx(styles['user-list-role'])}>{collaborator.role}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )
+              ) : (
+                isCollaborator ? (
+                  <p className={clsx(styles['empty-message'])}>Vous êtes collaborateurs</p>
+                ) : (
+                  <p className={clsx(styles['empty-message'])}>Aucun collaborateur</p>
+                )
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  </div>
   );
 }

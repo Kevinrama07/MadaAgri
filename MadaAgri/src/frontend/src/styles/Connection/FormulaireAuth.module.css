@@ -1,6 +1,14 @@
 @import url('https://fonts.googleapis.com/css?family=Poppins:300,400,600,700&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
+/* Theme Toggle Container */
+.theme-toggle-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 999;
+}
+
 :root {
   --primary-gradient: linear-gradient(135deg, #22c55e 0%, #06b6d4 50%, #3b82f6 100%);
   --glass-bg: rgba(3, 7, 18, 0.7);
@@ -307,7 +315,7 @@ select option {
 }
 
 .auth-container {
-  background: transparent;
+  background: linear-gradient(180deg, #030712c6 0%, rgba(0, 15, 40, 0.6) 100%);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.829), 0 0 60px #226bc569;
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
@@ -951,4 +959,4 @@ select option {
   background-color: rgba(239, 68, 68, 0.08);
   color: #dc2626;
   border-color: rgba(239, 68, 68, 0.3);
-}
+} 

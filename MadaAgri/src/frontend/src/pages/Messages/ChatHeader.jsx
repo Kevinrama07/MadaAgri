@@ -50,8 +50,14 @@ export default function ChatHeader({ contact, onBack = null }) {
         <div className={clsx(styles['chat-header-details'])}>
           <div className={clsx(styles['chat-header-name'])}>{contact.display_name}</div>
           <div className={clsx(styles['chat-header-status'])}>
-            <span className={clsx(styles['status-online'])}></span>
-            En ligne
+            {contact.online ? (
+              <>
+                <span className={clsx(styles['status-online'])}></span>
+                En ligne
+              </>
+            ) : (
+              'Hors ligne'
+            )}
           </div>
         </div>
       </div>

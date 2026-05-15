@@ -1,7 +1,7 @@
 import io from 'socket.io-client';
 import { getToken } from './api';
 
-const SOCKET_SERVER_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:4000';
+const SOCKET_SERVER_URL = import.meta.env.VITE_WS_URL || 'http://localhost:4000';
 
 class MessageSocketClient {
   constructor() {
@@ -18,6 +18,8 @@ class MessageSocketClient {
 
     return new Promise((resolve, reject) => {
       try {
+        console.log('[Socket] Connecting to:', SOCKET_SERVER_URL);
+        
         this.socket = io(SOCKET_SERVER_URL, {
           auth: {
             token: getToken(),
@@ -26,6 +28,7 @@ class MessageSocketClient {
           reconnectionDelay: 1000,
           reconnectionDelayMax: 5000,
           reconnectionAttempts: 5,
+          transports: ['websocket', 'polling'],
           extraHeaders: {
             Authorization: `Bearer ${getToken()}`,
           },
