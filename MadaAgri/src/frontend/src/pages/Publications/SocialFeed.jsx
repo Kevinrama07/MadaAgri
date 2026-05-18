@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import HomeFeed from './HomeFeed';
 import LeftSidebar from '../Composants/LeftSidebar';
 import RightSidebar from '../Composants/RightSidebar';
-import styles from '../../styles/Publications/SocialFeed.module.css';
+import styles from './SocialFeed.module.css';
 
 export default function SocialFeed({ onUserProfileClick }) {
   return (

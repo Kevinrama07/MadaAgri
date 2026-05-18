@@ -1,98 +1,20 @@
-import { useState, useEffect } from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import './App.css';
-import Accueil from './pages/Publique/Accueil';
-import styles from './styles/Publique/Accueil.module.css';
-import FormulaireAuth from './pages/Connection/FormulaireAuth';
-import TableauDeBord from './pages/Composants/TableauDeBord';
-import { AuthProvider, useAuth } from './contexts/ContextAuthentification';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/ContextAuthentification';
 import { LoadingProvider } from './contexts/LoadingContext';
-import GlobalLoader from './components/GlobalLoader';
-import { FiAlertTriangle } from "react-icons/fi";
-import { useGlobalModernScrollbar } from './hooks/useModernScrollbar';
-
-function AppContent() {
-  const [currentPage, setCurrentPage] = useState('home');
-  const { user, loading, error } = useAuth();
-
-  // DEBUG: Forcer un re-render
-  useEffect(() => {
-  }, [user, loading, error]);
-
-
-  if (loading && !error) {
-    return (
-      <div className="app-main">
-        <div className="app-container center-layout">
-          <p className="text-white">Chargement...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error && !error.includes('Unauthorized') && !error.includes('401')) {
-  return (
-    <div className="error-page">
-      <div className="error-card">
-        <div className="error-icon">
-          <FiAlertTriangle />
-        </div>
-
-        <h2>Une erreur est survenue</h2>
-        <p className="error-message">{error}</p>
-
-        <button
-          className="reload-btn"
-          onClick={() => window.location.reload()}
-        >
-          Recharger
-        </button>
-      </div>
-    </div>
-  );
-}
-
-  if (user) {
-    return <TableauDeBord />;
-  }
-  return (
-    <div className="app-main">
-      {currentPage === 'home' ? (
-        <Accueil onConnect={() => {
-          console.log('onConnect called in App, setting page to login');
-          setCurrentPage('login');
-        }} />
-      ) : (
-        <div className="app-container">
-          <div className="auth-wrapper">
-            <FormulaireAuth onBack={() => setCurrentPage('home')} />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+import { RouterProvider } from 'react-router-dom';
+import './styles/design-system.css';
+import { router } from './router/routes';
 
 function App() {
-  // Appliquer les scrollbars modernes globalement
-  useGlobalModernScrollbar(2000); // Cache après 2 secondes d'inactivité
-
-  useEffect(() => {
-    // Forcer le thème sombre par défaut
-    document.documentElement.setAttribute('data-theme', 'dark');
-  }, []);
-
   return (
-    <BrowserRouter>
+    <ThemeProvider>
       <AuthProvider>
         <LoadingProvider>
-          <GlobalLoader />
-          <AppContent />
+          <RouterProvider router={router} />
         </LoadingProvider>
       </AuthProvider>
-    </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
 export default App;
-

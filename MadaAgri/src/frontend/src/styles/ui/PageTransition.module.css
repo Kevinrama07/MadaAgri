@@ -1,20 +1,11 @@
-.page-transition {
+.pageTransition {
   width: 100%;
-  min-height: 100vh;
-  animation: pageLoad 0.3s ease-in-out;
+  height: 100%;
+  will-change: opacity, transform, filter;
 }
 
-@keyframes pageLoad {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .page-transition {
-    transition: all 0.3s ease-in-out;
+@media (prefers-reduced-motion: reduce) {
+  .pageTransition {
+    animation: none;
   }
 }

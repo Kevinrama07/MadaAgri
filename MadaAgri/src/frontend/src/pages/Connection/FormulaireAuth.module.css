@@ -1,0 +1,852 @@
+@import url('https://fonts.googleapis.com/css?family=Poppins:300,400,600,700&display=swap');
+
+/* ============================================
+   PAGE
+   ============================================ */
+.page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: var(--background);
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  padding: 20px;
+  animation: pageEnter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   BACKGROUND DECORATIONS
+   ============================================ */
+.bgDecor {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.bgOrb1,
+.bgOrb2,
+.bgOrb3 {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.35;
+  animation: orbFloat 14s ease-in-out infinite;
+}
+
+.bgOrb1 {
+  width: 450px;
+  height: 450px;
+  background: var(--primary);
+  top: -120px;
+  right: -100px;
+  animation-delay: 0s;
+}
+
+.bgOrb2 {
+  width: 350px;
+  height: 350px;
+  background: var(--secondary);
+  bottom: -80px;
+  left: -80px;
+  animation-delay: -5s;
+}
+
+.bgOrb3 {
+  width: 280px;
+  height: 280px;
+  background: var(--accent);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: -10s;
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(25px, -25px) scale(1.05); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+/* ============================================
+   BACK BUTTON
+   ============================================ */
+.backBtn {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  z-index: 100;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.backBtn:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ============================================
+   MOBILE SWIPE
+   ============================================ */
+.mobileSwipe {
+  display: none;
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: 20px;
+  z-index: 10;
+}
+
+.swipeTabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--background-secondary);
+  border-radius: 14px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+}
+
+.swipeTab {
+  flex: 1;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: inherit;
+}
+
+.swipeTabActive {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  transform: scale(1.02);
+}
+
+.swipeTrack {
+  position: relative;
+  height: 6px;
+  background: var(--background-secondary);
+  border-radius: 3px;
+  overflow: hidden;
+  cursor: grab;
+  border: 1px solid var(--border);
+}
+
+.swipeTrack:active {
+  cursor: grabbing;
+}
+
+.swipeIndicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 50%;
+  background: var(--primary-light);
+  border-radius: 3px;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.swipeThumb {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  width: 32px;
+  height: 32px;
+  background: var(--gradient);
+  border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  z-index: 2;
+}
+
+.swipeTrack:active .swipeThumb {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   MAIN CONTAINER
+   ============================================ */
+.container {
+  position: relative;
+  z-index: 10;
+  background: var(--surface);
+  border-radius: 28px;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.02),
+    0 12px 24px rgba(0, 0, 0, 0.06),
+    0 24px 48px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  width: 850px;
+  max-width: 100%;
+  min-height: 640px;
+  animation: containerEnter 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes containerEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+/* ============================================
+   FORM CONTAINERS
+   ============================================ */
+.formContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Sign Up (first form-container) */
+.container > .formContainer:nth-child(1) {
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Sign In (second form-container) */
+.container > .formContainer:nth-child(2) {
+  opacity: 1;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.rightPanelActive .formContainer:nth-child(1) {
+  transform: translateX(100%);
+  opacity: 1;
+  z-index: 5;
+  pointer-events: auto;
+  animation: show 0.6s;
+}
+
+.rightPanelActive .formContainer:nth-child(2) {
+  transform: translateX(100%);
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.signInForm {
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.signUpForm {
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes show {
+  0%, 49.99% {
+    opacity: 0;
+    z-index: 1;
+  }
+  50%, 100% {
+    opacity: 1;
+    z-index: 5;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slideOutLeft {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+}
+
+/* ============================================
+   FORM
+   ============================================ */
+form {
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 0 50px;
+  height: 100%;
+  text-align: center;
+  overflow-y: auto;
+}
+
+h1 {
+  font-weight: 700;
+  margin: 0;
+  color: var(--text);
+  font-size: 28px;
+  letter-spacing: -0.5px;
+}
+
+p {
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 20px;
+  letter-spacing: 0.3px;
+  margin: 16px 0 20px;
+  color: var(--text-secondary);
+}
+
+span {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+a {
+  color: var(--text-muted);
+  font-size: 14px;
+  text-decoration: none;
+  margin: 10px 0;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--primary);
+}
+
+/* ============================================
+   SOCIAL ICONS
+   ============================================ */
+.socialContainer {
+  margin: 14px 0;
+  display: flex;
+  gap: 12px;
+}
+
+.socialContainer a {
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  height: 46px;
+  width: 46px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: var(--text-secondary);
+  text-decoration: none;
+  background: var(--background-secondary);
+}
+
+.socialContainer a:hover {
+  background: var(--primary);
+  color: var(--text-inverse);
+  border-color: var(--primary);
+  transform: translateY(-4px) scale(1.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================
+   INPUTS
+   ============================================ */
+.input {
+  background: var(--background-secondary);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 18px;
+  margin: 6px 0;
+  width: 100%;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--primary-light);
+  transform: translateY(-2px);
+}
+
+.input:hover:not(:focus) {
+  border-color: var(--primary);
+  background: var(--background-secondary);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.input:focus::placeholder {
+  color: var(--primary);
+}
+
+/* ============================================
+   PASSWORD WRAPPER
+   ============================================ */
+.pwWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.pwWrapper .input {
+  padding-right: 48px;
+}
+
+.pwWrapper.hasMatchCheck .input {
+  padding-right: 76px;
+}
+
+.pwWrapper.hasMatchCheck .pwToggle {
+  right: 40px;
+}
+
+.pwToggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+  box-shadow: none;
+  z-index: 1;
+}
+
+.pwToggle:hover {
+  color: var(--primary);
+}
+
+.pwMatchIcon {
+  position: absolute;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.pwMatchIconOk {
+  color: #22c55e;
+}
+
+.pwMatchIconFail {
+  color: #ef4444;
+}
+
+.pwMatch {
+  border-color: #22c55e !important;
+  background: rgba(34, 197, 94, 0.05) !important;
+}
+
+.pwMismatch {
+  border-color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.05) !important;
+}
+
+/* ============================================
+    ROLE SELECTOR
+    ============================================ */
+.roleSelector {
+  width: 100%;
+  margin: 6px 0;
+}
+
+.roleLabel {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.roleOptions {
+  display: flex;
+  gap: 8px;
+}
+
+.roleBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--background-secondary);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.roleBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.roleBtnActive {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* ============================================
+    BUTTONS
+    ============================================ */
+.submitBtn {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  border: none;
+  background: var(--gradient);
+  color: var(--text-inverse);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 14px 48px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  margin-top: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  font-family: inherit;
+}
+
+.submitBtn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
+}
+
+.submitBtn:active:not(:disabled) {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.submitBtn:focus {
+  outline: none;
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   GHOST BUTTON
+   ============================================ */
+.ghost {
+  border-radius: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 14px 48px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  font-family: inherit;
+}
+
+.ghost:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  border-color: #ffffff;
+}
+
+.ghost:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.ghost:focus {
+  outline: none;
+}
+
+/* ============================================
+   ERROR
+   ============================================ */
+.errorMsg {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  margin: 6px 0;
+  width: 100%;
+  text-align: center;
+  font-family: inherit;
+}
+
+[data-theme-mode="dark"] .errorMsg {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* ============================================
+   OVERLAY CONTAINER
+   ============================================ */
+.overlayContainer {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+}
+
+.rightPanelActive .overlayContainer {
+  transform: translateX(-100%);
+}
+
+/* ============================================
+   OVERLAY
+   ============================================ */
+.overlay {
+  background: var(--gradient);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: 0 0;
+  color: #ffffff;
+  position: relative;
+  left: -100%;
+  height: 100%;
+  width: 200%;
+  transform: translateX(0);
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rightPanelActive .overlay {
+  transform: translateX(50%);
+}
+
+/* ============================================
+   OVERLAY PANELS
+   ============================================ */
+.overlayPanel {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 0 40px;
+  text-align: center;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  transform: translateX(0);
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
+}
+
+.overlayPanel h1 {
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.overlayPanel p {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.overlayLeft {
+  transform: translateX(-20%);
+}
+
+.rightPanelActive .overlayLeft {
+  transform: translateX(0);
+}
+
+.overlayRight {
+  right: 0;
+  transform: translateX(0);
+}
+
+.rightPanelActive .overlayRight {
+  transform: translateX(20%);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  .page {
+    padding: 16px;
+    padding-top: 80px;
+    align-items: center;
+  }
+
+  .mobileSwipe {
+    display: block;
+  }
+
+  .container {
+    min-height: 600px;
+    border-radius: 24px;
+  }
+
+  .overlayContainer {
+    display: none;
+  }
+
+  .formContainer {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+  }
+
+  .signInForm,
+  .signUpForm {
+    width: 100%;
+    left: 0;
+  }
+
+  .rightPanelActive .signInForm {
+    transform: translateX(0);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .rightPanelActive .signUpForm {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .signUpForm {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  form {
+    padding: 0 32px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 12px;
+    padding-top: 76px;
+  }
+
+  .backBtn {
+    top: 16px;
+    left: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .container {
+    min-height: 460px;
+    border-radius: 20px;
+  }
+
+  form {
+    padding: 0 24px;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+  .input {
+    padding: 12px 16px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+
+  .submitBtn,
+  .ghost {
+    padding: 12px 36px;
+    font-size: 12px;
+    border-radius: 12px;
+  }
+
+  .socialContainer {
+    gap: 10px;
+  }
+
+  .socialContainer a {
+    height: 42px;
+    width: 42px;
+    border-radius: 12px;
+  }
+}

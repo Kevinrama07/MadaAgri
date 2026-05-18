@@ -1,15 +1,15 @@
 /**
  * MarketplacePage - Marketplace des produits
+ * Note: This wrapper is deprecated. Use the standalone MarketplacePage instead.
  */
 
 import clsx from 'clsx';
-import Marketplace from '../../../Marketplace/Marketplace';
 import styles from '../../../../styles/Composants/TableauDeBord.module.css';
 
-export default function MarketplacePage({ onUserProfileClick }) {
+export default function MarketplacePage() {
   return (
     <section className={clsx(styles['mg-panel'])}>
-      <Marketplace onUserProfileClick={onUserProfileClick} />
+      <p>Marketplace - Utilisez la page standalone</p>
     </section>
   );
 }

@@ -39,13 +39,13 @@
 }
 
 .right-sidebar:hover::-webkit-scrollbar-thumb {
-  background: rgba(74, 222, 128, 0.6);
+  background: var(--primary);
   border-radius: 4px;
 }
 
 .right-sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(74, 222, 128, 0.8);
-  box-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
+  background: var(--primary-hover, var(--primary));
+  box-shadow: 0 0 4px var(--primary-light);
 }
 
 /* Section */
@@ -82,7 +82,7 @@
 
 .count-badge {
   background: var(--accent-primary);
-  color: white;
+  color: var(--text-inverse);
   font-size: 12px;
   font-weight: 600;
   padding: 2px 8px;
@@ -196,7 +196,7 @@
 
 .btn-accept {
   background: var(--accent-primary);
-  color: white;
+  color: var(--text-inverse);
 }
 
 .btn-accept:hover {
@@ -207,13 +207,13 @@
 
 .btn-reject {
   background: transparent;
-  color: var(--accent-danger);
-  border: 1px solid var(--accent-danger);
+  color: var(--error);
+  border: 1px solid var(--error);
 }
 
 .btn-reject:hover {
-  background: var(--accent-danger);
-  color: white;
+  background: var(--error);
+  color: var(--text-inverse);
   transform: translateY(-1px);
 }
 

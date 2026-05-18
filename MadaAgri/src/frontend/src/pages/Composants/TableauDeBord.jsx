@@ -487,7 +487,9 @@ export default function TableauDeBord() {
               >
                 <img src="/src/images/quitter.gif" alt="Quitter" />
               </p>
-              <FormulaireProduit onSuccess={handleProductCreated} />
+              <p style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                Utilisez la page <a href="/dashboard/create" style={{ color: 'var(--primary)' }}>Ajouter un produit</a>
+              </p>
             </div>
           </div>
         )}

@@ -94,7 +94,6 @@ router.get('/unread-count', authMiddleware, asyncHandler(async (req, res) => {
   res.json({ count: result[0].count });
 }));
 
-// GET /api/notifications/search - Rechercher
 router.get('/search', authMiddleware, asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const query = req.query.q || '';

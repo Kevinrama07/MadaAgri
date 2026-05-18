@@ -1,58 +1,44 @@
-import React from 'react';
-import clsx from 'clsx';
+import { forwardRef } from 'react';
 import styles from './Button.module.css';
 
-export const Button = ({
+export const Button = forwardRef(({
   children,
   variant = 'primary',
-  size = 'medium',
+  size = 'md',
   fullWidth = false,
-  disabled = false,
+  icon,
+  iconPosition = 'left',
   loading = false,
-  leftIcon,
-  rightIcon,
-  onClick,
-  type = 'button',
-  className,
+  disabled = false,
+  className = '',
   ...props
-}) => {
+}, ref) => {
+  const classes = [
+    styles.button,
+    styles[variant],
+    styles[size],
+    fullWidth ? styles.fullWidth : '',
+    loading ? styles.loading : '',
+    className,
+  ].filter(Boolean).join(' ');
+
   return (
     <button
-      type={type}
-      className={clsx(
-        styles.button,
-        styles[variant],
-        styles[size],
-        {
-          [styles.fullWidth]: fullWidth,
-          [styles.disabled]: disabled,
-          [styles.loading]: loading,
-        },
-        className
-      )}
+      ref={ref}
+      className={classes}
       disabled={disabled || loading}
-      onClick={onClick}
       {...props}
     >
-      {loading && (
-        <span className={styles.spinner}>
-          <svg className={styles.spinnerIcon} viewBox="0 0 24 24">
-            <circle
-              className={styles.spinnerCircle}
-              cx="12"
-              cy="12"
-              r="10"
-              fill="none"
-              strokeWidth="3"
-            />
-          </svg>
-        </span>
+      {loading && <span className={styles.spinner} />}
+      {!loading && icon && iconPosition === 'left' && (
+        <span className={styles.icon}>{icon}</span>
       )}
-      {!loading && leftIcon && <span className={styles.leftIcon}>{leftIcon}</span>}
-      <span className={styles.content}>{children}</span>
-      {!loading && rightIcon && <span className={styles.rightIcon}>{rightIcon}</span>}
+      <span>{children}</span>
+      {!loading && icon && iconPosition === 'right' && (
+        <span className={styles.icon}>{icon}</span>
+      )}
     </button>
   );
-};
+});
 
-export default Button;
+Button.displayName = 'Button';

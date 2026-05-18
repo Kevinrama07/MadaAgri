@@ -114,12 +114,83 @@ CREATE TABLE IF NOT EXISTS follows (
 
 CREATE TABLE IF NOT EXISTS notifications (
   id VARCHAR(36) PRIMARY KEY,
-  user_id VARCHAR(36) NOT NULL,
-  type VARCHAR(50) NOT NULL,
-  payload_json JSON,
-  is_read BOOLEAN DEFAULT FALSE,
+  user_id INT NOT NULL,
+  type ENUM('message', 'collaboration', 'follow', 'like', 'comment', 'mention', 'purchase', 'order', 'order_confirmed', 'order_cancelled', 'profile_view', 'system') NOT NULL,
+  actor_id INT,
+  actor_name VARCHAR(255),
+  actor_image VARCHAR(500),
+  content TEXT,
+  related_type VARCHAR(50),
+  related_id VARCHAR(36),
+  is_read BOOLEAN DEFAULT 0,
+  is_archived BOOLEAN DEFAULT 0,
+  priority ENUM('low', 'normal', 'high', 'urgent') DEFAULT 'normal',
+  read_at DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_user_id (user_id),
+  INDEX idx_user_read (user_id, is_read),
+  INDEX idx_user_archived (user_id, is_archived),
+  INDEX idx_created (created_at),
+  INDEX idx_type (type),
+  INDEX idx_actor (actor_id)
+);
+
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  user_id INT PRIMARY KEY,
+  email_enabled BOOLEAN DEFAULT 1,
+  push_enabled BOOLEAN DEFAULT 1,
+  sound_enabled BOOLEAN DEFAULT 1,
+  types_enabled JSON,
+  quiet_hours_start TIME,
+  quiet_hours_end TIME,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_user (user_id)
+);
+
+CREATE TABLE IF NOT EXISTS land_parcels (
+  id VARCHAR(36) PRIMARY KEY,
+  user_id INT NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  latitude DECIMAL(10, 8) NOT NULL,
+  longitude DECIMAL(11, 8) NOT NULL,
+  size_ha DECIMAL(10, 2),
+  country VARCHAR(100),
+  region VARCHAR(100),
+  district VARCHAR(100),
+  commune VARCHAR(100),
+  soil_type VARCHAR(100),
+  soil_ph DECIMAL(3, 1),
+  soil_organic_matter DECIMAL(5, 2),
+  climate_type VARCHAR(100),
+  annual_rainfall_mm INT,
+  avg_temperature DECIMAL(4, 1),
+  suitability_score DECIMAL(5, 2),
+  recommended_crops JSON,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_user_id (user_id),
+  INDEX idx_location (latitude, longitude),
+  INDEX idx_region (region)
+);
+
+CREATE TABLE IF NOT EXISTS crop_analysis_results (
+  id VARCHAR(36) PRIMARY KEY,
+  user_id INT NOT NULL,
+  parcel_id VARCHAR(36),
+  image_url VARCHAR(500),
+  detected_crop VARCHAR(100),
+  confidence_score DECIMAL(5, 2),
+  health_score DECIMAL(5, 2),
+  disease_detected VARCHAR(100),
+  disease_risk DECIMAL(5, 2),
+  recommendations JSON,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_user_id (user_id),
+  INDEX idx_parcel_id (parcel_id),
+  INDEX idx_crop (detected_crop)
 );
 
 CREATE TABLE IF NOT EXISTS messages (

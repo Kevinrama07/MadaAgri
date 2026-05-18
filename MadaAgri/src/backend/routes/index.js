@@ -11,6 +11,7 @@ const analysisRouter = require('./analysis');
 const uploadRouter = require('./upload');
 const healthRouter = require('./health');
 const optimizationRouter = require('./optimization');
+const parcelsRouter = require('./parcels');
 
 const logger = require('../utils/logger');
 const { authLimiter } = require('../middlewares/security');
@@ -80,6 +81,9 @@ function registerRoutes(app, uploadServices) {
 
   // Routes utilitaires
   app.use('/api/upload', uploadRouter);
+
+  // Routes parcelles agricoles
+  app.use('/api/parcels', parcelsRouter);
 
   // ========================
   // ROUTES 404 ET GESTION D'ERREURS

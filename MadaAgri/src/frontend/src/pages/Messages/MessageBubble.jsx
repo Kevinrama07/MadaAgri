@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import { FiCheck, FiCheckCircle, FiMoreVertical, FiEdit2, FiCopy, FiTrash2, FiX, FiSave, FiClock, FiAlertCircle, FiSmile } from 'react-icons/fi';
-import styles from '../../styles/Messages/MessagerieStyles.module.css';
+import styles from './MessagerieStyles.module.css';
 
 export default function MessageBubble({ message, currentUserId, onDelete, onEdit, onCopy, onReaction }) {
   const isSent = message.sender_id === currentUserId;

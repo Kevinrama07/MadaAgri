@@ -74,7 +74,8 @@
   width: 50px;
   height: 50px;
   border-radius: var(--radius-md);
-  color: white;
+  background: var(--primary);
+  color: var(--text-inverse);
   flex-shrink: 0;
 }
 
@@ -147,7 +148,7 @@
   width: 100%;
   padding: 10px;
   background: var(--accent-primary);
-  color: white;
+  color: var(--text-inverse);
   border: none;
   border-radius: var(--radius-md);
   font-size: 14px;

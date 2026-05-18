@@ -5,7 +5,7 @@ import { usePageLoading } from '../../hooks/usePageLoading';
 import { SkeletonTableRow, SkeletonTitle } from '../../components/Skeleton';
 import { dataApi } from '../../lib/api';
 import { useSlideInUp } from '../../lib/animations';
-import styles from '../../styles/Marketplace/Orders.module.css';
+import styles from './Orders.module.css';
 
 export default function Orders() {
   const { isLoading, startLoading, stopLoading, hasShownSkeletons, markSkeletonsShown } = usePageLoading();

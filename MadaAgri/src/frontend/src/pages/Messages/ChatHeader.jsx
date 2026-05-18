@@ -1,4 +1,4 @@
-import styles from '../../styles/Messages/MessagerieStyles.module.css';
+import styles from './MessagerieStyles.module.css';
 import clsx from 'clsx';
 import { FiArrowLeft, FiPhone, FiVideo, FiMoreVertical } from 'react-icons/fi';
 export default function ChatHeader({ contact, onBack = null }) {

@@ -40,7 +40,7 @@
 
         .filter-btn.active {
           background: var(--mg-primary);
-          color: white;
+          color: var(--text-inverse);
           border-color: var(--mg-primary);
         }
 
@@ -110,7 +110,7 @@
           display: flex;
           align-items: center;
           justify-content: center;
-          color: white;
+          color: var(--text-inverse);
           font-weight: 700;
           font-size: 1.5rem;
           margin-bottom: 0.5rem;

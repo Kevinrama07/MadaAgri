@@ -5,7 +5,7 @@ import { usePageLoading } from '../../hooks/usePageLoading';
 import { SkeletonTableRow, SkeletonTitle } from '../../components/Skeleton';
 import { dataApi } from '../../lib/api';
 import { useSlideInUp } from '../../lib/animations';
-import styles from '../../styles/Marketplace/ReceivedOrders.module.css';
+import styles from './ReceivedOrders.module.css';
 
 const TABS = {
   FEED: 'feed'

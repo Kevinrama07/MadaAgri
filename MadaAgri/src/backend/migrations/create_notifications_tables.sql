@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS notifications (
   id VARCHAR(36) PRIMARY KEY,
   user_id INT NOT NULL,
-  type ENUM('message', 'collaboration', 'follow', 'like', 'comment', 'mention', 'purchase', 'order', 'system') NOT NULL,
+  type ENUM('message', 'collaboration', 'follow', 'like', 'comment', 'mention', 'purchase', 'order', 'order_confirmed', 'order_cancelled', 'profile_view', 'system') NOT NULL,
   actor_id INT,
   actor_name VARCHAR(255),
   actor_image VARCHAR(500),

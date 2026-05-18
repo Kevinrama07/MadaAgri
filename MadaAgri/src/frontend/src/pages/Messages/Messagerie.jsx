@@ -10,7 +10,7 @@ import ChatSidebar from './ChatSidebar';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
-import styles from '../../styles/Messages/MessagerieStyles.module.css';
+import styles from './MessagerieStyles.module.css';
 
 export default function Messagerie() {
   const { user: currentUser } = useAuth();

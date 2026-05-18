@@ -237,6 +237,35 @@ class ReservationController {
 
       logger.info(`Réservations créées: ${reservations.map(r => r.id).join(', ')} pour le client ${client_id}`);
 
+      // Créer des notifications pour chaque agriculteur concerné
+      const farmerNotifs = new Map();
+      for (const item of items) {
+        const product_id = item.id || item.product_id;
+        const [products] = await db.query('SELECT farmer_id, title FROM products WHERE id = ?', [product_id]);
+        if (products.length > 0) {
+          const farmerId = products[0].farmer_id;
+          if (farmerId !== client_id) {
+            if (!farmerNotifs.has(farmerId)) {
+              farmerNotifs.set(farmerId, []);
+            }
+            farmerNotifs.get(farmerId).push(products[0].title);
+          }
+        }
+      }
+
+      const [clientRows] = await db.query('SELECT display_name, profile_image_url FROM users WHERE id = ?', [client_id]);
+      const client = clientRows[0];
+
+      for (const [farmerId, productTitles] of farmerNotifs) {
+        const notifId = uuidv4();
+        const content = `Nouvelle commande pour : ${productTitles.slice(0, 2).join(', ')}${productTitles.length > 2 ? '...' : ''}`;
+        await db.query(
+          `INSERT INTO notifications (id, user_id, type, actor_id, actor_name, actor_image, content, related_type, related_id, priority, created_at)
+           VALUES (?, ?, 'order', ?, ?, ?, ?, 'order', ?, 'high', NOW())`,
+          [notifId, farmerId, client_id, client?.display_name || 'Client', client?.profile_image_url || null, content, reservations[0]?.id]
+        );
+      }
+
       res.status(201).json({
         success: true,
         message: 'Réservations créées avec succès',
@@ -379,6 +408,16 @@ class ReservationController {
 
       logger.info(`Réservation ${id} confirmée par agriculteur ${farmer_id} - Stock décrémenté de ${reservation.quantity}`);
 
+      // Notification au client
+      const [farmerRows] = await db.query('SELECT display_name, profile_image_url FROM users WHERE id = ?', [farmer_id]);
+      const farmer = farmerRows[0];
+      const notifId = uuidv4();
+      await db.query(
+        `INSERT INTO notifications (id, user_id, type, actor_id, actor_name, actor_image, content, related_type, related_id, priority, created_at)
+         VALUES (?, ?, 'order_confirmed', ?, ?, ?, ?, 'order', ?, 'high', NOW())`,
+        [notifId, reservation.client_id, farmer_id, farmer?.display_name || 'Agriculteur', farmer?.profile_image_url || null, 'a confirmé votre commande', id]
+      );
+
       res.json({
         success: true,
         message: 'Réservation confirmée et stock décrémenté',
@@ -437,6 +476,18 @@ class ReservationController {
       ]);
 
       logger.info(`Réservation ${id} annulée/refusée (${cancelReason}) par ${user_id}`);
+
+      // Notification à l'autre partie
+      const notifyUserId = cancelledBy === 'farmer' ? reservation.client_id : reservation.farmer_id;
+      const actorId = user_id;
+      const [actorRows] = await db.query('SELECT display_name, profile_image_url FROM users WHERE id = ?', [actorId]);
+      const actor = actorRows[0];
+      const notifId = uuidv4();
+      await db.query(
+        `INSERT INTO notifications (id, user_id, type, actor_id, actor_name, actor_image, content, related_type, related_id, priority, created_at)
+         VALUES (?, ?, 'order_cancelled', ?, ?, ?, ?, 'order', ?, 'high', NOW())`,
+        [notifId, notifyUserId, actorId, actor?.display_name || 'Utilisateur', actor?.profile_image_url || null, `a ${cancelledBy === 'farmer' ? 'refusé' : 'annulé'} la commande`, id]
+      );
 
       res.json({
         success: true,

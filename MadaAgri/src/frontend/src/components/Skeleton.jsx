@@ -1,141 +1,77 @@
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
-import styles from '../styles/ui/Skeleton.module.css';
+import { useReducedMotion } from '../lib/motion';
+import styles from './Skeleton.module.css';
 
-export const SkeletonBox = ({ height = 20, width = '100%', className = '' }) => (
-  <motion.div
-    className={clsx('skeleton-box', className)}
-    style={{ height: `${height}px`, width }}
-    animate={{ 
-      opacity: [0.5, 1, 0.5],
-      scale: [1, 1.02, 1]
-    }}
-    transition={{ 
-      duration: 2, 
-      repeat: Infinity,
-      ease: "easeInOut"
-    }}
-  />
-);
+export const SkeletonBox = ({ height = 20, width = '100%', className = '', rounded = false }) => {
+  const prefersReducedMotion = useReducedMotion();
+
+  return (
+    <div
+      className={clsx('skeleton-box', styles.skeletonBox, { [styles.rounded]: rounded }, className)}
+      style={{ height: `${height}px`, width }}
+    >
+      {!prefersReducedMotion && <div className={styles.shimmer} />}
+    </div>
+  );
+};
 
 export const SkeletonLine = ({ width = '100%' }) => (
-  <SkeletonBox height={12} width={width} className={clsx(styles['skeleton-line'])} />
+  <SkeletonBox height={14} width={width} className={styles.skeletonLine} rounded />
 );
 
 export const SkeletonTitle = ({ width = '60%' }) => (
-  <SkeletonBox height={24} width={width} className={clsx(styles['skeleton-title'])} />
+  <SkeletonBox height={22} width={width} className={styles.skeletonTitle} rounded />
+);
+
+export const SkeletonHeading = ({ width = '40%' }) => (
+  <SkeletonBox height={28} width={width} className={styles.skeletonHeading} rounded />
 );
 
 export const SkeletonAvatar = ({ size = 48 }) => (
-  <motion.div
-    className={clsx(styles['skeleton-avatar'])}
-    style={{ width: `${size}px`, height: `${size}px` }}
-    animate={{ 
-      opacity: [0.5, 1, 0.5],
-      scale: [1, 1.05, 1]
-    }}
-    transition={{ 
-      duration: 2, 
-      repeat: Infinity,
-      ease: "easeInOut"
-    }}
-  />
+  <SkeletonBox height={size} width={size} className={styles.skeletonAvatar} rounded />
+);
+
+export const SkeletonCircle = ({ size = 24 }) => (
+  <SkeletonBox height={size} width={size} className={styles.skeletonCircle} rounded />
 );
 
 export const SkeletonCard = () => (
-  <motion.div 
-    className={clsx(styles['skeleton-card'])}
-    animate={{ 
-      y: [0, -4, 0],
-      boxShadow: [
-        '0 2px 8px rgba(0, 0, 0, 0.06)',
-        '0 8px 20px rgba(0, 0, 0, 0.12)',
-        '0 2px 8px rgba(0, 0, 0, 0.06)'
-      ]
-    }}
-    transition={{ 
-      duration: 2, 
-      repeat: Infinity,
-      ease: "easeInOut"
-    }}
-  >
-    <SkeletonBox height={200} width="100%" className={clsx(styles['skeleton-image'])} />
-    <div className={clsx(styles['skeleton-content'])}>
-      <SkeletonTitle width="80%" />
+  <div className={styles.skeletonCard}>
+    <SkeletonBox height={180} width="100%" className={styles.skeletonImage} />
+    <div className={styles.skeletonContent}>
+      <SkeletonTitle width="70%" />
       <SkeletonLine width="100%" />
-      <SkeletonLine width="60%" />
-      <SkeletonBox height={40} width="100%" className={clsx(styles['skeleton-button'])} />
+      <SkeletonLine width="85%" />
+      <div className={styles.skeletonCardFooter}>
+        <SkeletonBox height={40} width="100%" className={styles.skeletonButton} rounded />
+      </div>
     </div>
-  </motion.div>
+  </div>
 );
 
 export const SkeletonStat = () => (
-  <motion.div 
-    className={clsx(styles['skeleton-stat'])}
-    animate={{ 
-      y: [0, -3, 0],
-      boxShadow: [
-        '0 2px 8px rgba(0, 0, 0, 0.08)',
-        '0 6px 16px rgba(0, 0, 0, 0.12)',
-        '0 2px 8px rgba(0, 0, 0, 0.08)'
-      ]
-    }}
-    transition={{ 
-      duration: 2, 
-      repeat: Infinity,
-      ease: "easeInOut"
-    }}
-  >
-    <SkeletonTitle width="40%" />
-    <SkeletonBox height={32} width="60%" className={clsx(styles['skeleton-stat-value'])} />
-    <SkeletonLine width="50%" />
-  </motion.div>
+  <div className={styles.skeletonStat}>
+    <SkeletonCircle size={40} />
+    <div className={styles.skeletonStatContent}>
+      <SkeletonTitle width="50%" />
+      <SkeletonBox height={28} width="70%" className={styles.skeletonStatValue} rounded />
+    </div>
+  </div>
 );
 
 export const SkeletonTableRow = ({ columns = 4 }) => (
-  <motion.div 
-    className={clsx(styles['skeleton-table-row'])}
-    animate={{ 
-      x: [0, 4, 0],
-      opacity: [0.8, 1, 0.8]
-    }}
-    transition={{ 
-      duration: 2, 
-      repeat: Infinity,
-      ease: "easeInOut"
-    }}
-  >
+  <div className={styles.skeletonTableRow}>
     {Array.from({ length: columns }).map((_, i) => (
-      <SkeletonBox key={i} height={16} width={`${100 / columns - 2}%`} />
+      <SkeletonBox key={i} height={16} width={`${100 / columns - 4}%`} rounded />
     ))}
-  </motion.div>
+  </div>
 );
 
 export const SkeletonList = ({ count = 3, type = 'row' }) => (
-  <motion.div 
-    className={clsx(styles['skeleton-list'])}
-    animate={{ 
-      opacity: [0.85, 1, 0.85]
-    }}
-    transition={{ 
-      duration: 2, 
-      repeat: Infinity,
-      ease: "easeInOut"
-    }}
-  >
+  <div className={styles.skeletonList}>
     {Array.from({ length: count }).map((_, i) => (
-      <motion.div 
-        key={i} 
-        className={clsx(styles['skeleton-list-item'])}
-        animate={{ 
-          y: [0, -2, 0]
-        }}
-        transition={{ 
-          duration: 2 + (i * 0.1),
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      >
+      <div key={i} className={styles.skeletonListItem}>
         {type === 'row' && <SkeletonTableRow />}
         {type === 'card' && <SkeletonCard />}
         {type === 'line' && (
@@ -144,58 +80,154 @@ export const SkeletonList = ({ count = 3, type = 'row' }) => (
             <SkeletonLine width="90%" />
           </>
         )}
-      </motion.div>
+      </div>
     ))}
-  </motion.div>
+  </div>
 );
 
 export const SkeletonPublicationCard = () => (
-  <motion.div 
-    className={clsx(styles['skeleton-publication-card'])}
-    animate={{ 
-      y: [0, -6, 0],
-      boxShadow: [
-        '0 4px 16px rgba(0, 0, 0, 0.1)',
-        '0 12px 28px rgba(0, 0, 0, 0.15)',
-        '0 4px 16px rgba(0, 0, 0, 0.1)'
-      ]
-    }}
-    transition={{ 
-      duration: 2, 
-      repeat: Infinity,
-      ease: "easeInOut"
-    }}
-  >
-    <div className={clsx(styles['skeleton-pub-header'])}>
-      <SkeletonAvatar size={64} />
-      <div className={clsx(styles['skeleton-pub-user-info'])}>
+  <div className={styles.skeletonPublicationCard}>
+    <div className={styles.skeletonPubHeader}>
+      <SkeletonAvatar size={44} />
+      <div className={styles.skeletonPubUserInfo}>
+        <SkeletonLine width="45%" />
+        <SkeletonLine width="30%" />
+      </div>
+    </div>
+    <div className={styles.skeletonPubContent}>
+      <SkeletonLine width="100%" />
+      <SkeletonLine width="100%" />
+      <SkeletonLine width="80%" />
+    </div>
+    <SkeletonBox height={320} width="100%" className={styles.skeletonPubImage} />
+    <div className={styles.skeletonPubFooter}>
+      <div className={styles.skeletonPubStats}>
+        <SkeletonBox height={14} width="20%" rounded />
+        <SkeletonBox height={14} width="25%" rounded />
+      </div>
+      <div className={styles.skeletonPubButtons}>
+        <SkeletonBox height={36} width="30%" rounded />
+        <SkeletonBox height={36} width="30%" rounded />
+        <SkeletonBox height={36} width="30%" rounded />
+      </div>
+    </div>
+  </div>
+);
+
+export const SkeletonDashboard = () => (
+  <div className={styles.skeletonDashboard}>
+    <div className={styles.skeletonDashboardHeader}>
+      <SkeletonHeading width="35%" />
+      <SkeletonBox height={40} width="200px" rounded />
+    </div>
+    <div className={styles.skeletonStatsGrid}>
+      <SkeletonStat />
+      <SkeletonStat />
+      <SkeletonStat />
+      <SkeletonStat />
+    </div>
+    <div className={styles.skeletonChartSection}>
+      <SkeletonTitle width="25%" />
+      <SkeletonBox height={280} width="100%" className={styles.skeletonChart} />
+    </div>
+    <div className={styles.skeletonRecentSection}>
+      <SkeletonTitle width="30%" />
+      <SkeletonList count={4} type="row" />
+    </div>
+  </div>
+);
+
+export const SkeletonProductGrid = ({ count = 6 }) => (
+  <div className={styles.skeletonProductGrid}>
+    {Array.from({ length: count }).map((_, i) => (
+      <SkeletonCard key={i} />
+    ))}
+  </div>
+);
+
+export const SkeletonProfile = () => (
+  <div className={styles.skeletonProfile}>
+    <SkeletonBox height={200} width="100%" className={styles.skeletonCover} />
+    <div className={styles.skeletonProfileInfo}>
+      <SkeletonAvatar size={80} />
+      <div className={styles.skeletonProfileDetails}>
+        <SkeletonHeading width="40%" />
+        <SkeletonLine width="30%" />
         <SkeletonLine width="50%" />
-        <SkeletonLine width="70%" />
-        <SkeletonLine width="40%" />
       </div>
     </div>
-
-    <div className={clsx(styles['skeleton-pub-content'])}>
-      <SkeletonBox height={18} width="100%" className={clsx(styles['skeleton-pub-text'])} />
-      <SkeletonBox height={18} width="100%" className={clsx(styles['skeleton-pub-text'])} />
-      <SkeletonBox height={18} width="100%" className={clsx(styles['skeleton-pub-text'])} />
-      <SkeletonBox height={18} width="85%" className={clsx(styles['skeleton-pub-text'])} />
+    <div className={styles.skeletonProfileTabs}>
+      <SkeletonBox height={44} width="120px" rounded />
+      <SkeletonBox height={44} width="120px" rounded />
+      <SkeletonBox height={44} width="120px" rounded />
     </div>
+    <SkeletonProductGrid count={4} />
+  </div>
+);
 
-    <SkeletonBox height={500} width="100%" className={clsx(styles['skeleton-pub-image'])} />
-
-    <div className={clsx(styles['skeleton-pub-footer'])}>
-      <div className={clsx(styles['skeleton-pub-stats'])}>
-        <SkeletonBox height={14} width="25%" className={clsx(styles['skeleton-pub-stat'])} />
-        <SkeletonBox height={14} width="30%" className={clsx(styles['skeleton-pub-stat'])} />
-      </div>
-      <div className={clsx(styles['skeleton-pub-buttons'])}>
-        <SkeletonBox height={40} width="22%" className={clsx(styles['skeleton-pub-btn'])} />
-        <SkeletonBox height={40} width="22%" className={clsx(styles['skeleton-pub-btn'])} />
-        <SkeletonBox height={40} width="22%" className={clsx(styles['skeleton-pub-btn'])} />
-      </div>
+export const SkeletonSettings = () => (
+  <div className={styles.skeletonSettings}>
+    <SkeletonHeading width="30%" />
+    <div className={styles.skeletonSettingsSection}>
+      <SkeletonTitle width="25%" />
+      <SkeletonList count={3} type="line" />
     </div>
-  </motion.div>
+    <div className={styles.skeletonSettingsSection}>
+      <SkeletonTitle width="30%" />
+      <SkeletonList count={4} type="line" />
+    </div>
+  </div>
+);
+
+export const SkeletonMessages = () => (
+  <div className={styles.skeletonMessages}>
+    <div className={styles.skeletonMessagesSidebar}>
+      <SkeletonBox height={44} width="100%" rounded />
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className={styles.skeletonConversationItem}>
+          <SkeletonAvatar size={40} />
+          <div className={styles.skeletonConversationInfo}>
+            <SkeletonLine width="60%" />
+            <SkeletonLine width="80%" />
+          </div>
+        </div>
+      ))}
+    </div>
+    <div className={styles.skeletonMessagesMain}>
+      <div className={styles.skeletonMessagesHeader}>
+        <SkeletonAvatar size={40} />
+        <SkeletonLine width="30%" />
+      </div>
+      <div className={styles.skeletonMessagesList}>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <SkeletonBox key={i} height={40} width={i % 2 === 0 ? '60%' : '50%'} rounded className={i % 2 === 0 ? styles.skeletonMsgLeft : styles.skeletonMsgRight} />
+        ))}
+      </div>
+      <SkeletonBox height={48} width="100%" rounded className={styles.skeletonMsgInput} />
+    </div>
+  </div>
+);
+
+export const SkeletonMarketplace = () => (
+  <div className={styles.skeletonMarketplace}>
+    <div className={styles.skeletonMarketplaceHeader}>
+      <SkeletonHeading width="25%" />
+      <SkeletonBox height={44} width="300px" rounded />
+    </div>
+    <SkeletonProductGrid count={8} />
+  </div>
+);
+
+export const SkeletonLanding = () => (
+  <div className={styles.skeletonLanding}>
+    <SkeletonBox height={64} width="100%" className={styles.skeletonNavbar} />
+    <SkeletonBox height={500} width="100%" className={styles.skeletonHero} />
+    <div className={styles.skeletonFeatures}>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <SkeletonCard key={i} />
+      ))}
+    </div>
+  </div>
 );
 
 export default SkeletonBox;

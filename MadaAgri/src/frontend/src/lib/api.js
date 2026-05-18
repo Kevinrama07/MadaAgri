@@ -412,6 +412,14 @@ export const dataApi = {
     return data.user;
   },
 
+  async changePassword(currentPassword, newPassword) {
+    const data = await apiFetch('/users/password', {
+      method: 'PUT',
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    return data;
+  },
+
   async createPost(post) {
     const data = await apiFetch('/posts', {
       method: 'POST',
@@ -563,6 +571,86 @@ export const dataApi = {
   async fetchUserPosts(userId) {
     const data = await apiFetch(`/posts/user/${encodeURIComponent(userId)}`);
     return data.posts;
+  },
+
+  async fetchNotifications({ limit = 50, offset = 0, type, unreadOnly, archived } = {}) {
+    const params = new URLSearchParams();
+    params.set('limit', limit);
+    params.set('offset', offset);
+    if (type) params.set('type', type);
+    if (unreadOnly) params.set('unreadOnly', 'true');
+    if (archived) params.set('archived', 'true');
+    const data = await apiFetch(`/notifications?${params.toString()}`);
+    return data;
+  },
+
+  async fetchUnreadNotificationCount() {
+    const data = await apiFetch('/notifications/unread-count');
+    return data.count;
+  },
+
+  async markNotificationRead(notificationId) {
+    await apiFetch(`/notifications/${encodeURIComponent(notificationId)}/read`, { method: 'PUT' });
+  },
+
+  async markAllNotificationsRead(type) {
+    const params = type ? `?type=${encodeURIComponent(type)}` : '';
+    await apiFetch(`/notifications/read-all${params}`, { method: 'PUT' });
+  },
+
+  async archiveNotification(notificationId) {
+    await apiFetch(`/notifications/${encodeURIComponent(notificationId)}/archive`, { method: 'PUT' });
+  },
+
+  async deleteNotification(notificationId) {
+    await apiFetch(`/notifications/${encodeURIComponent(notificationId)}`, { method: 'DELETE' });
+  },
+
+  async clearReadNotifications() {
+    await apiFetch('/notifications/clear-all', { method: 'DELETE' });
+  },
+
+  async fetchParcels() {
+    const data = await apiFetch('/parcels');
+    return data.parcels;
+  },
+
+  async fetchParcel(parcelId) {
+    const data = await apiFetch(`/parcels/${encodeURIComponent(parcelId)}`);
+    return data.parcel;
+  },
+
+  async createParcel(parcel) {
+    const data = await apiFetch('/parcels', {
+      method: 'POST',
+      body: JSON.stringify(parcel),
+    });
+    return data;
+  },
+
+  async updateParcel(parcelId, updates) {
+    const data = await apiFetch(`/parcels/${encodeURIComponent(parcelId)}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+    return data.parcel;
+  },
+
+  async deleteParcel(parcelId) {
+    await apiFetch(`/parcels/${encodeURIComponent(parcelId)}`, { method: 'DELETE' });
+  },
+
+  async analyzeCrop(parcelId, analysisData) {
+    const data = await apiFetch(`/parcels/${encodeURIComponent(parcelId)}/analyze-crop`, {
+      method: 'POST',
+      body: JSON.stringify(analysisData),
+    });
+    return data.analysis;
+  },
+
+  async fetchAnalysisHistory(parcelId) {
+    const data = await apiFetch(`/parcels/${encodeURIComponent(parcelId)}/analysis-history`);
+    return data.analyses;
   }
 };
 

@@ -15,7 +15,7 @@
   border-radius: 50%;
   border: none;
   background: transparent;
-  color: rgba(74, 222, 128, 0.7);
+  color: var(--primary);
   cursor: pointer;
   font-size: 0;
   transition: all 0.3s ease;
@@ -23,13 +23,13 @@
 }
 
 .notification-button:hover {
-  color: rgba(74, 222, 128, 1);
-  background: rgba(74, 222, 128, 0.1);
+  color: var(--primary-hover);
+  background: var(--primary-light);
 }
 
 .notification-button.active {
-  background: rgba(74, 222, 128, 0.15);
-  color: rgba(74, 222, 128, 1);
+  background: var(--primary-light);
+  color: var(--primary);
 }
 
 .notification-button.has-unread {
@@ -56,11 +56,11 @@
   height: 20px;
   padding: 0 4px;
   background: linear-gradient(135deg, #ff6b7a 0%, #ff5268 100%);
-  color: white;
+  color: var(--text-inverse);
   font-size: 11px;
   font-weight: 600;
   border-radius: 10px;
-  border: 2px solid var(--bg-primary, #0a0e27);
+  border: 2px solid var(--background);
   box-shadow: 0 2px 8px rgba(255, 107, 122, 0.3);
 }
 
@@ -71,10 +71,10 @@
   margin-top: 8px;
   width: 380px;
   max-height: 600px;
-  background: var(--bg-secondary, #1a1f3a);
-  border: 1px solid rgba(74, 222, 128, 0.1);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -98,14 +98,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  border-bottom: 1px solid rgba(74, 222, 128, 0.1);
+  border-bottom: 1px solid var(--border);
 }
 
 .header h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary, #e0e0e0);
+  color: var(--text);
 }
 
 .header-actions {
@@ -123,19 +123,19 @@
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .header-btn:hover {
-  background: rgba(74, 222, 128, 0.1);
-  color: rgba(74, 222, 128, 1);
+  background: var(--primary-light);
+  color: var(--primary);
 }
 
 .filters {
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(74, 222, 128, 0.1);
+  border-bottom: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -146,10 +146,10 @@
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: rgba(74, 222, 128, 0.05);
-  border: 1px solid rgba(74, 222, 128, 0.1);
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
 }
 
 .search-input {
@@ -157,12 +157,12 @@
   background: transparent;
   border: none;
   outline: none;
-  color: var(--text-primary, #e0e0e0);
+  color: var(--text);
   font-size: 13px;
 }
 
 .search-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
 }
 
 .filter-tabs {
@@ -174,9 +174,9 @@
 .filter-tab {
   padding: 6px 12px;
   background: transparent;
-  border: 1px solid rgba(74, 222, 128, 0.2);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -186,14 +186,14 @@
 }
 
 .filter-tab:hover {
-  background: rgba(74, 222, 128, 0.1);
-  color: rgba(74, 222, 128, 1);
+  background: var(--primary-light);
+  color: var(--primary);
 }
 
 .filter-tab.active {
-  background: rgba(74, 222, 128, 0.2);
-  color: rgba(74, 222, 128, 1);
-  border-color: rgba(74, 222, 128, 0.6);
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
 }
 
 .btn-action {
@@ -205,24 +205,24 @@
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   cursor: pointer;
   font-size: 0;
   transition: all 0.2s ease;
 }
 
 .btn-action:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
+  background: var(--background-secondary);
+  color: var(--text);
 }
 
 .footer-btn {
   width: 100%;
   padding: 10px;
   background: transparent;
-  border: 1px solid rgba(74, 222, 128, 0.3);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  color: rgba(74, 222, 128, 0.9);
+  color: var(--primary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -230,8 +230,8 @@
 }
 
 .footer-btn:hover {
-  background: rgba(74, 222, 128, 0.1);
-  border-color: rgba(74, 222, 128, 0.6);
+  background: var(--primary-light);
+  border-color: var(--primary);
 }
 
 .content {
@@ -249,12 +249,12 @@
 }
 
 .content::-webkit-scrollbar-thumb {
-  background: rgba(74, 222, 128, 0.2);
+  background: var(--border);
   border-radius: 3px;
 }
 
 .content::-webkit-scrollbar-thumb:hover {
-  background: rgba(74, 222, 128, 0.4);
+  background: var(--text-muted);
 }
 
 .section-title {
@@ -262,7 +262,7 @@
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  color: rgba(74, 222, 128, 0.5);
+  color: var(--text-muted);
   letter-spacing: 0.5px;
 }
 
@@ -281,10 +281,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(74, 222, 128, 0.05);
+  border-bottom: 1px solid var(--border-light);
   transition: all 0.3s ease;
   cursor: pointer;
-  background: rgba(74, 222, 128, 0);
+  background: transparent;
   animation: slideIn 0.3s ease;
 }
 
@@ -300,13 +300,13 @@
 }
 
 .notification-item.unread {
-  background: rgba(74, 222, 128, 0.05);
-  border-left: 3px solid rgba(74, 222, 128, 0.6);
+  background: var(--primary-light);
+  border-left: 3px solid var(--primary);
   padding-left: 13px;
 }
 
 .notification-item:hover {
-  background: rgba(74, 222, 128, 0.1);
+  background: var(--background-secondary);
 }
 
 .notification-item.removing {
@@ -339,9 +339,9 @@
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background: rgba(74, 222, 128, 0.1);
+  background: var(--primary-light);
   flex-shrink: 0;
-  color: rgba(74, 222, 128, 0.8);
+  color: var(--primary);
 }
 
 .icon {
@@ -350,30 +350,30 @@
 }
 
 .icon-message {
-  color: rgba(100, 200, 255, 0.8);
+  color: var(--info);
 }
 
 .item-icon.icon-message {
-  background: rgba(100, 200, 255, 0.1);
-  color: rgba(100, 200, 255, 0.8);
+  background: var(--info-light);
+  color: var(--info);
 }
 
 .icon-collab {
-  color: rgba(255, 180, 0, 0.8);
+  color: var(--warning);
 }
 
 .item-icon.icon-collab {
-  background: rgba(255, 180, 0, 0.1);
-  color: rgba(255, 180, 0, 0.8);
+  background: var(--warning-light);
+  color: var(--warning);
 }
 
 .icon-follow {
-  color: rgba(255, 107, 122, 0.8);
+  color: var(--error);
 }
 
 .item-icon.icon-follow {
-  background: rgba(255, 107, 122, 0.1);
-  color: rgba(255, 107, 122, 0.8);
+  background: var(--error-light);
+  color: var(--error);
 }
 
 .item-text {
@@ -385,7 +385,7 @@
   margin: 0 0 4px 0;
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary, #e0e0e0);
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -394,7 +394,7 @@
 .item-desc {
   margin: 0 0 4px 0;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -403,7 +403,7 @@
 .item-time {
   display: inline-block;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
 }
 
 .item-actions {
@@ -430,25 +430,25 @@
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   cursor: pointer;
   font-size: 0;
   transition: all 0.2s ease;
 }
 
 .btn-accept:hover {
-  background: rgba(74, 222, 128, 0.2);
-  color: rgba(74, 222, 128, 1);
+  background: var(--success-light);
+  color: var(--success);
 }
 
 .btn-decline:hover {
-  background: rgba(255, 107, 122, 0.2);
-  color: rgba(255, 107, 122, 1);
+  background: var(--error-light);
+  color: var(--error);
 }
 
 .btn-close:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
+  background: var(--background-secondary);
+  color: var(--text);
 }
 
 .empty-state {
@@ -458,7 +458,7 @@
   justify-content: center;
   padding: 40px 20px;
   text-align: center;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
 }
 
 .empty-state svg {
@@ -473,17 +473,17 @@
 
 .footer {
   padding: 12px 16px;
-  border-top: 1px solid rgba(74, 222, 128, 0.1);
-  background: rgba(74, 222, 128, 0.02);
+  border-top: 1px solid var(--border);
+  background: var(--background-secondary);
 }
 
 .clear-all {
   width: 100%;
   padding: 8px 12px;
   background: transparent;
-  border: 1px solid rgba(74, 222, 128, 0.3);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  color: rgba(74, 222, 128, 0.8);
+  color: var(--primary);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -491,9 +491,9 @@
 }
 
 .clear-all:hover {
-  background: rgba(74, 222, 128, 0.1);
-  color: rgba(74, 222, 128, 1);
-  border-color: rgba(74, 222, 128, 0.6);
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
 }
 
 /* Responsive */

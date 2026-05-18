@@ -9,7 +9,7 @@ import { useAuth } from '../../contexts/ContextAuthentification';
 import { useSlideInUp } from '../../lib/animations';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import styles from '../../styles/Carte/OptimisationItineraire.module.css';
+import styles from './OptimisationItineraire.module.css';
 
 // Nominatim API pour la géocodage
 const NOMINATIM_API = 'https://nominatim.openstreetmap.org';

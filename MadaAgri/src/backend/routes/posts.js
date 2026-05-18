@@ -134,6 +134,21 @@ router.post('/:postId/like', authMiddleware, asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const postId = req.params.postId;
   await pool.query('INSERT IGNORE INTO post_likes (post_id, user_id, created_at) VALUES (?, ?, NOW())', [postId, userId]);
+
+  // Créer une notification pour l'auteur du post
+  const [postRows] = await pool.query('SELECT author_id FROM posts WHERE id = ?', [postId]);
+  if (postRows.length > 0 && postRows[0].author_id !== userId) {
+    const authorId = postRows[0].author_id;
+    const [userRows] = await pool.query('SELECT display_name, profile_image_url FROM users WHERE id = ?', [userId]);
+    const actor = userRows[0];
+    const notifId = randomUUID();
+    await pool.query(
+      `INSERT INTO notifications (id, user_id, type, actor_id, actor_name, actor_image, content, related_type, related_id, priority, created_at)
+       VALUES (?, ?, 'like', ?, ?, ?, ?, 'post', ?, 'normal', NOW())`,
+      [notifId, authorId, userId, actor?.display_name || 'Utilisateur', actor?.profile_image_url || null, 'a aimé votre publication', postId]
+    );
+  }
+
   res.json({ ok: true });
 }));
 
@@ -199,6 +214,36 @@ router.post('/:postId/comments', authMiddleware, asyncHandler(async (req, res) =
     'SELECT pc.*, u.display_name, u.profile_image_url FROM post_comments pc JOIN users u ON u.id = pc.user_id WHERE pc.id = ?',
     [id]
   );
+
+  // Créer une notification
+  const [postRows] = await pool.query('SELECT author_id FROM posts WHERE id = ?', [postId]);
+  let notifyUserId = null;
+  let relatedType = 'post';
+  let relatedId = postId;
+
+  if (parent_id) {
+    // Notification au parent comment author
+    const [parentComment] = await pool.query('SELECT user_id FROM post_comments WHERE id = ?', [parent_id]);
+    if (parentComment.length > 0 && parentComment[0].user_id !== userId) {
+      notifyUserId = parentComment[0].user_id;
+      relatedType = 'comment';
+      relatedId = parent_id;
+    }
+  } else if (postRows.length > 0 && postRows[0].author_id !== userId) {
+    notifyUserId = postRows[0].author_id;
+  }
+
+  if (notifyUserId) {
+    const [userRows] = await pool.query('SELECT display_name, profile_image_url FROM users WHERE id = ?', [userId]);
+    const actor = userRows[0];
+    const notifId = randomUUID();
+    await pool.query(
+      `INSERT INTO notifications (id, user_id, type, actor_id, actor_name, actor_image, content, related_type, related_id, priority, created_at)
+       VALUES (?, ?, 'comment', ?, ?, ?, ?, ?, ?, 'normal', NOW())`,
+      [notifId, notifyUserId, userId, actor?.display_name || 'Utilisateur', actor?.profile_image_url || null, `a commenté : ${content.trim().slice(0, 80)}`, relatedType, relatedId]
+    );
+  }
+
   res.json({ comment: rows[0] });
 }));
 

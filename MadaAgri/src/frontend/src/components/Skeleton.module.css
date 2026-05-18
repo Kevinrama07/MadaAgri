@@ -1,0 +1,396 @@
+/* Base Skeleton */
+.skeletonBox {
+  position: relative;
+  background: var(--border, #e2e8f0);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.skeletonBox.rounded {
+  border-radius: 8px;
+}
+
+.shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Skeleton Variants */
+.skeletonLine {
+  margin: 8px 0;
+}
+
+.skeletonTitle {
+  margin: 12px 0;
+}
+
+.skeletonHeading {
+  margin: 16px 0;
+}
+
+.skeletonAvatar {
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeletonCircle {
+  border-radius: 50%;
+}
+
+/* Skeleton Card */
+.skeletonCard {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.08));
+}
+
+.skeletonImage {
+  border-radius: 0;
+}
+
+.skeletonContent {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeletonCardFooter {
+  margin-top: 16px;
+}
+
+.skeletonButton {
+  border-radius: 8px;
+}
+
+/* Skeleton Stat */
+.skeletonStat {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+}
+
+.skeletonStatContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonStatValue {
+  margin-top: 4px;
+}
+
+/* Skeleton Table */
+.skeletonTableRow {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+}
+
+/* Skeleton List */
+.skeletonList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeletonListItem {
+  width: 100%;
+}
+
+/* Skeleton Publication Card */
+.skeletonPublicationCard {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skeletonPubHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skeletonPubUserInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonPubContent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonPubImage {
+  border-radius: 8px;
+  margin: 8px 0;
+}
+
+.skeletonPubFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeletonPubStats {
+  display: flex;
+  gap: 16px;
+}
+
+.skeletonPubButtons {
+  display: flex;
+  gap: 12px;
+}
+
+/* Skeleton Dashboard */
+.skeletonDashboard {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.skeletonDashboardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.skeletonStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.skeletonChartSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skeletonChart {
+  border-radius: 12px;
+}
+
+.skeletonRecentSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Skeleton Product Grid */
+.skeletonProductGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+/* Skeleton Profile */
+.skeletonProfile {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.skeletonCover {
+  border-radius: 0;
+}
+
+.skeletonProfileInfo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 24px;
+  margin-top: -40px;
+}
+
+.skeletonProfileDetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonProfileTabs {
+  display: flex;
+  gap: 12px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+}
+
+/* Skeleton Settings */
+.skeletonSettings {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.skeletonSettingsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Skeleton Messages */
+.skeletonMessages {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  height: calc(100vh - 64px);
+  overflow: hidden;
+}
+
+.skeletonMessagesSidebar {
+  border-right: 1px solid var(--border, #e2e8f0);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.skeletonConversationItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.skeletonConversationInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skeletonMessagesMain {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.skeletonMessagesHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+}
+
+.skeletonMessagesList {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.skeletonMsgLeft {
+  align-self: flex-start;
+}
+
+.skeletonMsgRight {
+  align-self: flex-end;
+}
+
+.skeletonMsgInput {
+  margin: 16px 24px;
+}
+
+/* Skeleton Marketplace */
+.skeletonMarketplace {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.skeletonMarketplaceHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Skeleton Landing */
+.skeletonLanding {
+  display: flex;
+  flex-direction: column;
+}
+
+.skeletonNavbar {
+  border-radius: 0;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+}
+
+.skeletonHero {
+  border-radius: 0;
+}
+
+.skeletonFeatures {
+  padding: 48px 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .skeletonBox {
+  background: var(--border, #1e2d25);
+}
+
+[data-theme="dark"] .shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 100%
+  );
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+  }
+}

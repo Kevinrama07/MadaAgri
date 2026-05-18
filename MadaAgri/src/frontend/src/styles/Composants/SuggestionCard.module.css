@@ -94,7 +94,7 @@
 
 .follow-btn {
   background: var(--social-primary);
-  color: white;
+  color: var(--text-inverse);
   border: none;
   padding: 6px 12px;
   border-radius: 20px;

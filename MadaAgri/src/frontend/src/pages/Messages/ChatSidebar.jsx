@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import clsx from 'clsx';
 import { FiUser, FiTarget, FiMessageCircle, FiSearch, FiInbox, FiCircle } from 'react-icons/fi';
-import styles from '../../styles/Messages/MessagerieStyles.module.css';
+import styles from './MessagerieStyles.module.css';
 
 export default function ChatSidebar({
   conversations,

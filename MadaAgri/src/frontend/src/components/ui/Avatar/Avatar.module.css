@@ -5,9 +5,14 @@
   justify-content: center;
   border-radius: var(--radius-full);
   overflow: hidden;
-  background: var(--color-gray-200);
+  background: var(--background-secondary);
   color: var(--text-secondary);
   flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.avatar:hover {
+  transform: scale(1.05);
 }
 
 /* Sizes */
@@ -45,6 +50,7 @@
 .initials {
   font-weight: var(--font-semibold);
   text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .placeholder {
@@ -59,24 +65,26 @@
   right: 0;
   width: 25%;
   height: 25%;
+  min-width: 10px;
+  min-height: 10px;
   border-radius: var(--radius-full);
-  border: 2px solid var(--bg-primary);
+  border: 2px solid var(--surface);
 }
 
 .status-online {
-  background: var(--color-success);
+  background: var(--success);
 }
 
 .status-offline {
-  background: var(--color-gray-400);
+  background: var(--text-muted);
 }
 
 .status-away {
-  background: var(--color-warning);
+  background: var(--warning);
 }
 
 .status-busy {
-  background: var(--color-error);
+  background: var(--error);
 }
 
 /* Badge */
@@ -90,10 +98,20 @@
   min-width: 20px;
   height: 20px;
   padding: 0 4px;
-  background: var(--color-error);
-  color: white;
+  background: var(--error);
+  color: var(--text-inverse);
   font-size: var(--text-xs);
   font-weight: var(--font-bold);
   border-radius: var(--radius-full);
-  border: 2px solid var(--bg-primary);
+  border: 2px solid var(--surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar {
+    transition: none;
+  }
+
+  .avatar:hover {
+    transform: none;
+  }
 }

@@ -1,17 +1,14 @@
-@import './styles/GlobalStyles.css';
+/* App.css - Global app-level styles
+ * Colors come from ThemeContext via index.css → design-system.css
+ */
 
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 body {
-  font-family: var(--font-body);
+  font-family: var(--font-sans);
   overflow-x: hidden;
-  background: var(--theme-background);
-  color: var(--theme-text);
-  transition: background 0.3s ease, color 0.3s ease;
 }
 
 #root {
@@ -34,12 +31,12 @@ body {
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  background: var(--theme-background);
-  transition: background 0.3s ease;
+  background: var(--background);
+  transition: background var(--transition-slow);
 }
 
 .auth-wrapper {
-  z-index: 10;
+  z-index: var(--z-sticky);
   position: relative;
 }
 
@@ -48,65 +45,58 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: var(--theme-background);
-  font-family: Arial, sans-serif;
+  background: var(--background);
+  font-family: var(--font-sans);
 }
 
 .error-card {
-  background: var(--theme-glass-background);
-  -webkit-backdrop-filter: blur(var(--backdrop-blur, 12px));
-  backdrop-filter: blur(var(--backdrop-blur, 12px));
-  border: var(--theme-glass-border);
-  border-radius: 20px;
-  padding: 40px;
+  background: var(--surface);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-10);
   text-align: center;
-  color: var(--theme-text);
+  color: var(--text);
   width: 50%;
   animation: fadeIn 0.6s ease, shake 0.4s ease;
-  box-shadow: var(--theme-shadow-lg);
+  box-shadow: var(--shadow-lg);
 }
 
 .error-icon {
   font-size: 50px;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-2);
   animation: pulse 1.5s infinite;
-  color: var(--theme-primary);
+  color: var(--primary);
 }
 
 .error-message {
-  font-size: 30px;
-  color: var(--theme-text);
+  font-size: var(--text-3xl);
+  color: var(--text);
 }
 
 .reload-btn {
-  background: var(--theme-primary);
+  background: var(--primary);
   border: none;
   padding: 12px 20px;
-  border-radius: 12px;
-  color: white;
+  border-radius: var(--radius-lg);
+  color: var(--text-inverse);
   cursor: pointer;
-  font-size: 16px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: var(--theme-shadow);
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow);
 }
 
 .reload-btn:hover {
-  background: var(--theme-primary-hover);
+  background: var(--primary-hover);
   transform: translateY(-2px);
-  box-shadow: var(--theme-shadow-md);
+  box-shadow: var(--shadow-md);
 }
 
-/* Animations */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes shake {

@@ -1,51 +1,25 @@
-import React from 'react';
-import clsx from 'clsx';
 import styles from './Badge.module.css';
 
-export const Badge = ({
+export function Badge({
   children,
   variant = 'default',
-  size = 'medium',
+  size = 'sm',
   dot = false,
-  removable = false,
-  onRemove,
-  className,
+  className = '',
   ...props
-}) => {
+}) {
+  const classes = [
+    styles.badge,
+    styles[variant],
+    styles[size],
+    dot ? styles.dot : '',
+    className,
+  ].filter(Boolean).join(' ');
+
   return (
-    <span
-      className={clsx(
-        styles.badge,
-        styles[variant],
-        styles[size],
-        {
-          [styles.dot]: dot,
-          [styles.removable]: removable,
-        },
-        className
-      )}
-      {...props}
-    >
+    <span className={classes} {...props}>
       {dot && <span className={styles.dotIndicator} />}
-      <span className={styles.content}>{children}</span>
-      {removable && (
-        <button
-          type="button"
-          className={styles.removeButton}
-          onClick={onRemove}
-          aria-label="Remove"
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </button>
-      )}
+      {children}
     </span>
   );
-};
-
-export default Badge;
+}

@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import clsx from 'clsx';
 import { useAuth } from '../../contexts/ContextAuthentification';
 import { dataApi } from '../../lib/api';
-import styles from '../../styles/Publications/FormulairePublication.module.css';
+import styles from './FormulairePublication.module.css';
 
 const VISIBILITY_OPTIONS = [
   { value: 'public', label: 'Public' },

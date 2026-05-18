@@ -76,6 +76,16 @@ router.post('/invitations/send', authMiddleware, rateLimit, asyncHandler(async (
     [invitationId, senderId, recipientId, message || null]
   );
 
+  // Créer une notification pour le destinataire
+  const [senderRows] = await pool.query('SELECT display_name, profile_image_url FROM users WHERE id = ?', [senderId]);
+  const sender = senderRows[0];
+  const notifId = randomUUID();
+  await pool.query(
+    `INSERT INTO notifications (id, user_id, type, actor_id, actor_name, actor_image, content, related_type, related_id, priority, created_at)
+     VALUES (?, ?, 'collaboration', ?, ?, ?, ?, 'collaboration', ?, 'normal', NOW())`,
+    [notifId, recipientId, senderId, sender?.display_name || 'Utilisateur', sender?.profile_image_url || null, 'vous a envoyé une invitation à collaborer', invitationId]
+  );
+
   res.status(201).json({ id: invitationId, ok: true });
 }));
 
@@ -157,6 +167,16 @@ router.put('/invitations/:invitationId/accept', authMiddleware, asyncHandler(asy
   await pool.query(
     'INSERT IGNORE INTO follows (follower_id, followee_id, status, created_at) VALUES (?, ?, "following", NOW()), (?, ?, "following", NOW())',
     [userId, senderId, senderId, userId]
+  );
+
+  // Notification au sender que l'invitation a été acceptée
+  const [recipientRows] = await pool.query('SELECT display_name, profile_image_url FROM users WHERE id = ?', [userId]);
+  const recipient = recipientRows[0];
+  const notifId = randomUUID();
+  await pool.query(
+    `INSERT INTO notifications (id, user_id, type, actor_id, actor_name, actor_image, content, related_type, related_id, priority, created_at)
+     VALUES (?, ?, 'collaboration', ?, ?, ?, ?, 'collaboration', ?, 'normal', NOW())`,
+    [notifId, senderId, userId, recipient?.display_name || 'Utilisateur', recipient?.profile_image_url || null, 'a accepté votre invitation à collaborer', invitationId]
   );
 
   res.json({ ok: true, message: 'Invitation accepted' });
@@ -273,6 +293,16 @@ router.post('/follows/:userId', authMiddleware, rateLimit, asyncHandler(async (r
   await pool.query(
     'INSERT INTO follows (follower_id, followee_id, status, created_at) VALUES (?, ?, "following", NOW())',
     [followerId, followeeId]
+  );
+
+  // Créer une notification pour l'utilisateur suivi
+  const [followerRows] = await pool.query('SELECT display_name, profile_image_url FROM users WHERE id = ?', [followerId]);
+  const follower = followerRows[0];
+  const notifId = randomUUID();
+  await pool.query(
+    `INSERT INTO notifications (id, user_id, type, actor_id, actor_name, actor_image, content, related_type, related_id, priority, created_at)
+     VALUES (?, ?, 'follow', ?, ?, ?, ?, 'user', ?, 'normal', NOW())`,
+    [notifId, followeeId, followerId, follower?.display_name || 'Utilisateur', follower?.profile_image_url || null, 'a commencé à vous suivre', followeeId]
   );
 
   res.json({ ok: true });

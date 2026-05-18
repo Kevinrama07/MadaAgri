@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import clsx from 'clsx';
 import { FiPaperclip, FiSend, FiSmile } from 'react-icons/fi';
-import styles from '../../styles/Messages/MessagerieStyles.module.css';
+import styles from './MessagerieStyles.module.css';
 
 export default function ChatInput({ onSendMessage, disabled = false, onAttachFile = null, onTyping = null }) {
   const inputRef = useRef(null);

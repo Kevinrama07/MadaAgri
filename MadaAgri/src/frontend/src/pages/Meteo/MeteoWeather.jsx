@@ -15,7 +15,7 @@ import {
 import clsx from 'clsx';
 import { SkeletonBox } from '../../components/Skeleton';
 import { useSlideInUp } from '../../lib/animations';
-import styles from '../../styles/Meteo/MeteoWeather.module.css';
+import styles from './MeteoWeather.module.css';
 
 export default function MeteoWeather() {
   const containerRef = useSlideInUp(0.8, 0.2);

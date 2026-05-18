@@ -11,19 +11,18 @@ export const GlobalLoader = () => {
       {isLoading && (
         <>
           <motion.div
-            className={clsx(styles['global-progress-bar'])}
-            initial={{ width: '0%' }}
-            animate={{ width: `${progress}%` }}
+            className={clsx(styles.globalProgressBar)}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: progress / 100 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
           />
-
           <motion.div
-            className={clsx(styles['global-loader-overlay'])}
+            className={clsx(styles.globalLoaderOverlay)}
             initial={{ opacity: 0 }}
             animate={{ opacity: progress > 50 ? 0.02 : 0 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.3 }}
           />
         </>
       )}

@@ -15,8 +15,6 @@ OptimisationItineraire(agriculteur seulement)
 
 Panier(client seulement)
 
-
-
 Réorganise complètement la navigation mobile de Mada Agri pour obtenir une expérience moderne, fluide et professionnelle similaire à Facebook Lite, tout en intégrant toutes les fonctionnalités déjà présentes dans la version web.
 
 IMPORTANT :

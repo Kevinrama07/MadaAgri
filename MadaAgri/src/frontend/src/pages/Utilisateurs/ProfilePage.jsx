@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { FiMail, FiPhone, FiMapPin, FiEdit } from 'react-icons/fi';
 import { dataApi } from '../../lib/api';
 import PostCard from '../Publications/PostCard';
-import styles from '../../styles/Utilisateurs/ProfilePage.module.css';
+import styles from './ProfilePage.module.css';
 
 export default function ProfilePage({ user, onUserProfileClick }) {
   const [posts, setPosts] = useState([]);

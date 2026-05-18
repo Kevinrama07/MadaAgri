@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import clsx from 'clsx';
 import { FiMessageCircle } from 'react-icons/fi';
 import MessageBubble from './MessageBubble';
-import styles from '../../styles/Messages/MessagerieStyles.module.css';
+import styles from './MessagerieStyles.module.css';
 
 export default function MessageList({ messages, loading, currentUserId, isTyping = false, typingUser = null, onDeleteMessage, onEditMessage, onCopyMessage, onReaction, onLoadMore, hasMore = false, loadingMore = false }) {
   const endRef = useRef(null);

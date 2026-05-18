@@ -6,7 +6,7 @@ import { SkeletonBox, SkeletonCard, SkeletonAvatar } from '../../components/Skel
 import { useAuth } from '../../contexts/ContextAuthentification';
 import { dataApi } from '../../lib/api';
 import PostCard from '../Publications/PostCard';
-import styles from '../../styles/Utilisateurs/UserProfile.module.css';
+import styles from './UserProfile.module.css';
 
 export default function UserProfile({ userId, onBack, onUserProfileClick }) {
   const { user: currentUser } = useAuth();

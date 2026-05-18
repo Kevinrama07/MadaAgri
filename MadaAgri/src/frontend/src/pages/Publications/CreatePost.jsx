@@ -3,7 +3,7 @@ import { FiImage, FiVideo, FiSmile, FiMapPin, FiSend } from 'react-icons/fi';
 import clsx from 'clsx';
 import { useAuth } from '../../contexts/ContextAuthentification';
 import { dataApi } from '../../lib/api';
-import styles from '../../styles/Publications/CreatePost.module.css';
+import styles from './CreatePost.module.css';
 
 export default function CreatePost({ onPostCreated }) {
   const { user } = useAuth();

@@ -4,7 +4,7 @@ import { dataApi } from '../../lib/api';
 import { FiCheck, FiX, FiUser, FiUserPlus, FiMail, FiInbox, FiSearch, FiUserCheck, FiUserX, FiSend, FiUsers } from 'react-icons/fi';
 import { usePageLoading } from '../../hooks/usePageLoading';
 import { SkeletonCard } from '../../components/Skeleton';
-import styles from '../../styles/Utilisateurs/InvitationsCollaborateurs.module.css';
+import styles from './InvitationsCollaborateurs.module.css';
 
 export default function InvitationsCollaborateurs({ onUserProfileClick }) {
   const { hasShownSkeletons, markSkeletonsShown } = usePageLoading();

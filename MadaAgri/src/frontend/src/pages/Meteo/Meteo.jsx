@@ -13,7 +13,7 @@ import { usePageLoading } from '../../hooks/usePageLoading';
 import { SkeletonBox, SkeletonCard } from '../../components/Skeleton';
 import { MdOpacity, MdAir } from 'react-icons/md';
 import { useSlideInUp } from '../../lib/animations';
-import styles from '../../styles/Meteo/Meteo.module.css';
+import styles from './Meteo.module.css';
 
 export default function Meteo() {
   const { isLoading, startLoading, stopLoading } = usePageLoading();
