@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiMail, FiPhone, FiMapPin, FiMessageSquare, FiUserPlus, FiUserCheck, FiUserX, FiUsers, FiAtSign, FiFileText } from 'react-icons/fi';
 import clsx from 'clsx';
 import { usePageLoading } from '../../hooks/usePageLoading';
@@ -10,6 +11,7 @@ import styles from './UserProfile.module.css';
 
 export default function UserProfile({ userId, onBack, onUserProfileClick }) {
   const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
   const { isLoading, startLoading, stopLoading, hasShownSkeletons, markSkeletonsShown } = usePageLoading();
   
   useEffect(() => {
@@ -64,10 +66,13 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
       // Check follow status
       try {
         const followStatus = await dataApi.fetchFollowStatus(userId);
+        console.log('[UserProfile] Follow status for', userId, ':', followStatus);
         setIsFollowing(followStatus.isFollowing || false);
         setIsFollowedBy(followStatus.isFollowedBy || false);
-        setIsCollaborator(followStatus.isFollowing && followStatus.isFollowedBy);
-      } catch {
+        setIsCollaborator(followStatus.isCollaborator || false);
+        console.log('[UserProfile] isCollaborator set to:', followStatus.isCollaborator);
+      } catch (err) {
+        console.error('[UserProfile] Error fetching follow status:', err);
         setIsFollowing(false);
         setIsFollowedBy(false);
         setIsCollaborator(false);
@@ -76,7 +81,13 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
       // Check invitation status
       try {
         const invitationStatus = await dataApi.fetchInvitationStatus(userId);
-        if (invitationStatus?.status === 'pending') {
+        console.log('[UserProfile] Invitation status:', invitationStatus);
+        if (invitationStatus?.status === 'accepted') {
+          // Déjà collaborateurs
+          setIsCollaborator(true);
+          setInvitationSent(false);
+          setReceivedInvitation(null);
+        } else if (invitationStatus?.status === 'pending') {
           if (invitationStatus.sender_id === currentUser?.id) {
             setInvitationSent(true);
           } else {
@@ -86,7 +97,8 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
           setInvitationSent(false);
           setReceivedInvitation(null);
         }
-      } catch {
+      } catch (err) {
+        console.error('[UserProfile] Error fetching invitation status:', err);
         setInvitationSent(false);
         setReceivedInvitation(null);
       }
@@ -142,6 +154,20 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
     }
   };
 
+  const handleRemoveCollaborator = async () => {
+    setFollowLoading(true);
+    try {
+      console.log('[UserProfile] Removing collaborator:', userId);
+      await dataApi.removeCollaboration(userId);
+      setIsCollaborator(false);
+      await fetchUserProfile();
+    } catch (err) {
+      console.error('[UserProfile] Error removing collaboration:', err);
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
   const handleAcceptInvitation = async () => {
     if (!receivedInvitation) return;
     setInvitationLoading(true);
@@ -171,17 +197,7 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
   };
 
   const handleMessage = async () => {
-    setMessageLoading(true);
-    try {
-      const result = await dataApi.sendMessage(userId, '');
-      if (onUserProfileClick) {
-        onUserProfileClick(userId);
-      }
-    } catch (err) {
-      console.error('Erreur message:', err);
-    } finally {
-      setMessageLoading(false);
-    }
+    navigate(`/dashboard/messages/${userId}`);
   };
 
   const handleLike = async (postId) => {
@@ -315,8 +331,8 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
               </button>
 
               {isCollaborator ? (
-                <button className={clsx(styles.actionBtn, styles.collabBtn)} disabled>
-                  <FiUserCheck /> Collaborateur
+                <button className={clsx(styles.actionBtn, styles.removeCollabBtn)} onClick={handleRemoveCollaborator} disabled={followLoading}>
+                  <FiUserX /> Retirer des collaborateurs
                 </button>
               ) : receivedInvitation ? (
                 <div className={styles.invitationGroup}>

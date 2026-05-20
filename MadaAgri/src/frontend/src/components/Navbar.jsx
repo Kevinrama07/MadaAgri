@@ -241,9 +241,17 @@ export function Navbar() {
           </Link>
 
           <Link to="/profile" className={styles.profileBtn}>
-            <div className={styles.profileAvatar}>
-              {user.display_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
-            </div>
+            {user.profile_image_url ? (
+              <img
+                src={user.profile_image_url}
+                alt={user.display_name || 'Profil'}
+                className={styles.profileAvatar}
+              />
+            ) : (
+              <div className={styles.profileInitials}>
+                {user.display_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
+              </div>
+            )}
           </Link>
 
           <button

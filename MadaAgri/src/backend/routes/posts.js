@@ -160,6 +160,39 @@ router.delete('/:postId/like', authMiddleware, asyncHandler(async (req, res) => 
   res.json({ ok: true });
 }));
 
+// GET /api/posts/:postId - Récupérer une publication spécifique
+router.get('/:postId', authMiddleware, asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const postId = req.params.postId;
+
+  const [postRows] = await pool.query(
+    `SELECT p.*, p.author_id AS user_id, u.display_name, u.email, u.region_id AS author_region_id, u.profile_image_url,
+      (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS likes_count,
+      (SELECT IF(COUNT(*) > 0, 1, 0) FROM post_likes WHERE post_id = p.id AND user_id = ?) AS user_likes,
+      (SELECT COUNT(*) FROM post_comments pc WHERE pc.post_id = p.id) AS comments_count
+     FROM posts p
+     JOIN users u ON u.id = p.author_id
+     WHERE p.id = ?`,
+    [userId, postId]
+  );
+
+  if (postRows.length === 0) {
+    return res.status(404).json({ error: 'Post not found' });
+  }
+
+  const post = postRows[0];
+
+  // Vérifier la visibilité
+  const [followRows] = await pool.query('SELECT followee_id FROM follows WHERE follower_id = ?', [userId]);
+  const following = new Set(followRows.map((r) => r.followee_id));
+
+  if (post.visibility === 'public' || post.author_id === userId || (post.visibility === 'followers' && following.has(post.author_id))) {
+    res.json({ post });
+  } else {
+    res.status(403).json({ error: 'You do not have permission to view this post' });
+  }
+}));
+
 // GET /api/posts/:postId/comments - Récupérer les commentaires (avec réponses imbriquées)
 router.get('/:postId/comments', authMiddleware, asyncHandler(async (req, res) => {
   const postId = req.params.postId;

@@ -22,12 +22,16 @@ const RoutesPageWrapper = lazy(() => import('../pages/Dashboard/RoutesPageWrappe
 const MeteoPageWrapper = lazy(() => import('../pages/Dashboard/MeteoPageWrapper'));
 const DashboardPageWrapper = lazy(() => import('../pages/Dashboard/DashboardPageWrapper'));
 const AssistantPageWrapper = lazy(() => import('../pages/Dashboard/AssistantPageWrapper'));
+const PostDetailPage = lazy(() => import('../pages/Composants/Dashboard/pages/PostDetailPage'));
 
 // Shared pages
 const MarketplacePage = lazy(() => import('../pages/Marketplace/MarketplacePage'));
 const ProductDetailPage = lazy(() => import('../pages/ProductDetail/ProductDetailPage'));
-const ProfilePage = lazy(() => import('../pages/Profile/ProfilePage'));
 const SettingsPage = lazy(() => import('../pages/Settings/SettingsPage'));
+
+// User profile pages
+const OwnProfileWrapper = lazy(() => import('../pages/Utilisateurs/OwnProfileWrapper'));
+const OtherProfileWrapper = lazy(() => import('../pages/Utilisateurs/OtherProfileWrapper'));
 
 const withSuspense = (Component) => (
   <Suspense fallback={<PageLoadingFallback />}>
@@ -47,8 +51,10 @@ export const routes = [
     children: [
       { index: true, element: withSuspense(FeedPageWrapper) },
       { path: 'post', element: withSuspense(PublicationPageWrapper) },
+      { path: 'post/:id', element: withSuspense(PostDetailPage) },
       { path: 'network', element: withSuspense(NetworkPageWrapper) },
       { path: 'messages', element: withSuspense(MessagesPageWrapper) },
+      { path: 'messages/:targetUserId', element: withSuspense(MessagesPageWrapper) },
       { path: 'stats', element: withSuspense(DashboardPageWrapper) },
       { path: 'products', element: withSuspense(ProductsPageWrapper) },
       { path: 'create', element: withSuspense(CreateProductPageWrapper) },
@@ -77,8 +83,8 @@ export const routes = [
     path: '/',
     element: <DashboardLayout />,
     children: [
-      { path: 'profile', element: withSuspense(ProfilePage) },
-      { path: 'profile/:id', element: withSuspense(ProfilePage) },
+      { path: 'profile', element: withSuspense(OwnProfileWrapper) },
+      { path: 'profile/:id', element: withSuspense(OtherProfileWrapper) },
       { path: 'settings', element: withSuspense(SettingsPage) },
     ],
   },

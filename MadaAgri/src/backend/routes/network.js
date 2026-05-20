@@ -281,7 +281,7 @@ router.post('/follows/:userId', authMiddleware, rateLimit, asyncHandler(async (r
 
   // Vérifier si déjà suivi
   const [existing] = await pool.query(
-    'SELECT id FROM follows WHERE follower_id = ? AND followee_id = ?',
+    'SELECT 1 FROM follows WHERE follower_id = ? AND followee_id = ?',
     [followerId, followeeId]
   );
 
@@ -331,19 +331,28 @@ router.get('/follows/status/:userId', authMiddleware, asyncHandler(async (req, r
   const followeeId = req.params.userId; // Accepter string ou int
   
   const [following] = await pool.query(
-    'SELECT id FROM follows WHERE follower_id = ? AND followee_id = ?',
+    'SELECT 1 FROM follows WHERE follower_id = ? AND followee_id = ?',
     [followerId, followeeId]
   );
   
   const [followedBy] = await pool.query(
-    'SELECT id FROM follows WHERE follower_id = ? AND followee_id = ?',
+    'SELECT 1 FROM follows WHERE follower_id = ? AND followee_id = ?',
     [followeeId, followerId]
+  );
+
+  // Vérifier si c'est une collaboration acceptée
+  const [collaboration] = await pool.query(
+    `SELECT id FROM collaboration_invitations 
+     WHERE ((sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?))
+     AND status = 'accepted'`,
+    [followerId, followeeId, followeeId, followerId]
   );
   
   res.json({
     isFollowing: following.length > 0,
     isFollowedBy: followedBy.length > 0,
-    isMutual: following.length > 0 && followedBy.length > 0
+    isMutual: following.length > 0 && followedBy.length > 0,
+    isCollaborator: collaboration.length > 0
   });
 }));
 

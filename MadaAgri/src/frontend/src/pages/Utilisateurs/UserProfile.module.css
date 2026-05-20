@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 24px;
+  padding: 18px 32px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   position: sticky;
@@ -23,10 +23,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 14px;
   background: var(--primaryLight);
   color: var(--primary);
   cursor: pointer;
@@ -38,6 +38,7 @@
   background: var(--primary);
   color: var(--text-inverse);
   transform: translateX(-2px);
+  box-shadow: 0 4px 12px var(--primaryLight);
 }
 
 .headerTitle {
@@ -45,6 +46,7 @@
   font-size: 18px;
   font-weight: 700;
   color: var(--text);
+  letter-spacing: -0.01em;
 }
 
 /* Skeleton & Error */
@@ -62,7 +64,7 @@
   height: 300px;
   padding: 24px;
   background: var(--surface);
-  border-radius: var(--radius-lg);
+  border-radius: 20px;
   color: var(--error);
   font-weight: 500;
   text-align: center;
@@ -74,18 +76,19 @@
 .profileCard {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  margin: 24px auto;
-  max-width: 900px;
+  border-radius: 24px;
+  margin: 0 auto 24px;
+  max-width: 960px;
   width: calc(100% - 48px);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
+  overflow: visible;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
 }
 
 .coverArea {
-  height: 160px;
+  height: 220px;
   background: var(--gradient);
   position: relative;
+  border-radius: 0 0 24px 24px;
 }
 
 .coverArea::after {
@@ -94,26 +97,27 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 60px;
+  height: 80px;
   background: linear-gradient(transparent, var(--surface));
+  border-radius: 0 0 24px 24px;
 }
 
 .profileContent {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 32px 32px;
+  padding: 0 40px 40px;
   position: relative;
 }
 
 .profilePicture {
-  width: 140px;
-  height: 140px;
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid var(--surface);
-  box-shadow: var(--shadow-lg);
-  margin-top: -70px;
+  border: 5px solid var(--surface);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  margin-top: -80px;
   position: relative;
   z-index: 2;
   transition: var(--transition-smooth);
@@ -121,7 +125,7 @@
 
 .profilePicture:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 0 4px var(--primaryLight);
+  box-shadow: 0 0 0 5px var(--primaryLight), 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
 .profileInfo {
@@ -129,26 +133,28 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-  margin-top: 16px;
+  margin-top: 20px;
 }
 
 .profileName {
   margin: 0;
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 800;
   color: var(--text);
-  letter-spacing: -0.5px;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .roleBadge {
   display: inline-block;
-  padding: 4px 16px;
+  padding: 6px 18px;
   background: var(--primaryLight);
   color: var(--primary);
-  border-radius: 20px;
+  border-radius: 100px;
   font-size: 13px;
   font-weight: 600;
-  margin-top: 8px;
+  margin-top: 10px;
+  letter-spacing: 0.01em;
 }
 
 /* Stats */
@@ -156,24 +162,25 @@
   display: flex;
   align-items: center;
   gap: 0;
-  margin-top: 20px;
-  padding: 12px 24px;
+  margin-top: 24px;
+  padding: 14px 28px;
   background: var(--background-secondary);
-  border-radius: var(--radius-lg);
+  border-radius: 16px;
   width: fit-content;
+  border: 1px solid var(--border);
 }
 
 .statBtn, .statItem {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 8px 16px;
+  gap: 4px;
+  padding: 10px 20px;
   border: none;
   background: transparent;
   cursor: pointer;
   transition: var(--transition-smooth);
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
   font-family: inherit;
 }
 
@@ -187,22 +194,26 @@
 }
 
 .statNumber {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text);
   line-height: 1;
   transition: var(--transition-smooth);
+  font-variant-numeric: tabular-nums;
 }
 
 .statLabel {
   font-size: 12px;
   color: var(--text-muted);
   transition: var(--transition-smooth);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
 }
 
 .statDivider {
   width: 1px;
-  height: 32px;
+  height: 36px;
   background: var(--border);
 }
 
@@ -210,13 +221,14 @@
 .bioSection {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  margin-top: 20px;
-  padding: 16px 20px;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 18px 24px;
   background: var(--gradientSoft);
-  border-radius: var(--radius-md);
+  border-radius: 16px;
   width: 100%;
-  max-width: 600px;
+  max-width: 640px;
+  border: 1px solid var(--border);
 }
 
 .bioIcon {
@@ -230,39 +242,41 @@
   margin: 0;
   font-size: 15px;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 /* Info Grid */
 .infoGrid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 20px;
   width: 100%;
-  max-width: 400px;
+  max-width: 440px;
 }
 
 .infoItem {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
+  gap: 14px;
+  padding: 12px 18px;
   background: var(--background-secondary);
-  border-radius: var(--radius-md);
+  border-radius: 14px;
   font-size: 14px;
   color: var(--text);
   transition: var(--transition-smooth);
+  border: 1px solid var(--border);
 }
 
 .infoItem:hover {
   background: var(--bg-hover);
   transform: translateX(4px);
+  border-color: var(--primaryLight);
 }
 
 .infoIcon {
   color: var(--primary);
-  font-size: 16px;
+  font-size: 18px;
   flex-shrink: 0;
 }
 
@@ -270,12 +284,12 @@
 .actionButtons {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 24px;
-  padding-top: 24px;
+  gap: 12px;
+  margin-top: 28px;
+  padding-top: 28px;
   border-top: 1px solid var(--border);
   width: 100%;
-  max-width: 600px;
+  max-width: 640px;
   justify-content: center;
 }
 
@@ -284,20 +298,21 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 14px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition-smooth);
   font-family: inherit;
-  min-height: 42px;
+  min-height: 44px;
+  letter-spacing: 0.01em;
 }
 
 .actionBtn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
 .actionBtn:disabled {
@@ -306,12 +321,12 @@
 }
 
 .messageBtn {
-  background: var(--primary);
+  background: var(--gradient);
   color: var(--text-inverse);
 }
 
 .messageBtn:hover:not(:disabled) {
-  background: var(--primaryHover);
+  box-shadow: 0 6px 20px var(--primaryLight);
 }
 
 .addBtn {
@@ -321,6 +336,7 @@
 
 .addBtn:hover:not(:disabled) {
   opacity: 0.9;
+  box-shadow: 0 4px 16px var(--infoLight, rgba(59, 130, 246, 0.3));
 }
 
 .pendingBtn {
@@ -340,9 +356,25 @@
   border: 1px solid var(--success);
 }
 
+.removeCollabBtn {
+  background: transparent;
+  color: var(--error);
+  border: 1px solid var(--error);
+}
+
+.removeCollabBtn:hover:not(:disabled) {
+  background: var(--error);
+  color: var(--text-inverse);
+  box-shadow: 0 4px 16px var(--errorLight);
+}
+
 .acceptBtn {
   background: var(--success);
   color: var(--text-inverse);
+}
+
+.acceptBtn:hover:not(:disabled) {
+  box-shadow: 0 4px 16px var(--successLight);
 }
 
 .declineBtn {
@@ -358,7 +390,7 @@
 
 .invitationGroup {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 .followBtn {
@@ -370,6 +402,7 @@
 .followBtn:hover:not(:disabled) {
   background: var(--primary);
   color: var(--text-inverse);
+  box-shadow: 0 4px 16px var(--primaryLight);
 }
 
 .followBackBtn {
@@ -397,16 +430,18 @@
 
 /* Posts Section */
 .postsSection {
-  max-width: 900px;
+  max-width: 720px;
   width: calc(100% - 48px);
-  margin: 0 auto 32px;
+  margin: 0 auto 40px;
 }
 
 .sectionTitle {
-  margin: 0 0 16px 0;
-  font-size: 20px;
+  margin: 0 0 20px 0;
+  font-size: 22px;
   font-weight: 700;
   color: var(--text);
+  letter-spacing: -0.01em;
+  text-align: center;
 }
 
 .emptyPosts {
@@ -414,29 +449,31 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
+  padding: 72px 24px;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border: 2px dashed var(--border);
+  border-radius: 20px;
   text-align: center;
   color: var(--text-muted);
-  gap: 12px;
+  gap: 14px;
 }
 
 .emptyIcon {
-  font-size: 48px;
+  font-size: 52px;
   opacity: 0.3;
 }
 
 .emptyPosts p {
   margin: 0;
   font-size: 15px;
+  font-weight: 500;
 }
 
 .postsList {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
+  align-items: center;
 }
 
 /* Modal */
@@ -447,29 +484,29 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  padding: 24px;
 }
 
 .modalContent {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: 20px;
   width: 100%;
-  max-width: 420px;
-  max-height: 80vh;
+  max-width: 460px;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-lg);
-  animation: modalIn 0.2s ease;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+  animation: modalIn 0.25s ease;
 }
 
 @keyframes modalIn {
-  from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+  from { opacity: 0; transform: scale(0.96) translateY(-12px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
@@ -477,15 +514,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 18px 24px;
   border-bottom: 1px solid var(--border);
 }
 
 .modalHeader h3 {
   margin: 0;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text);
+  letter-spacing: -0.01em;
 }
 
 .modalClose {
@@ -494,8 +532,8 @@
   font-size: 24px;
   cursor: pointer;
   color: var(--text-muted);
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -509,7 +547,7 @@
 }
 
 .modalBody {
-  padding: 12px;
+  padding: 16px 20px;
   overflow-y: auto;
   flex: 1;
 }
@@ -517,8 +555,9 @@
 .emptyMessage {
   text-align: center;
   color: var(--text-muted);
-  padding: 40px 20px;
+  padding: 48px 24px;
   font-size: 14px;
+  font-weight: 500;
 }
 
 .userList {
@@ -527,15 +566,15 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .userListItem {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
   cursor: pointer;
   transition: var(--transition-smooth);
 }
@@ -545,8 +584,8 @@
 }
 
 .userListAvatar {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--border);
@@ -556,7 +595,7 @@
 .userListInfo {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
 }
 
@@ -572,30 +611,36 @@
 .userListRole {
   font-size: 12px;
   color: var(--text-muted);
+  font-weight: 500;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .header { padding: 12px 16px; }
-  .profileCard { margin: 16px auto; width: calc(100% - 32px); }
-  .profileContent { padding: 0 16px 24px; }
-  .profilePicture { width: 110px; height: 110px; margin-top: -55px; }
-  .profileName { font-size: 22px; }
-  .statsRow { padding: 10px 16px; flex-wrap: wrap; justify-content: center; }
-  .statBtn, .statItem { padding: 6px 12px; }
-  .statNumber { font-size: 16px; }
+  .header { padding: 14px 20px; }
+  .profileCard { margin: 0 auto 20px; width: calc(100% - 32px); border-radius: 20px; }
+  .profileContent { padding: 0 20px 28px; }
+  .coverArea { height: 160px; border-radius: 0 0 20px 20px; }
+  .profilePicture { width: 120px; height: 120px; margin-top: -60px; }
+  .profileName { font-size: 26px; }
+  .statsRow { padding: 12px 18px; flex-wrap: wrap; justify-content: center; border-radius: 14px; }
+  .statBtn, .statItem { padding: 8px 14px; }
+  .statNumber { font-size: 18px; }
   .actionButtons { flex-direction: column; }
   .actionBtn { width: 100%; }
   .invitationGroup { width: 100%; }
   .invitationGroup .actionBtn { flex: 1; }
-  .postsSection { width: calc(100% - 32px); margin: 0 auto 16px; }
-  .bioSection { padding: 12px 16px; }
+  .postsSection { width: calc(100% - 32px); margin: 0 auto 24px; }
+  .bioSection { padding: 14px 18px; }
 }
 
 @media (max-width: 480px) {
-  .profilePicture { width: 90px; height: 90px; margin-top: -45px; }
-  .profileName { font-size: 20px; }
-  .coverArea { height: 120px; }
+  .profilePicture { width: 100px; height: 100px; margin-top: -50px; }
+  .profileName { font-size: 22px; }
+  .coverArea { height: 130px; }
   .statsRow { gap: 0; }
-  .statDivider { height: 24px; }
+  .statDivider { height: 28px; }
+  .modalContent { max-width: 95%; border-radius: 16px; }
+  .postsSection { width: calc(100% - 24px); }
+  .header { padding: 12px 16px; }
+  .backBtn { width: 38px; height: 38px; }
 }

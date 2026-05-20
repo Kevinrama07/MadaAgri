@@ -265,6 +265,14 @@
 .profileAvatar {
   width: 34px;
   height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  transition: all var(--transition-fast);
+}
+
+.profileInitials {
+  width: 34px;
+  height: 34px;
   background: var(--gradient);
   color: var(--text-inverse);
   border-radius: 50%;
@@ -276,7 +284,8 @@
   transition: all var(--transition-fast);
 }
 
-.profileBtn:hover .profileAvatar {
+.profileBtn:hover .profileAvatar,
+.profileBtn:hover .profileInitials {
   transform: scale(1.05);
   box-shadow: var(--shadow);
 }

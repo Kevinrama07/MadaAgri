@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiUsers, FiBarChart2, FiBookmark, FiHome, FiShoppingBag, FiMessageSquare, FiBell, FiChevronDown, FiChevronUp, FiMapPin, FiCalendar, FiTrendingUp } from 'react-icons/fi';
 import { GiWheat } from 'react-icons/gi';
 import { FaRobot } from "react-icons/fa";
@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { useAuth } from '../../contexts/ContextAuthentification';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
+import { dataApi } from '../../lib/api';
 import styles from '../../styles/Composants/LeftSidebar.module.css';
 
 export default function LeftSidebar() {
@@ -13,6 +14,11 @@ export default function LeftSidebar() {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const [showMore, setShowMore] = useState(false);
+  const [stats, setStats] = useState({
+    posts: 0,
+    followers: 0,
+    following: 0,
+  });
 
   const mainMenuItems = [
     { icon: <FiHome />, label: 'Fil d\'actualite', route: '/dashboard' },
@@ -36,10 +42,40 @@ export default function LeftSidebar() {
     if (route) navigate(route);
   };
 
-  const stats = [
-    { label: 'Publications', value: user?.posts_count || 0 },
-    { label: 'Abonnes', value: user?.followers_count || 0 },
-    { label: 'Abonnements', value: user?.following_count || 0 },
+  useEffect(() => {
+    if (!user?.id) return;
+
+    let cancelled = false;
+
+    const fetchStats = async () => {
+      try {
+        const [followersData, followingData, postsData] = await Promise.all([
+          dataApi.fetchFollowers(user.id),
+          dataApi.fetchFollowing(user.id),
+          dataApi.fetchPosts({ q: '', sort: 'recent' }).catch(() => []),
+        ]);
+
+        if (!cancelled) {
+          const userPosts = postsData.filter((p) => p.user_id === user.id || p.email === user.email);
+          setStats({
+            posts: userPosts.length,
+            followers: followersData?.length || 0,
+            following: followingData?.length || 0,
+          });
+        }
+      } catch (err) {
+        console.error('[LeftSidebar] Failed to fetch stats:', err);
+      }
+    };
+
+    fetchStats();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  const displayStats = [
+    { label: 'Publications', value: stats.posts },
+    { label: 'Abonnes', value: stats.followers },
+    { label: 'Abonnements', value: stats.following },
   ];
 
   return (
@@ -59,7 +95,7 @@ export default function LeftSidebar() {
       </div>
 
       <div className={styles['stats-row']}>
-        {stats.map((stat, i) => (
+        {displayStats.map((stat, i) => (
           <div key={i} className={styles['stat-item']}>
             <span className={styles['stat-value']}>{stat.value}</span>
             <span className={styles['stat-label']}>{stat.label}</span>

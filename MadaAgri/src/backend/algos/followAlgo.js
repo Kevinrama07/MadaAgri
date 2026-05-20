@@ -9,10 +9,10 @@ class FollowAlgorithm {
   /**
    * Vérifie si un suivi existe
    */
-  static async followExists(followerId, followingId) {
+  static async followExists(followerId, followeeId) {
     const [result] = await db.query(
-      'SELECT id FROM follows WHERE follower_id = ? AND following_id = ?',
-      [followerId, followingId]
+      'SELECT 1 FROM follows WHERE follower_id = ? AND followee_id = ?',
+      [followerId, followeeId]
     );
     return result.length > 0;
   }
@@ -22,8 +22,8 @@ class FollowAlgorithm {
    */
   static async collaborationExists(userA, userB) {
     const [result] = await db.query(
-      `SELECT id, status FROM collaborations 
-       WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
+      `SELECT id, status FROM collaboration_invitations 
+       WHERE ((sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?))
        ORDER BY created_at DESC LIMIT 1`,
       [userA, userB, userB, userA]
     );
@@ -33,10 +33,10 @@ class FollowAlgorithm {
   /**
    * Crée un suivi
    */
-  static async createFollow(followerId, followingId) {
+  static async createFollow(followerId, followeeId) {
     await db.query(
-      'INSERT INTO follows (follower_id, following_id) VALUES (?, ?)',
-      [followerId, followingId]
+      'INSERT INTO follows (follower_id, followee_id) VALUES (?, ?)',
+      [followerId, followeeId]
     );
   }
 
@@ -45,8 +45,8 @@ class FollowAlgorithm {
    */
   static async createAutoCollaboration(userA, userB) {
     const [result] = await db.query(
-      `INSERT INTO collaborations (sender_id, receiver_id, status, level, message, responded_at) 
-       VALUES (?, ?, 'accepted', 'collaborateur', 'Collaboration automatique via suivi mutuel', NOW())`,
+      `INSERT INTO collaboration_invitations (id, sender_id, recipient_id, message, status, updated_at) 
+       VALUES (UUID(), ?, ?, 'Collaboration automatique via suivi mutuel', 'accepted', NOW())`,
       [userA, userB]
     );
     return result.insertId;
@@ -143,14 +143,14 @@ class FollowAlgorithm {
 
     // Supprimer le suivi
     await db.query(
-      'DELETE FROM follows WHERE follower_id = ? AND following_id = ?',
+      'DELETE FROM follows WHERE follower_id = ? AND followee_id = ?',
       [followerId, followingId]
     );
 
     // Supprimer la collaboration automatique si elle existe
     const [result] = await db.query(
-      `DELETE FROM collaborations 
-       WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
+      `DELETE FROM collaboration_invitations 
+       WHERE ((sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?))
        AND status = 'accepted' 
        AND message = 'Collaboration automatique via suivi mutuel'`,
       [followerId, followingId, followingId, followerId]
@@ -170,25 +170,25 @@ class FollowAlgorithm {
       SELECT 
         EXISTS(
           SELECT 1 FROM follows 
-          WHERE follower_id = ? AND following_id = ?
+          WHERE follower_id = ? AND followee_id = ?
         ) as is_following,
         EXISTS(
           SELECT 1 FROM follows 
-          WHERE follower_id = ? AND following_id = ?
+          WHERE follower_id = ? AND followee_id = ?
         ) as is_followed_by,
         EXISTS(
-          SELECT 1 FROM collaborations 
-          WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
+          SELECT 1 FROM collaboration_invitations 
+          WHERE ((sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?))
           AND status = 'accepted'
         ) as is_collaborator,
         (
-          SELECT status FROM collaborations 
-          WHERE sender_id = ? AND receiver_id = ?
+          SELECT status FROM collaboration_invitations 
+          WHERE sender_id = ? AND recipient_id = ?
           ORDER BY created_at DESC LIMIT 1
         ) as sent_invitation_status,
         (
-          SELECT status FROM collaborations 
-          WHERE sender_id = ? AND receiver_id = ?
+          SELECT status FROM collaboration_invitations 
+          WHERE sender_id = ? AND recipient_id = ?
           ORDER BY created_at DESC LIMIT 1
         ) as received_invitation_status
     `, [

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { FiMenu, FiMessageCircle } from 'react-icons/fi';
 import { usePageLoading } from '../../hooks/usePageLoading';
@@ -12,9 +13,10 @@ import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import styles from './MessagerieStyles.module.css';
 
-export default function Messagerie() {
+export default function Messagerie({ targetUserId }) {
   const { user: currentUser } = useAuth();
   const { isLoading, startLoading, stopLoading, hasShownSkeletons, markSkeletonsShown } = usePageLoading();
+  const navigate = useNavigate();
   
   useEffect(() => {
     if (isLoading && !hasShownSkeletons) {
@@ -98,6 +100,38 @@ export default function Messagerie() {
         const conversationsWithMessages = (convData || []).filter(conv => conv.last_message);
         console.log('[Messagerie] Conversations avec messages:', conversationsWithMessages.length);
         setConversations(conversationsWithMessages);
+
+        // Si un targetUserId est fourni, ouvrir la conversation correspondante
+        if (targetUserId) {
+          const existingConv = conversationsWithMessages.find(
+            (conv) => conv.other_user_id === targetUserId
+          );
+          if (existingConv) {
+            setSelectedConversation(existingConv);
+            setShowSidebar(false);
+          } else {
+            // Récupérer les infos de l'utilisateur
+            try {
+              const profileData = await dataApi.fetchUserProfile(targetUserId);
+              const targetUser = profileData?.user || profileData;
+              const conversationId = [currentUser.id, targetUserId].sort().join('_');
+              const newConv = {
+                id: conversationId,
+                other_user_id: targetUserId,
+                other_user_name: targetUser?.display_name || 'Utilisateur',
+                other_user_image: targetUser?.profile_image_url || null,
+                other_user_online: false,
+                last_message: null,
+                last_message_time: null,
+              };
+              setSelectedConversation(newConv);
+              setShowSidebar(false);
+              setMessages([]);
+            } catch (err) {
+              console.error('[Messagerie] Erreur chargement profil utilisateur:', err);
+            }
+          }
+        }
       } catch (err) {
         console.error('[Messagerie] Erreur chargement conversations:', err);
         setConversations([]);
@@ -107,7 +141,7 @@ export default function Messagerie() {
     }
     
     fetchConversations();
-  }, [currentUser]);
+  }, [currentUser, targetUserId]);
 
   // Rejoindre la conversation et écouter les messages
   useEffect(() => {

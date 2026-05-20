@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import clsx from 'clsx';
 import { FiBell, FiX, FiCheck, FiUser, FiUsers, FiMessageSquare, FiSearch, FiFilter, FiArchive, FiSettings } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/ContextAuthentification';
 import styles from './NotificationCenter.module.css';
 
 export default function NotificationCenter({
@@ -14,6 +15,7 @@ export default function NotificationCenter({
   onNavigate,
 }) {
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [animatingId, setAnimatingId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,11 +67,15 @@ export default function NotificationCenter({
           navigate(`/invitations`);
           break;
         case 'follow':
-          navigate(`/profile/${notification.senderId}`);
+          if (notification.senderId === currentUser?.id) {
+            navigate('/profile');
+          } else {
+            navigate(`/profile/${notification.senderId}`);
+          }
           break;
         case 'like':
         case 'comment':
-          navigate(`/posts/${notification.relatedItem}`);
+          navigate(`/dashboard/post/${notification.relatedItem}`);
           break;
         default:
           break;

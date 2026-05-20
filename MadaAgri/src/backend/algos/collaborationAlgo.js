@@ -13,16 +13,16 @@ class CollaborationAlgorithm {
   static async checkRelationshipState(userA, userB) {
     const [result] = await db.query(`
       SELECT 
-        (SELECT COUNT(*) FROM follows WHERE follower_id = ? AND following_id = ?) as a_follows_b,
-        (SELECT COUNT(*) FROM follows WHERE follower_id = ? AND following_id = ?) as b_follows_a,
-        (SELECT id, status FROM collaborations 
-         WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
+        (SELECT COUNT(*) FROM follows WHERE follower_id = ? AND followee_id = ?) as a_follows_b,
+        (SELECT COUNT(*) FROM follows WHERE follower_id = ? AND followee_id = ?) as b_follows_a,
+        (SELECT id, status FROM collaboration_invitations 
+         WHERE ((sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?))
          ORDER BY created_at DESC LIMIT 1) as collaboration
     `, [userA, userB, userB, userA, userA, userB, userB, userA]);
 
     const [collab] = await db.query(`
-      SELECT id, status, sender_id FROM collaborations 
-      WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
+      SELECT id, status, sender_id FROM collaboration_invitations 
+      WHERE ((sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?))
       ORDER BY created_at DESC LIMIT 1
     `, [userA, userB, userB, userA]);
 
@@ -38,8 +38,8 @@ class CollaborationAlgorithm {
    */
   static async createAcceptedCollaboration(userA, userB, reason = 'Suivi mutuel') {
     const [result] = await db.query(
-      `INSERT INTO collaborations (sender_id, receiver_id, status, level, message, responded_at) 
-       VALUES (?, ?, 'accepted', 'collaborateur', ?, NOW())`,
+      `INSERT INTO collaboration_invitations (id, sender_id, recipient_id, message, status, updated_at) 
+       VALUES (UUID(), ?, ?, ?, 'accepted', NOW())`,
       [userA, userB, reason]
     );
     return result.insertId;
@@ -50,7 +50,7 @@ class CollaborationAlgorithm {
    */
   static async createMutualFollows(userA, userB) {
     await db.query(
-      'INSERT IGNORE INTO follows (follower_id, following_id) VALUES (?, ?), (?, ?)',
+      'INSERT IGNORE INTO follows (follower_id, followee_id) VALUES (?, ?), (?, ?)',
       [userA, userB, userB, userA]
     );
   }
@@ -72,7 +72,7 @@ class CollaborationAlgorithm {
    */
   static async processInvitationAcceptance(invitationId, acceptorId) {
     const [invitation] = await db.query(
-      'SELECT * FROM collaborations WHERE id = ? AND receiver_id = ? AND status = "pending"',
+      'SELECT * FROM collaboration_invitations WHERE id = ? AND recipient_id = ? AND status = "pending"',
       [invitationId, acceptorId]
     );
 
@@ -84,7 +84,7 @@ class CollaborationAlgorithm {
 
     // Accepter l'invitation
     await db.query(
-      'UPDATE collaborations SET status = "accepted", responded_at = NOW() WHERE id = ?',
+      'UPDATE collaboration_invitations SET status = "accepted", updated_at = NOW() WHERE id = ?',
       [invitationId]
     );
 
@@ -110,7 +110,7 @@ class CollaborationAlgorithm {
    */
   static async processInvitationRejection(invitationId, rejectorId) {
     const [invitation] = await db.query(
-      'SELECT * FROM collaborations WHERE id = ? AND receiver_id = ? AND status = "pending"',
+      'SELECT * FROM collaboration_invitations WHERE id = ? AND recipient_id = ? AND status = "pending"',
       [invitationId, rejectorId]
     );
 
@@ -122,7 +122,7 @@ class CollaborationAlgorithm {
 
     // Refuser l'invitation
     await db.query(
-      'UPDATE collaborations SET status = "rejected", responded_at = NOW() WHERE id = ?',
+      'UPDATE collaboration_invitations SET status = "declined", updated_at = NOW() WHERE id = ?',
       [invitationId]
     );
 

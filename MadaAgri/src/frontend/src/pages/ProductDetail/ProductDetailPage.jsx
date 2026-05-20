@@ -4,11 +4,13 @@ import { Card } from '../../components/ui/Card/Card';
 import { Badge } from '../../components/ui/Badge/Badge';
 import { Button } from '../../components/ui/Button/Button';
 import { dataApi } from '../../lib/api';
+import { useAuth } from '../../contexts/ContextAuthentification';
 import styles from './ProductDetailPage.module.css';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -197,7 +199,13 @@ export default function ProductDetailPage() {
                   size="lg"
                   fullWidth
                   disabled={product.quantity === 0}
-                  onClick={() => navigate(`/profile/${product.farmer_id}`)}
+                  onClick={() => {
+                    if (product.farmer_id === currentUser?.id) {
+                      navigate('/profile');
+                    } else {
+                      navigate(`/profile/${product.farmer_id}`);
+                    }
+                  }}
                 >
                   Contacter le vendeur
                 </Button>

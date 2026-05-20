@@ -379,6 +379,11 @@ export const dataApi = {
     return data.posts;
   },
 
+  async fetchPostById(postId) {
+    const data = await apiFetch(`/posts/${encodeURIComponent(postId)}`);
+    return data.post;
+  },
+
   async uploadImage(file) {
     const token = getToken();
     const form = new FormData();
@@ -416,6 +421,71 @@ export const dataApi = {
     const data = await apiFetch('/users/password', {
       method: 'PUT',
       body: JSON.stringify({ currentPassword, newPassword })
+    });
+    return data;
+  },
+
+  async enable2FA() {
+    const data = await apiFetch('/users/2fa/enable', {
+      method: 'POST'
+    });
+    return data;
+  },
+
+  async verify2FA(token) {
+    const data = await apiFetch('/users/2fa/verify', {
+      method: 'POST',
+      body: JSON.stringify({ token })
+    });
+    return data;
+  },
+
+  async disable2FA() {
+    const data = await apiFetch('/users/2fa/disable', {
+      method: 'POST'
+    });
+    return data;
+  },
+
+  async revokeAllSessions() {
+    const data = await apiFetch('/users/sessions/revoke', {
+      method: 'POST'
+    });
+    return data;
+  },
+
+  async exportUserData() {
+    const token = getToken();
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE}/users/export`, {
+      headers
+    });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      throw new Error(body?.error || 'Erreur lors de l\'export');
+    }
+
+    return await response.blob();
+  },
+
+  async deleteAccount() {
+    const data = await apiFetch('/users', {
+      method: 'DELETE'
+    });
+    return data;
+  },
+
+  async updateNotificationPreferences(preferences) {
+    const data = await apiFetch('/users', {
+      method: 'PUT',
+      body: JSON.stringify({ notification_settings: preferences })
     });
     return data;
   },
@@ -495,6 +565,13 @@ export const dataApi = {
   async fetchCollaborators(limit = 50, offset = 0) {
     const data = await apiFetch(`/network/collaborators?limit=${limit}&offset=${offset}`);
     return data.collaborators;
+  },
+
+  async removeCollaboration(userId) {
+    const data = await apiFetch(`/collaborations/${encodeURIComponent(userId)}`, {
+      method: 'DELETE'
+    });
+    return data;
   },
 
   async fetchInvitationStatus(targetUserId) {

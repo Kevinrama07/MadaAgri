@@ -40,6 +40,15 @@ export default function SettingsPage() {
   const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
   const [twoFactorSecret, setTwoFactorSecret] = useState(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [notificationSettings, setNotificationSettings] = useState({
+    newOrders: true,
+    messages: true,
+    reviews: false,
+    priceAlerts: true,
+    weatherAlerts: true,
+  });
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState(null);
   const [saveError, setSaveError] = useState(null);
@@ -145,6 +154,60 @@ export default function SettingsPage() {
       setSaveMessage('Authentification à deux facteurs désactivée');
     } catch (err) {
       setSaveError(err.message || 'Erreur lors de la désactivation de la 2FA');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    setSaveError(null);
+    setSaveMessage(null);
+    setSaving(true);
+    try {
+      const blob = await dataApi.exportUserData();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `madaagri_data_export_${new Date().toISOString().split('T')[0]}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setSaveMessage('Export de données en cours de téléchargement');
+    } catch (err) {
+      setSaveError(err.message || 'Erreur lors de l\'export de vos données');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'SUPPRIMER MON COMPTE') {
+      setSaveError('Veuillez taper "SUPPRIMER MON COMPTE" pour confirmer');
+      return;
+    }
+    setSaveError(null);
+    setSaveMessage(null);
+    setSaving(true);
+    try {
+      await dataApi.deleteAccount();
+      signOut();
+      navigate('/login');
+    } catch (err) {
+      setSaveError(err.message || 'Erreur lors de la suppression du compte');
+      setSaving(false);
+    }
+  };
+
+  const handleNotificationSave = async () => {
+    setSaveError(null);
+    setSaveMessage(null);
+    setSaving(true);
+    try {
+      await dataApi.updateNotificationPreferences(notificationSettings);
+      setSaveMessage('Préférences de notification sauvegardées');
+    } catch (err) {
+      setSaveError(err.message || 'Erreur lors de la sauvegarde des notifications');
     } finally {
       setSaving(false);
     }
@@ -306,88 +369,292 @@ export default function SettingsPage() {
           )}
 
           {activeTab === 'security' && (
-            <Card className={styles.settingsCard}>
-              <h2 className={styles.sectionTitle}>Modifier le mot de passe</h2>
-              <form onSubmit={handlePasswordChange}>
-                <div className={styles.formGrid}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Mot de passe actuel</label>
-                    <input
-                      className={styles.input}
-                      type={showPassword ? 'text' : 'password'}
-                      value={passwordForm.current}
-                      onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
-                      required
-                    />
+            <>
+              <Card className={styles.settingsCard}>
+                <h2 className={styles.sectionTitle}>Modifier le mot de passe</h2>
+                <form onSubmit={handlePasswordChange}>
+                  <div className={styles.formGrid}>
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>Mot de passe actuel</label>
+                      <input
+                        className={styles.input}
+                        type={showPassword ? 'text' : 'password'}
+                        value={passwordForm.current}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>Nouveau mot de passe</label>
+                      <input
+                        className={styles.input}
+                        type={showPassword ? 'text' : 'password'}
+                        value={passwordForm.new}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
+                        required
+                        minLength={8}
+                      />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>Confirmer le nouveau mot de passe</label>
+                      <input
+                        className={styles.input}
+                        type={showPassword ? 'text' : 'password'}
+                        value={passwordForm.confirm}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                        required
+                        minLength={8}
+                      />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label className={styles.toggle}>
+                        <input type="checkbox" checked={showPassword} onChange={() => setShowPassword(!showPassword)} />
+                        <span className={styles.toggleSlider} />
+                      </label>
+                      Afficher les mots de passe
+                    </div>
                   </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Nouveau mot de passe</label>
-                    <input
-                      className={styles.input}
-                      type={showPassword ? 'text' : 'password'}
-                      value={passwordForm.new}
-                      onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
-                      required
-                      minLength={8}
-                    />
+                  {passwordForm.new && passwordForm.confirm && passwordForm.new !== passwordForm.confirm && (
+                    <p className={styles.errorText}>Les mots de passe ne correspondent pas</p>
+                  )}
+                  <div className={styles.formActions}>
+                    <button type="submit" className={styles.saveBtn} disabled={saving || passwordForm.new !== passwordForm.confirm || !passwordForm.new}>
+                      {saving ? 'Mise à jour...' : 'Mettre à jour'}
+                    </button>
                   </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Confirmer le nouveau mot de passe</label>
-                    <input
-                      className={styles.input}
-                      type={showPassword ? 'text' : 'password'}
-                      value={passwordForm.confirm}
-                      onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
-                      required
-                      minLength={8}
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.toggle}>
-                      <input type="checkbox" checked={showPassword} onChange={() => setShowPassword(!showPassword)} />
-                      <span className={styles.toggleSlider} />
-                    </label>
-                    Afficher les mots de passe
-                  </div>
-                </div>
-                {passwordForm.new && passwordForm.confirm && passwordForm.new !== passwordForm.confirm && (
-                  <p className={styles.errorText}>Les mots de passe ne correspondent pas</p>
-                )}
-                <div className={styles.formActions}>
-                  <button type="submit" className={styles.saveBtn} disabled={saving || passwordForm.new !== passwordForm.confirm || !passwordForm.new}>
-                    {saving ? 'Mise à jour...' : 'Mettre à jour'}
+                </form>
+              </Card>
+
+              <Card className={styles.settingsCard}>
+                <h2 className={styles.sectionTitle}>Authentification à deux facteurs (2FA)</h2>
+                <p className={styles.aboutText} style={{ marginBottom: 16 }}>
+                  Ajoutez une couche de sécurité supplémentaire en要求 un code de vérification lors de la connexion.
+                </p>
+
+                {!showTwoFactorSetup && !twoFactorEnabled && (
+                  <button
+                    className={styles.saveBtn}
+                    onClick={handleEnable2FA}
+                    disabled={saving}
+                  >
+                    {saving ? 'Activation...' : 'Activer la 2FA'}
                   </button>
-                </div>
-              </form>
-            </Card>
+                )}
+
+                {showTwoFactorSetup && twoFactorSecret && (
+                  <div>
+                    <div style={{ marginBottom: 16 }}>
+                      <p className={styles.aboutText}>
+                        1. Scannez ce QR code avec votre application d'authentification (Google Authenticator, Authy, etc.)
+                      </p>
+                      <img src={twoFactorSecret.qrCodeUrl} alt="QR Code 2FA" style={{ maxWidth: 200, margin: '12px 0' }} />
+                      <p className={styles.aboutText}>
+                        2. Ou entrez manuellement cette clé : <code style={{ background: 'var(--background-secondary)', padding: '2px 6px', borderRadius: 4 }}>{twoFactorSecret.secret}</code>
+                      </p>
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>Code de vérification</label>
+                      <input
+                        className={styles.input}
+                        type="text"
+                        value={twoFactorCode}
+                        onChange={(e) => setTwoFactorCode(e.target.value)}
+                        placeholder="Entrez le code à 6 chiffres"
+                        maxLength={6}
+                        pattern="[0-9]{6}"
+                      />
+                    </div>
+                    <div className={styles.formActions} style={{ gap: 8 }}>
+                      <button
+                        className={styles.saveBtn}
+                        onClick={handleVerify2FA}
+                        disabled={saving || twoFactorCode.length !== 6}
+                      >
+                        {saving ? 'Vérification...' : 'Vérifier et activer'}
+                      </button>
+                      <button
+                        className={styles.saveBtn}
+                        style={{ background: 'var(--background-secondary)', color: 'var(--text)' }}
+                        onClick={() => { setShowTwoFactorSetup(false); setTwoFactorSecret(null); setTwoFactorCode(''); }}
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {twoFactorEnabled && !showTwoFactorSetup && (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2" width="20" height="20">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
+                      </svg>
+                      <span style={{ color: 'var(--success)', fontWeight: 600 }}>2FA activée</span>
+                    </div>
+                    <button
+                      className={styles.dangerBtn}
+                      onClick={handleDisable2FA}
+                      disabled={saving}
+                    >
+                      {saving ? 'Désactivation...' : 'Désactiver la 2FA'}
+                    </button>
+                  </div>
+                )}
+              </Card>
+
+              <Card className={styles.settingsCard}>
+                <h2 className={styles.sectionTitle}>Sessions actives</h2>
+                <p className={styles.aboutText} style={{ marginBottom: 16 }}>
+                  Gérez les appareils connectés à votre compte.
+                </p>
+                <button
+                  className={styles.saveBtn}
+                  style={{ background: 'var(--background-secondary)', color: 'var(--text)' }}
+                  onClick={async () => {
+                    setSaving(true);
+                    try {
+                      await dataApi.revokeAllSessions();
+                      setSaveMessage('Toutes les autres sessions ont été fermées');
+                    } catch (err) {
+                      setSaveError(err.message || 'Erreur lors de la fermeture des sessions');
+                    } finally {
+                      setSaving(false);
+                    }
+                  }}
+                  disabled={saving}
+                >
+                  Fermer toutes les autres sessions
+                </button>
+              </Card>
+            </>
           )}
 
           {activeTab === 'privacy' && (
-            <Card className={styles.settingsCard}>
-              <h2 className={styles.sectionTitle}>Paramètres de confidentialité</h2>
-              {[
-                { key: 'profileVisible', label: 'Profil visible', desc: 'Les autres utilisateurs peuvent voir votre profil' },
-                { key: 'showEmail', label: 'Afficher l\'email', desc: 'Montrer votre email sur votre profil public' },
-                { key: 'showLocation', label: 'Afficher la localisation', desc: 'Montrer votre région sur votre profil' },
-                { key: 'allowMessages', label: 'Autoriser les messages', desc: 'Recevoir des messages d\'autres utilisateurs' },
-                { key: 'showActivity', label: 'Afficher l\'activité', desc: 'Montrer votre activité récente sur le profil' },
-              ].map((pref) => (
-                <div key={pref.key} className={styles.prefRow}>
-                  <div>
-                    <span className={styles.prefLabel}>{pref.label}</span>
-                    <span className={styles.prefDesc}>{pref.desc}</span>
+            <>
+              <Card className={styles.settingsCard}>
+                <h2 className={styles.sectionTitle}>Paramètres de confidentialité</h2>
+                {[
+                  { key: 'profileVisible', label: 'Profil visible', desc: 'Les autres utilisateurs peuvent voir votre profil' },
+                  { key: 'showEmail', label: 'Afficher l\'email', desc: 'Montrer votre email sur votre profil public' },
+                  { key: 'showLocation', label: 'Afficher la localisation', desc: 'Montrer votre région sur votre profil' },
+                  { key: 'allowMessages', label: 'Autoriser les messages', desc: 'Recevoir des messages d\'autres utilisateurs' },
+                  { key: 'showActivity', label: 'Afficher l\'activité', desc: 'Montrer votre activité récente sur le profil' },
+                ].map((pref) => (
+                  <div key={pref.key} className={styles.prefRow}>
+                    <div>
+                      <span className={styles.prefLabel}>{pref.label}</span>
+                      <span className={styles.prefDesc}>{pref.desc}</span>
+                    </div>
+                    <label className={styles.toggle}>
+                      <input
+                        type="checkbox"
+                        checked={privacySettings[pref.key]}
+                        onChange={() => setPrivacySettings({ ...privacySettings, [pref.key]: !privacySettings[pref.key] })}
+                      />
+                      <span className={styles.toggleSlider} />
+                    </label>
                   </div>
-                  <label className={styles.toggle}>
-                    <input
-                      type="checkbox"
-                      checked={privacySettings[pref.key]}
-                      onChange={() => setPrivacySettings({ ...privacySettings, [pref.key]: !privacySettings[pref.key] })}
-                    />
-                    <span className={styles.toggleSlider} />
-                  </label>
+                ))}
+              </Card>
+
+              <Card className={styles.settingsCard}>
+                <h2 className={styles.sectionTitle}>Vos données (RGPD)</h2>
+                <p className={styles.aboutText} style={{ marginBottom: 16 }}>
+                  Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez d'un droit d'accès, de rectification et de suppression de vos données personnelles.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <button
+                    className={styles.saveBtn}
+                    onClick={handleExportData}
+                    disabled={saving}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18" style={{ marginRight: 8 }}>
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    {saving ? 'Préparation de l\'export...' : 'Exporter mes données'}
+                  </button>
+
+                  <button
+                    className={styles.dangerBtn}
+                    onClick={() => setShowDeleteConfirm(true)}
+                    disabled={saving}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      <line x1="10" y1="11" x2="10" y2="17" />
+                      <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
+                    Supprimer mon compte
+                  </button>
                 </div>
-              ))}
-            </Card>
+
+                {showDeleteConfirm && (
+                  <div style={{ marginTop: 20, padding: 16, background: 'var(--error-light, rgba(239, 68, 68, 0.1))', borderRadius: 'var(--radius-md)', border: '1px solid var(--error)' }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--error)', marginBottom: 8 }}>
+                      Confirmation de suppression
+                    </h3>
+                    <p className={styles.aboutText} style={{ marginBottom: 12 }}>
+                      Cette action est irréversible. Toutes vos données seront supprimées définitivement.
+                    </p>
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>
+                        Tapez <strong>"SUPPRIMER MON COMPTE"</strong> pour confirmer
+                      </label>
+                      <input
+                        className={styles.input}
+                        type="text"
+                        value={deleteConfirmText}
+                        onChange={(e) => setDeleteConfirmText(e.target.value)}
+                        placeholder="SUPPRIMER MON COMPTE"
+                      />
+                    </div>
+                    <div className={styles.formActions} style={{ gap: 8 }}>
+                      <button
+                        className={styles.dangerBtn}
+                        onClick={handleDeleteAccount}
+                        disabled={deleteConfirmText !== 'SUPPRIMER MON COMPTE' || saving}
+                      >
+                        {saving ? 'Suppression...' : 'Confirmer la suppression'}
+                      </button>
+                      <button
+                        className={styles.saveBtn}
+                        style={{ background: 'var(--background-secondary)', color: 'var(--text)' }}
+                        onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }}
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </Card>
+
+              <Card className={styles.settingsCard}>
+                <h2 className={styles.sectionTitle}>Conservation des données</h2>
+                <div className={styles.aboutInfo}>
+                  <div className={styles.aboutItem}>
+                    <span className={styles.aboutLabel}>Données de compte</span>
+                    <span className={styles.aboutValue}>Conservées jusqu'à suppression</span>
+                  </div>
+                  <div className={styles.aboutItem}>
+                    <span className={styles.aboutLabel}>Historique des transactions</span>
+                    <span className={styles.aboutValue}>7 ans (obligation légale)</span>
+                  </div>
+                  <div className={styles.aboutItem}>
+                    <span className={styles.aboutLabel}>Logs de connexion</span>
+                    <span className={styles.aboutValue}>12 mois</span>
+                  </div>
+                  <div className={styles.aboutItem}>
+                    <span className={styles.aboutLabel}>Cookies</span>
+                    <span className={styles.aboutValue}>13 mois</span>
+                  </div>
+                </div>
+              </Card>
+            </>
           )}
 
           {activeTab === 'appearance' && (
@@ -486,23 +753,32 @@ export default function SettingsPage() {
             <Card className={styles.settingsCard}>
               <h2 className={styles.sectionTitle}>Préférences de notification</h2>
               {[
-                { label: 'Nouvelles commandes', desc: 'Être notifié lors d\'une nouvelle commande', defaultChecked: true },
-                { label: 'Messages', desc: 'Être notifié lors d\'un nouveau message', defaultChecked: true },
-                { label: 'Avis', desc: 'Être notifié lors d\'un nouvel avis', defaultChecked: false },
-                { label: 'Alertes prix', desc: 'Être notifié des changements de prix', defaultChecked: true },
-                { label: 'Alertes météo', desc: 'Être notifié des conditions météorologiques sévères', defaultChecked: true },
-              ].map((pref, i) => (
-                <div key={i} className={styles.prefRow}>
+                { key: 'newOrders', label: 'Nouvelles commandes', desc: 'Être notifié lors d\'une nouvelle commande' },
+                { key: 'messages', label: 'Messages', desc: 'Être notifié lors d\'un nouveau message' },
+                { key: 'reviews', label: 'Avis', desc: 'Être notifié lors d\'un nouvel avis' },
+                { key: 'priceAlerts', label: 'Alertes prix', desc: 'Être notifié des changements de prix' },
+                { key: 'weatherAlerts', label: 'Alertes météo', desc: 'Être notifié des conditions météorologiques sévères' },
+              ].map((pref) => (
+                <div key={pref.key} className={styles.prefRow}>
                   <div>
                     <span className={styles.prefLabel}>{pref.label}</span>
                     <span className={styles.prefDesc}>{pref.desc}</span>
                   </div>
                   <label className={styles.toggle}>
-                    <input type="checkbox" defaultChecked={pref.defaultChecked} />
+                    <input
+                      type="checkbox"
+                      checked={notificationSettings[pref.key]}
+                      onChange={() => setNotificationSettings({ ...notificationSettings, [pref.key]: !notificationSettings[pref.key] })}
+                    />
                     <span className={styles.toggleSlider} />
                   </label>
                 </div>
               ))}
+              <div className={styles.formActions}>
+                <button type="button" className={styles.saveBtn} onClick={handleNotificationSave} disabled={saving}>
+                  {saving ? 'Sauvegarde...' : 'Sauvegarder les préférences'}
+                </button>
+              </div>
             </Card>
           )}
 

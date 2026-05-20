@@ -13,7 +13,7 @@ exports.sendCollaborationInvitation = async (req, res) => {
   try {
     // Vérifier si déjà collaborateurs
     const [existing] = await db.query(
-      `SELECT id, status FROM collaborations 
+      `SELECT id, status FROM collaboration_invitations 
        WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))`,
       [senderId, recipientId, recipientId, senderId]
     );
@@ -29,9 +29,9 @@ exports.sendCollaborationInvitation = async (req, res) => {
 
     // Créer l'invitation
     const [result] = await db.query(
-      `INSERT INTO collaborations (sender_id, receiver_id, status, level, message) 
-       VALUES (?, ?, 'pending', ?, ?)`,
-      [senderId, recipientId, level, message || null]
+      `INSERT INTO collaboration_invitations (id, sender_id, recipient_id, message, status, created_at, updated_at) 
+       VALUES (UUID(), ?, ?, ?, 'pending', NOW(), NOW())`,
+      [senderId, recipientId, message || null]
     );
 
     // Notification
@@ -101,7 +101,7 @@ exports.cancelInvitation = async (req, res) => {
   try {
     // Vérifier que c'est bien l'envoyeur
     const [invitation] = await db.query(
-      'SELECT * FROM collaborations WHERE id = ? AND sender_id = ? AND status = \'pending\'',
+      'SELECT * FROM collaboration_invitations WHERE id = ? AND sender_id = ? AND status = \'pending\'',
       [invitationId, userId]
     );
 
@@ -111,7 +111,7 @@ exports.cancelInvitation = async (req, res) => {
 
     // Annuler l'invitation
     await db.query(
-      'UPDATE collaborations SET status = \'cancelled\' WHERE id = ?',
+      'UPDATE collaboration_invitations SET status = \'cancelled\' WHERE id = ?',
       [invitationId]
     );
 
@@ -128,20 +128,27 @@ exports.cancelInvitation = async (req, res) => {
 // Supprimer une collaboration
 exports.removeCollaboration = async (req, res) => {
   const userId = req.user.id;
-  const collaboratorId = parseInt(req.params.userId);
+  const collaboratorId = req.params.userId;
 
   try {
     // Supprimer la collaboration
-    const result = await db.query(
-      `DELETE FROM collaborations 
-       WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
+    const [result] = await db.query(
+      `DELETE FROM collaboration_invitations 
+       WHERE ((sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?))
        AND status = 'accepted'`,
       [userId, collaboratorId, collaboratorId, userId]
     );
 
-    if (result[0].affectedRows === 0) {
+    if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Collaboration non trouvée' });
     }
+
+    // Retirer les suivis mutuels
+    await db.query(
+      `DELETE FROM follows 
+       WHERE (follower_id = ? AND followee_id = ?) OR (follower_id = ? AND followee_id = ?)`,
+      [userId, collaboratorId, collaboratorId, userId]
+    );
 
     res.json({ 
       success: true, 
@@ -165,21 +172,20 @@ exports.getReceivedInvitations = async (req, res) => {
       SELECT 
         c.id,
         c.message,
-        c.level,
         c.created_at,
         u.id as sender_id,
         u.display_name as sender_name,
         u.email as sender_email,
         u.profile_image_url as sender_avatar
-      FROM collaborations c
+      FROM collaboration_invitations c
       JOIN users u ON c.sender_id = u.id
-      WHERE c.receiver_id = ? AND c.status = 'pending'
+      WHERE c.recipient_id = ? AND c.status = 'pending'
       ORDER BY c.created_at DESC
       LIMIT ? OFFSET ?
     `, [userId, limit, offset]);
 
     const [total] = await db.query(
-      'SELECT COUNT(*) as count FROM collaborations WHERE receiver_id = ? AND status = \'pending\'',
+      'SELECT COUNT(*) as count FROM collaboration_invitations WHERE recipient_id = ? AND status = \'pending\'',
       [userId]
     );
 
@@ -210,22 +216,21 @@ exports.getSentInvitations = async (req, res) => {
       SELECT 
         c.id,
         c.message,
-        c.level,
         c.status,
         c.created_at,
-        u.id as receiver_id,
-        u.display_name as receiver_name,
-        u.email as receiver_email,
-        u.profile_image_url as receiver_avatar
-      FROM collaborations c
-      JOIN users u ON c.receiver_id = u.id
+        u.id as recipient_id,
+        u.display_name as recipient_name,
+        u.email as recipient_email,
+        u.profile_image_url as recipient_avatar
+      FROM collaboration_invitations c
+      JOIN users u ON c.recipient_id = u.id
       WHERE c.sender_id = ? AND c.status = 'pending'
       ORDER BY c.created_at DESC
       LIMIT ? OFFSET ?
     `, [userId, limit, offset]);
 
     const [total] = await db.query(
-      'SELECT COUNT(*) as count FROM collaborations WHERE sender_id = ? AND status = \'pending\'',
+      'SELECT COUNT(*) as count FROM collaboration_invitations WHERE sender_id = ? AND status = \'pending\'',
       [userId]
     );
 
@@ -246,7 +251,7 @@ exports.getSentInvitations = async (req, res) => {
 
 // Liste des collaborateurs actifs
 exports.getCollaborators = async (req, res) => {
-  const userId = parseInt(req.params.userId);
+  const userId = req.params.userId;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
   const offset = (page - 1) * limit;
@@ -259,22 +264,21 @@ exports.getCollaborators = async (req, res) => {
         u.email,
         u.profile_image_url,
         u.bio,
-        c.level,
         c.created_at as collaboration_since
-      FROM collaborations c
+      FROM collaboration_invitations c
       JOIN users u ON (
         CASE 
-          WHEN c.sender_id = ? THEN u.id = c.receiver_id
+          WHEN c.sender_id = ? THEN u.id = c.recipient_id
           ELSE u.id = c.sender_id
         END
       )
-      WHERE (c.sender_id = ? OR c.receiver_id = ?) AND c.status = 'accepted'
+      WHERE (c.sender_id = ? OR c.recipient_id = ?) AND c.status = 'accepted'
       ORDER BY c.created_at DESC
       LIMIT ? OFFSET ?
     `, [userId, userId, userId, limit, offset]);
 
     const [total] = await db.query(
-      'SELECT COUNT(*) as count FROM collaborations WHERE (sender_id = ? OR receiver_id = ?) AND status = \'accepted\'',
+      'SELECT COUNT(*) as count FROM collaboration_invitations WHERE (sender_id = ? OR recipient_id = ?) AND status = \'accepted\'',
       [userId, userId]
     );
 

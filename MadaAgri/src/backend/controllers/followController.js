@@ -4,7 +4,7 @@ const FollowAlgorithm = require('../algos/followAlgo');
 // Suivre un utilisateur
 exports.followUser = async (req, res) => {
   const followerId = req.user.id;
-  const followingId = parseInt(req.params.userId);
+  const followingId = req.params.userId;
 
   if (followerId === followingId) {
     return res.status(400).json({ error: 'Vous ne pouvez pas vous suivre vous-même' });
@@ -33,7 +33,7 @@ exports.followUser = async (req, res) => {
 // Ne plus suivre
 exports.unfollowUser = async (req, res) => {
   const followerId = req.user.id;
-  const followingId = parseInt(req.params.userId);
+  const followingId = req.params.userId;
 
   try {
     const result = await FollowAlgorithm.processUnfollow(followerId, followingId);
@@ -54,7 +54,7 @@ exports.unfollowUser = async (req, res) => {
 
 // Liste des abonnés
 exports.getFollowers = async (req, res) => {
-  const userId = parseInt(req.params.userId);
+  const userId = req.params.userId;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
   const offset = (page - 1) * limit;
@@ -70,22 +70,22 @@ exports.getFollowers = async (req, res) => {
         f.created_at as followed_at,
         EXISTS(
           SELECT 1 FROM follows 
-          WHERE follower_id = ? AND following_id = u.id
+          WHERE follower_id = ? AND followee_id = u.id
         ) as is_following_back,
         EXISTS(
-          SELECT 1 FROM collaborations 
-          WHERE ((sender_id = ? AND receiver_id = u.id) OR (sender_id = u.id AND receiver_id = ?))
+          SELECT 1 FROM collaboration_invitations 
+          WHERE ((sender_id = ? AND recipient_id = u.id) OR (sender_id = u.id AND recipient_id = ?))
           AND status = 'accepted'
         ) as is_collaborator
       FROM follows f
       JOIN users u ON f.follower_id = u.id
-      WHERE f.following_id = ?
+      WHERE f.followee_id = ?
       ORDER BY f.created_at DESC
       LIMIT ? OFFSET ?
     `, [req.user.id, req.user.id, req.user.id, userId, limit, offset]);
 
     const [total] = await db.query(
-      'SELECT COUNT(*) as count FROM follows WHERE following_id = ?',
+      'SELECT COUNT(*) as count FROM follows WHERE followee_id = ?',
       [userId]
     );
 
@@ -106,7 +106,7 @@ exports.getFollowers = async (req, res) => {
 
 // Liste des suivis
 exports.getFollowing = async (req, res) => {
-  const userId = parseInt(req.params.userId);
+  const userId = req.params.userId;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
   const offset = (page - 1) * limit;
@@ -122,15 +122,15 @@ exports.getFollowing = async (req, res) => {
         f.created_at as followed_at,
         EXISTS(
           SELECT 1 FROM follows 
-          WHERE follower_id = u.id AND following_id = ?
+          WHERE follower_id = u.id AND followee_id = ?
         ) as is_following_back,
         EXISTS(
-          SELECT 1 FROM collaborations 
-          WHERE ((sender_id = ? AND receiver_id = u.id) OR (sender_id = u.id AND receiver_id = ?))
+          SELECT 1 FROM collaboration_invitations 
+          WHERE ((sender_id = ? AND recipient_id = u.id) OR (sender_id = u.id AND recipient_id = ?))
           AND status = 'accepted'
         ) as is_collaborator
       FROM follows f
-      JOIN users u ON f.following_id = u.id
+      JOIN users u ON f.followee_id = u.id
       WHERE f.follower_id = ?
       ORDER BY f.created_at DESC
       LIMIT ? OFFSET ?
