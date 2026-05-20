@@ -10,6 +10,7 @@ const config = require('./config');
 const logger = require('./utils/logger');
 const { registerRoutes } = require('./routes');
 const messageSocketService = require('./services/messageSocketService');
+const ImageCleanupScheduler = require('./services/imageCleanupScheduler');
 
 // Imports des middlewares
 const { helmetConfig, generalLimiter, readLimiter } = require('./middlewares/security');
@@ -237,9 +238,45 @@ process.on('unhandledRejection', (reason, promise) => {
   logger.error(`Unhandled Rejection at: ${promise}, reason: ${reason}`);
 });
 
+// Graceful shutdown handler
+const shutdown = async () => {
+  logger.info('🛑 Arrêt du serveur en cours...');
+  
+  // Stop image cleanup scheduler
+  try {
+    ImageCleanupScheduler.stop();
+    logger.info('✅ ImageCleanupScheduler arrêté');
+  } catch (error) {
+    logger.error('❌ Erreur lors de l\'arrêt du scheduler:', error);
+  }
+
+  // Close HTTP server
+  server.close(() => {
+    logger.info('✅ Serveur HTTP fermé');
+    process.exit(0);
+  });
+
+  // Force exit after 10 seconds
+  setTimeout(() => {
+    logger.error('⚠️  Timeout de fermeture - Force exit');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
 // Démarrer le serveur si le script est exécuté directement
 if (require.main === module) {
   startServer();
+  
+  // Initialize image cleanup scheduler
+  try {
+    ImageCleanupScheduler.start();
+    logger.info('✅ ImageCleanupScheduler démarré (cleanup quotidien à 2h du matin)');
+  } catch (error) {
+    logger.error('❌ Erreur lors du démarrage du scheduler:', error);
+  }
 }
 
 module.exports = app;

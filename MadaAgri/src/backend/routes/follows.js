@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const followController = require('../controllers/followController');
-const { authenticateToken } = require('../middlewares/authMiddleware');
+const { authMiddleware } = require('../middlewares/authMiddleware');
 
 // Toutes les routes nécessitent une authentification
-router.use(authenticateToken);
+router.use(authMiddleware);
 
 // Suivre / Ne plus suivre
 router.post('/:userId', followController.followUser);

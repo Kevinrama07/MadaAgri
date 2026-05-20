@@ -12,6 +12,9 @@ const uploadRouter = require('./upload');
 const healthRouter = require('./health');
 const optimizationRouter = require('./optimization');
 const parcelsRouter = require('./parcels');
+const followsRouter = require('./follows');
+const collaborationsRouter = require('./collaborations');
+const assistantRouter = require('./assistant');
 
 const logger = require('../utils/logger');
 const { authLimiter } = require('../middlewares/security');
@@ -56,7 +59,8 @@ function registerRoutes(app, uploadServices) {
   app.use('/api/posts', postsRouter);
   app.use('/api/users', usersRouter);
   app.use('/api/network', networkRouter);
-  app.use('/api/follows', networkRouter);
+  app.use('/api/follows', followsRouter);
+  app.use('/api/collaborations', collaborationsRouter);
 
   // Routes produits
   app.use('/api/products', productsRouter);
@@ -84,6 +88,9 @@ function registerRoutes(app, uploadServices) {
 
   // Routes parcelles agricoles
   app.use('/api/parcels', parcelsRouter);
+
+  // Routes assistant IA
+  app.use('/api/assistant', assistantRouter);
 
   // ========================
   // ROUTES 404 ET GESTION D'ERREURS

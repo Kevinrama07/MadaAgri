@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const collaborationController = require('../controllers/collaborationController');
-const { authenticateToken } = require('../middlewares/authMiddleware');
+const { authMiddleware } = require('../middlewares/authMiddleware');
 
 // Toutes les routes nécessitent une authentification
-router.use(authenticateToken);
+router.use(authMiddleware);
 
 // Envoyer / Gérer invitations
 router.post('/send', collaborationController.sendCollaborationInvitation);

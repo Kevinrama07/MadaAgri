@@ -21,11 +21,11 @@ const dbConfig = {
 };
 
 
-logger.info('[DB Config]', { 
-  host: dbConfig.host, 
-  port: dbConfig.port, 
-  user: dbConfig.user, 
-  database: dbConfig.database 
+logger.info('[DB Config]', {
+  host: dbConfig.host,
+  port: dbConfig.port,
+  user: dbConfig.user,
+  database: dbConfig.database
 });
 
 const pool = mysql.createPool(dbConfig);

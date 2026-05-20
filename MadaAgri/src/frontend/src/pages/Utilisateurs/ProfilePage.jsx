@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
-import { FiMail, FiPhone, FiMapPin, FiEdit } from 'react-icons/fi';
+import { FiMail, FiPhone, FiMapPin, FiEdit, FiCamera, FiFileText } from 'react-icons/fi';
 import { dataApi } from '../../lib/api';
 import PostCard from '../Publications/PostCard';
 import styles from './ProfilePage.module.css';
@@ -19,57 +19,47 @@ export default function ProfilePage({ user, onUserProfileClick }) {
   const fileInputRef = useRef(null);
   const [followers, setFollowers] = useState([]);
   const [following, setFollowing] = useState([]);
+  const [collaborators, setCollaborators] = useState([]);
   const [collaboratorsCount, setCollaboratorsCount] = useState(0);
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
   const [showCollaboratorsModal, setShowCollaboratorsModal] = useState(false);
-  const [collaborators, setCollaborators] = useState([]);
 
-  const roleDisplay = {
-    farmer: 'Agriculteur',
-    client: 'Client',
-    trader: 'Commerçant'
-  };
+  const roleDisplay = { farmer: 'Agriculteur', client: 'Client', trader: 'Commercant' };
 
   const handleProfileUpdated = async (url) => {
     setProfileStatus('Enregistrement...');
     try {
       await dataApi.updateProfilePicture(url);
       setProfileImageUrl(url);
-      setProfileStatus('Photo de profil mise à jour');
+      setProfileStatus('Photo de profil mise a jour');
       setTimeout(() => setProfileStatus(''), 3000);
     } catch (err) {
-      setProfileStatus(err.message || 'Impossible de mettre à jour.');
+      setProfileStatus(err.message || 'Impossible de mettre a jour.');
       setTimeout(() => setProfileStatus(''), 3000);
     }
   };
 
   const handleAvatarClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
+    if (fileInputRef.current) fileInputRef.current.click();
   };
 
   const handleAvatarFileChange = async (event) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
-
     const allowed = ['image/jpeg', 'image/jpg', 'image/png'];
     if (!allowed.includes(selectedFile.type)) {
       setProfileStatus('Format invalide');
       setTimeout(() => setProfileStatus(''), 3000);
       return;
     }
-
     if (selectedFile.size > 5 * 1024 * 1024) {
       setProfileStatus('Taille max 5MB.');
       setTimeout(() => setProfileStatus(''), 3000);
       return;
     }
-
     setUploading(true);
     setProfileStatus('Upload en cours...');
-
     try {
       const imageUrl = await dataApi.uploadImage(selectedFile);
       await handleProfileUpdated(imageUrl);
@@ -85,19 +75,10 @@ export default function ProfilePage({ user, onUserProfileClick }) {
   const handleSaveProfile = async () => {
     setProfileStatus('Enregistrement du profil...');
     try {
-      const updatedUser = await dataApi.updateUserProfile({
-        displayName,
-        bio,
-        location,
-        phone,
-        profileImageUrl
-      });
+      const updatedUser = await dataApi.updateUserProfile({ displayName, bio, location, phone, profileImageUrl });
       if (updatedUser) {
-        setProfileStatus('Profil mis à jour');
-        setTimeout(() => {
-          setProfileStatus('');
-          setShowEditModal(false);
-        }, 2000);
+        setProfileStatus('Profil mis a jour');
+        setTimeout(() => { setProfileStatus(''); setShowEditModal(false); }, 2000);
       }
     } catch (err) {
       setProfileStatus(err.message || 'Erreur lors de la sauvegarde.');
@@ -108,27 +89,15 @@ export default function ProfilePage({ user, onUserProfileClick }) {
   const handleLike = async (postId) => {
     try {
       await dataApi.likePost(postId);
-      setPosts(posts.map(p => 
-        p.id === postId 
-          ? { ...p, user_likes: 1, likes_count: (p.likes_count || 0) + 1 }
-          : p
-      ));
-    } catch (err) {
-      console.error('Erreur like:', err);
-    }
+      setPosts(posts.map(p => p.id === postId ? { ...p, user_likes: 1, likes_count: (p.likes_count || 0) + 1 } : p));
+    } catch (err) { console.error('Erreur like:', err); }
   };
 
   const handleUnlike = async (postId) => {
     try {
       await dataApi.unlikePost(postId);
-      setPosts(posts.map(p => 
-        p.id === postId 
-          ? { ...p, user_likes: 0, likes_count: Math.max(0, (p.likes_count || 0) - 1) }
-          : p
-      ));
-    } catch (err) {
-      console.error('Erreur unlike:', err);
-    }
+      setPosts(posts.map(p => p.id === postId ? { ...p, user_likes: 0, likes_count: Math.max(0, (p.likes_count || 0) - 1) } : p));
+    } catch (err) { console.error('Erreur unlike:', err); }
   };
 
   const loadProfileData = async () => {
@@ -144,17 +113,8 @@ export default function ProfilePage({ user, onUserProfileClick }) {
         ]);
         setFollowers(followersData || []);
         setFollowing(followingData || []);
-        
-        // Collaborateurs = ceux qui me suivent ET que je suis (suivi mutuel)
         const followerIds = new Set(followersData?.map(f => f.follower_id) || []);
         const collaboratorsList = followingData?.filter(f => followerIds.has(f.followee_id)) || [];
-        
-        console.log('[ProfilePage] User ID:', user.id);
-        console.log('[ProfilePage] Followers:', followersData?.length, followersData);
-        console.log('[ProfilePage] Following:', followingData?.length, followingData);
-        console.log('[ProfilePage] Follower IDs:', Array.from(followerIds));
-        console.log('[ProfilePage] Collaborators (mutual):', collaboratorsList.length, collaboratorsList);
-        
         setCollaborators(collaboratorsList);
         setCollaboratorsCount(collaboratorsList.length);
       }
@@ -173,14 +133,31 @@ export default function ProfilePage({ user, onUserProfileClick }) {
     setProfileImageUrl(user?.profile_image_url || '/src/images/avatar.gif');
   }, [user]);
 
-  useEffect(() => {
-    loadProfileData();
-  }, [user]);
+  useEffect(() => { loadProfileData(); }, [user]);
+
+  const followersCount = followers.length;
+  const followingCount = following.length;
+  const publicationsCount = posts.length;
 
   return (
-    <div className={clsx(styles['profile-page-container'])}>
-      <div className={clsx(styles['profile-page-card'])}>
-        <div className={clsx(styles['profile-top-section'])}>
+    <div className={styles.container}>
+      {/* Cover + Profile Card */}
+      <div className={styles.profileCard}>
+        <div className={styles.coverArea} />
+        <div className={styles.profileContent}>
+          <div className={styles.avatarWrapper}>
+            <img
+              src={profileImageUrl || '/src/images/avatar.gif'}
+              alt="Profil"
+              className={styles.profilePicture}
+              onClick={handleAvatarClick}
+              title="Cliquer pour changer"
+            />
+            <div className={styles.cameraOverlay} onClick={handleAvatarClick}>
+              <FiCamera />
+            </div>
+            {uploading && <div className={styles.uploadSpinner} />}
+          </div>
           <input
             ref={fileInputRef}
             type="file"
@@ -189,316 +166,165 @@ export default function ProfilePage({ user, onUserProfileClick }) {
             onChange={handleAvatarFileChange}
             disabled={uploading}
           />
-          
-          <img
-            src={profileImageUrl || '/src/images/avatar.gif'}
-            alt="Profil"
-            className={clsx(styles['profile-picture'])}
-            onClick={handleAvatarClick}
-            title="Cliquer pour changer"
-          />
 
-          <div className={clsx(styles['profile-info'])}>
-            <h1 className={clsx(styles['profile-name'])}>
-              {displayName || user?.display_name || user?.email}
-            </h1>
-            
-            {/* Stats style Facebook - sous le nom */}
-            <div className={clsx(styles['profile-stats-compact'])}>
-              <span 
-                className={clsx(styles['stat-item'])} 
-                onClick={() => setShowFollowersModal(true)}
-                title="Voir les abonnés"
-              >
-                <strong>{followers.length}</strong> abonné{followers.length > 1 ? 's' : ''}
-              </span>
-              <span className={clsx(styles['stat-separator'])}>·</span>
-              <span 
-                className={clsx(styles['stat-item'])}
-                onClick={() => setShowFollowingModal(true)}
-                title="Voir les abonnements"
-              >
-                <strong>{following.length}</strong> abonnement{following.length > 1 ? 's' : ''}
-              </span>
-              <span className={clsx(styles['stat-separator'])}>·</span>
-              <span 
-                className={clsx(styles['stat-item'])} 
-                onClick={() => setShowCollaboratorsModal(true)}
-                title="Voir les collaborateurs"
-              >
-                <strong>{collaboratorsCount}</strong> collaborateur{collaboratorsCount > 1 ? 's' : ''}
-              </span>
-            </div>
+          <div className={styles.profileInfo}>
+            <h1 className={styles.profileName}>{displayName || user?.display_name || user?.email}</h1>
+            {user?.role && <span className={styles.roleBadge}>{roleDisplay[user?.role] || user?.role}</span>}
 
-            <div className={clsx(styles['profile-role'])}>
-              {roleDisplay[user?.role] || user?.role}
+            {/* Stats */}
+            <div className={styles.statsRow}>
+              <button className={styles.statBtn} onClick={() => setShowFollowersModal(true)}>
+                <span className={styles.statNumber}>{followersCount}</span>
+                <span className={styles.statLabel}>abonn{followersCount > 1 ? '\u00e9s' : '\u00e9'}</span>
+              </button>
+              <div className={styles.statDivider} />
+              <button className={styles.statBtn} onClick={() => setShowFollowingModal(true)}>
+                <span className={styles.statNumber}>{followingCount}</span>
+                <span className={styles.statLabel}>abonnement{followingCount > 1 ? 's' : ''}</span>
+              </button>
+              <div className={styles.statDivider} />
+              <button className={styles.statBtn} onClick={() => setShowCollaboratorsModal(true)}>
+                <span className={styles.statNumber}>{collaboratorsCount}</span>
+                <span className={styles.statLabel}>collaborateur{collaboratorsCount > 1 ? 's' : ''}</span>
+              </button>
+              <div className={styles.statDivider} />
+              <div className={styles.statItem}>
+                <span className={styles.statNumber}>{publicationsCount}</span>
+                <span className={styles.statLabel}>publication{publicationsCount > 1 ? 's' : ''}</span>
+              </div>
             </div>
 
             {/* Bio */}
             {bio && (
-              <div className={clsx(styles['profile-section'])}>
-                <p className={clsx(styles['profile-bio'])}>{bio}</p>
+              <div className={styles.bioSection}>
+                <FiFileText className={styles.bioIcon} />
+                <p className={styles.bioText}>{bio}</p>
               </div>
             )}
 
-            {/* Localisation */}
-            {location && (
-              <div className={clsx(styles['profile-section'])}>
-                <div className={clsx(styles['info-item'])}>
-                  <FiMapPin size={16} />
+            {/* Info */}
+            <div className={styles.infoGrid}>
+              {location && (
+                <div className={styles.infoItem}>
+                  <FiMapPin className={styles.infoIcon} />
                   <span>{location}</span>
                 </div>
-              </div>
-            )}
-
-            {/* Contact */}
-            <div className={clsx(styles['profile-section'])}>
-              <div className={clsx(styles['info-item'])}>
-                <FiMail size={16} />
+              )}
+              <div className={styles.infoItem}>
+                <FiMail className={styles.infoIcon} />
                 <span>{user?.email || 'Non disponible'}</span>
               </div>
               {phone && (
-                <div className={clsx(styles['info-item'])}>
-                  <FiPhone size={16} />
+                <div className={styles.infoItem}>
+                  <FiPhone className={styles.infoIcon} />
                   <span>{phone}</span>
                 </div>
               )}
             </div>
 
-            {/* Bouton d'action */}
-            <div className={clsx(styles['profile-actions'])}>
-              <button 
-                className={clsx(styles['action-btn'], styles['edit-btn'])}
-                onClick={() => setShowEditModal(true)}
-                title="Modifier le profil"
-              >
-                <FiEdit size={18} />
-                <span>Modifier le profil</span>
+            {/* Edit Button */}
+            <div className={styles.actionButtons}>
+              <button className={clsx(styles.actionBtn, styles.editBtn)} onClick={() => setShowEditModal(true)}>
+                <FiEdit /> Modifier le profil
               </button>
             </div>
 
-            {/* Status message */}
-            {profileStatus && (
-              <div className={clsx(styles['profile-status'])}>
-                {profileStatus}
-              </div>
-            )}
+            {profileStatus && <div className={styles.profileStatus}>{profileStatus}</div>}
           </div>
-        </div>
-
-        {/* Publications Section */}
-        <div className={clsx(styles['profile-publications-section'])}>
-          <h3 className={clsx(styles['publications-title'])}>
-            Publications ({posts.length})
-          </h3>
-
-          {posts.length === 0 ? (
-            <div className={clsx(styles['no-posts-message'])}>
-              <p>Aucune publication pour le moment</p>
-            </div>
-          ) : (
-            <div className={clsx(styles['posts-grid'])}>
-              {posts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  onLike={handleLike}
-                  onUnlike={handleUnlike}
-                  onRefresh={loadProfileData}
-                  onUserProfileClick={onUserProfileClick}
-                />
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Modal Modifier le profil */}
+      {/* Publications */}
+      <div className={styles.postsSection}>
+        <h3 className={styles.sectionTitle}>Publications ({publicationsCount})</h3>
+        {posts.length === 0 ? (
+          <div className={styles.emptyPosts}>
+            <FiFileText className={styles.emptyIcon} />
+            <p>Aucune publication pour le moment</p>
+          </div>
+        ) : (
+          <div className={styles.postsList}>
+            {posts.map((post) => (
+              <PostCard key={post.id} post={post} onLike={handleLike} onUnlike={handleUnlike} onRefresh={loadProfileData} onUserProfileClick={onUserProfileClick} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Edit Modal */}
       {showEditModal && (
-        <div className={clsx(styles['modal-overlay'])} onClick={() => setShowEditModal(false)}>
-          <div className={clsx(styles['modal-content'])} onClick={(e) => e.stopPropagation()}>
-            <div className={clsx(styles['modal-header'])}>
+        <div className={styles.modalOverlay} onClick={() => setShowEditModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
               <h3>Modifier le profil</h3>
-              <button className={clsx(styles['modal-close'])} onClick={() => setShowEditModal(false)}>×</button>
+              <button className={styles.modalClose} onClick={() => setShowEditModal(false)}>&times;</button>
             </div>
-            <div className={clsx(styles['modal-body'])}>
-              <label className={clsx(styles['input-label'])}>
-                Nom d'affichage :
-                <input 
-                  className={clsx(styles['input-field'])} 
-                  value={displayName} 
-                  onChange={(e) => setDisplayName(e.target.value)} 
-                  placeholder="Votre nom"
-                />
+            <div className={styles.modalBody}>
+              <label className={styles.inputLabel}>
+                Nom d'affichage
+                <input className={styles.inputField} value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Votre nom" />
               </label>
-              <label className={clsx(styles['input-label'])}>
-                Bio :
-                <textarea 
-                  className={clsx(styles['input-field'])} 
-                  value={bio} 
-                  rows={4} 
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="Parlez de vous..."
-                />
+              <label className={styles.inputLabel}>
+                Bio
+                <textarea className={clsx(styles.inputField, styles.textarea)} value={bio} rows={4} onChange={(e) => setBio(e.target.value)} placeholder="Parlez de vous..." />
               </label>
-              <label className={clsx(styles['input-label'])}>
-                Localisation :
-                <input 
-                  className={clsx(styles['input-field'])} 
-                  value={location} 
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Ville, Pays"
-                />
+              <label className={styles.inputLabel}>
+                Localisation
+                <input className={styles.inputField} value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ville, Pays" />
               </label>
-              <label className={clsx(styles['input-label'])}>
-                Téléphone :
-                <input 
-                  className={clsx(styles['input-field'])} 
-                  value={phone} 
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+261 XX XX XXX XX"
-                />
+              <label className={styles.inputLabel}>
+                Telephone
+                <input className={styles.inputField} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+261 XX XX XXX XX" />
               </label>
-              <div className={clsx(styles['modal-actions'])}>
-                <button 
-                  type="button" 
-                  className={clsx(styles['btn-cancel'])} 
-                  onClick={() => setShowEditModal(false)}
-                >
-                  Annuler
-                </button>
-                <button 
-                  type="button" 
-                  className={clsx(styles['btn-save'])} 
-                  onClick={handleSaveProfile}
-                >
-                  Enregistrer
-                </button>
+              <div className={styles.modalActions}>
+                <button className={clsx(styles.modalBtn, styles.cancelBtn)} onClick={() => setShowEditModal(false)}>Annuler</button>
+                <button className={clsx(styles.modalBtn, styles.saveBtn)} onClick={handleSaveProfile}>Enregistrer</button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal Abonnés */}
+      {/* Followers Modal */}
       {showFollowersModal && (
-        <div className={clsx(styles['modal-overlay'])} onClick={() => setShowFollowersModal(false)}>
-          <div className={clsx(styles['modal-content'])} onClick={(e) => e.stopPropagation()}>
-            <div className={clsx(styles['modal-header'])}>
-              <h3>Abonnés ({followers.length})</h3>
-              <button className={clsx(styles['modal-close'])} onClick={() => setShowFollowersModal(false)}>×</button>
-            </div>
-            <div className={clsx(styles['modal-body'])}>
-              {followers.length === 0 ? (
-                <p className={clsx(styles['empty-message'])}>Aucun abonné pour le moment</p>
-              ) : (
-                <ul className={clsx(styles['user-list'])}>
-                  {followers.map((follower) => (
-                    <li 
-                      key={follower.follower_id} 
-                      className={clsx(styles['user-list-item'])}
-                      onClick={() => {
-                        setShowFollowersModal(false);
-                        if (onUserProfileClick) onUserProfileClick(follower.follower_id);
-                      }}
-                    >
-                      <img 
-                        src={follower.profile_image_url || '/src/images/avatar.gif'} 
-                        alt={follower.display_name}
-                        className={clsx(styles['user-list-avatar'])}
-                      />
-                      <div className={clsx(styles['user-list-info'])}>
-                        <span className={clsx(styles['user-list-name'])}>{follower.display_name}</span>
-                        <span className={clsx(styles['user-list-role'])}>{roleDisplay[follower.role] || follower.role}</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        </div>
+        <UserListModal title={`Abonn\u00e9s (${followersCount})`} users={followers} idKey="follower_id" onClose={() => setShowFollowersModal(false)} onUserClick={onUserProfileClick} />
       )}
-
-      {/* Modal Abonnements */}
       {showFollowingModal && (
-        <div className={clsx(styles['modal-overlay'])} onClick={() => setShowFollowingModal(false)}>
-          <div className={clsx(styles['modal-content'])} onClick={(e) => e.stopPropagation()}>
-            <div className={clsx(styles['modal-header'])}>
-              <h3>Abonnements ({following.length})</h3>
-              <button className={clsx(styles['modal-close'])} onClick={() => setShowFollowingModal(false)}>×</button>
-            </div>
-            <div className={clsx(styles['modal-body'])}>
-              {following.length === 0 ? (
-                <p className={clsx(styles['empty-message'])}>Aucun abonnement pour le moment</p>
-              ) : (
-                <ul className={clsx(styles['user-list'])}>
-                  {following.map((followed) => (
-                    <li 
-                      key={followed.followee_id} 
-                      className={clsx(styles['user-list-item'])}
-                      onClick={() => {
-                        setShowFollowingModal(false);
-                        if (onUserProfileClick) onUserProfileClick(followed.followee_id);
-                      }}
-                    >
-                      <img 
-                        src={followed.profile_image_url || '/src/images/avatar.gif'} 
-                        alt={followed.display_name}
-                        className={clsx(styles['user-list-avatar'])}
-                      />
-                      <div className={clsx(styles['user-list-info'])}>
-                        <span className={clsx(styles['user-list-name'])}>{followed.display_name}</span>
-                        <span className={clsx(styles['user-list-role'])}>{roleDisplay[followed.role] || followed.role}</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        </div>
+        <UserListModal title={`Abonnements (${followingCount})`} users={following} idKey="followee_id" onClose={() => setShowFollowingModal(false)} onUserClick={onUserProfileClick} />
       )}
-
-      {/* Modal Collaborateurs */}
       {showCollaboratorsModal && (
-        <div className={clsx(styles['modal-overlay'])} onClick={() => setShowCollaboratorsModal(false)}>
-          <div className={clsx(styles['modal-content'])} onClick={(e) => e.stopPropagation()}>
-            <div className={clsx(styles['modal-header'])}>
-              <h3>Collaborateurs ({collaborators.length})</h3>
-              <button className={clsx(styles['modal-close'])} onClick={() => setShowCollaboratorsModal(false)}>×</button>
-            </div>
-            <div className={clsx(styles['modal-body'])}>
-              {collaborators.length === 0 ? (
-                <p className={clsx(styles['empty-message'])}>Aucun collaborateur pour le moment</p>
-              ) : (
-                <ul className={clsx(styles['user-list'])}>
-                  {collaborators.map((collaborator) => (
-                    <li 
-                      key={collaborator.followee_id} 
-                      className={clsx(styles['user-list-item'])}
-                      onClick={() => {
-                        setShowCollaboratorsModal(false);
-                        if (onUserProfileClick) onUserProfileClick(collaborator.followee_id);
-                      }}
-                    >
-                      <img 
-                        src={collaborator.profile_image_url || '/src/images/avatar.gif'} 
-                        alt={collaborator.display_name}
-                        className={clsx(styles['user-list-avatar'])}
-                      />
-                      <div className={clsx(styles['user-list-info'])}>
-                        <span className={clsx(styles['user-list-name'])}>{collaborator.display_name}</span>
-                        <span className={clsx(styles['user-list-role'])}>{roleDisplay[collaborator.role] || collaborator.role}</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        </div>
+        <UserListModal title={`Collaborateurs (${collaboratorsCount})`} users={collaborators} idKey="followee_id" onClose={() => setShowCollaboratorsModal(false)} onUserClick={onUserProfileClick} />
       )}
+    </div>
+  );
+}
+
+function UserListModal({ title, users, idKey, onClose, onUserClick }) {
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h3>{title}</h3>
+          <button className={styles.modalClose} onClick={onClose}>&times;</button>
+        </div>
+        <div className={styles.modalBody}>
+          {users.length === 0 ? (
+            <p className={styles.emptyMessage}>Aucun r\u00e9sultat</p>
+          ) : (
+            <ul className={styles.userList}>
+              {users.map((u) => (
+                <li key={u[idKey]} className={styles.userListItem} onClick={() => { onClose(); if (onUserClick) onUserClick(u[idKey]); }}>
+                  <img src={u.profile_image_url || '/src/images/avatar.gif'} alt={u.display_name} className={styles.userListAvatar} />
+                  <div className={styles.userListInfo}>
+                    <span className={styles.userListName}>{u.display_name}</span>
+                    <span className={styles.userListRole}>{u.role}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -292,6 +292,14 @@ function applyThemeToCSS(theme) {
   root.style.setProperty('--border-medium', theme.border);
   root.style.setProperty('--border-strong', theme.border);
 
+  // Additional design system variables
+  root.style.setProperty('--radius-sm', '6px');
+  root.style.setProperty('--radius-md', '10px');
+  root.style.setProperty('--radius-lg', '16px');
+  root.style.setProperty('--radius-xl', '24px');
+  root.style.setProperty('--transition-smooth', 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)');
+  root.style.setProperty('--background-secondary', theme.backgroundSecondary);
+
   root.setAttribute('data-theme', theme.isDark ? 'dark' : 'light');
 }
 

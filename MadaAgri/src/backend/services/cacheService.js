@@ -1,182 +1,114 @@
-const redis = require('redis');
+const { createClient } = require('redis');
 const logger = require('../utils/logger');
+
+const CACHE_TTL = 86400 * 7; // 7 days
+const CACHE_PREFIX = 'ai:analysis:';
 
 class CacheService {
   constructor() {
-    this.client = null;
-    this.isConnected = false;
+    this.redis = null;
+    this.memoryCache = new Map();
+    this.useRedis = process.env.DISABLE_REDIS !== 'true' && process.env.REDIS_URL;
+    this.initialized = false;
   }
 
-  async connect() {
+  async init() {
+    if (this.initialized) return;
+    if (!this.useRedis) {
+      logger.info('[CacheService] Using in-memory cache (Redis disabled)');
+      this.initialized = true;
+      return;
+    }
+
     try {
-      this.client = redis.createClient({
-        host: process.env.REDIS_HOST || 'localhost',
-        port: process.env.REDIS_PORT || 6379,
-        password: process.env.REDIS_PASSWORD || undefined,
-        retry_strategy: (options) => {
-          if (options.error && options.error.code === 'ECONNREFUSED') {
-            logger.error('Redis connection refused');
-            return new Error('Redis server refused connection');
-          }
-          if (options.total_retry_time > 1000 * 60 * 60) {
-            return new Error('Redis retry time exhausted');
-          }
-          if (options.attempt > 10) {
-            return undefined;
-          }
-          return Math.min(options.attempt * 100, 3000);
+      this.redis = createClient({ url: process.env.REDIS_URL });
+      this.redis.on('error', (err) => logger.error('[CacheService] Redis error', { error: err.message }));
+      this.redis.on('connect', () => logger.info('[CacheService] Redis connected'));
+      await this.redis.connect();
+      logger.info('[CacheService] Redis cache initialized');
+    } catch (error) {
+      logger.warn('[CacheService] Redis unavailable, using in-memory cache', { error: error.message });
+      this.redis = null;
+      this.useRedis = false;
+    }
+
+    this.initialized = true;
+  }
+
+  _makeKey(hash) {
+    return `${CACHE_PREFIX}${hash}`;
+  }
+
+  async get(hash) {
+    if (!this.initialized) await this.init();
+
+    if (this.useRedis && this.redis) {
+      try {
+        const data = await this.redis.get(this._makeKey(hash));
+        if (data) {
+          logger.info('[CacheService] Redis cache hit', { hash: hash.substring(0, 12) });
+          return JSON.parse(data);
         }
-      });
-
-      this.client.on('connect', () => {
-        logger.info('Redis client connected');
-        this.isConnected = true;
-      });
-
-      this.client.on('error', (err) => {
-        logger.error('Redis error:', err);
-        this.isConnected = false;
-      });
-
-      this.client.on('end', () => {
-        logger.info('Redis client disconnected');
-        this.isConnected = false;
-      });
-
-      await this.client.connect();
-    } catch (error) {
-      logger.error('Failed to connect to Redis:', error);
-      this.isConnected = false;
-    }
-  }
-
-  async get(key) {
-    if (!this.isConnected) {
-      return null;
-    }
-
-    try {
-      const value = await this.client.get(key);
-      return value ? JSON.parse(value) : null;
-    } catch (error) {
-      logger.error(`Cache get error for key ${key}:`, error);
-      return null;
-    }
-  }
-
-  async set(key, value, ttl = 3600) {
-    if (!this.isConnected) {
-      return false;
-    }
-
-    try {
-      await this.client.setEx(key, ttl, JSON.stringify(value));
-      return true;
-    } catch (error) {
-      logger.error(`Cache set error for key ${key}:`, error);
-      return false;
-    }
-  }
-
-  async del(key) {
-    if (!this.isConnected) {
-      return false;
-    }
-
-    try {
-      await this.client.del(key);
-      return true;
-    } catch (error) {
-      logger.error(`Cache delete error for key ${key}:`, error);
-      return false;
-    }
-  }
-
-  async delPattern(pattern) {
-    if (!this.isConnected) {
-      return false;
-    }
-
-    try {
-      const keys = await this.client.keys(pattern);
-      if (keys.length > 0) {
-        await this.client.del(keys);
+      } catch (error) {
+        logger.warn('[CacheService] Redis get failed', { error: error.message });
       }
-      return true;
-    } catch (error) {
-      logger.error(`Cache delete pattern error for ${pattern}:`, error);
-      return false;
+    }
+
+    const entry = this.memoryCache.get(hash);
+    if (entry) {
+      if (Date.now() < entry.expiresAt) {
+        logger.info('[CacheService] Memory cache hit', { hash: hash.substring(0, 12) });
+        return entry.data;
+      }
+      this.memoryCache.delete(hash);
+    }
+
+    return null;
+  }
+
+  async set(hash, data) {
+    if (!this.initialized) await this.init();
+
+    if (this.useRedis && this.redis) {
+      try {
+        await this.redis.set(this._makeKey(hash), JSON.stringify(data), { EX: CACHE_TTL });
+      } catch (error) {
+        logger.warn('[CacheService] Redis set failed', { error: error.message });
+      }
+    }
+
+    this.memoryCache.set(hash, {
+      data,
+      expiresAt: Date.now() + CACHE_TTL * 1000,
+    });
+
+    if (this.memoryCache.size > 1000) {
+      const oldestKey = this.memoryCache.keys().next().value;
+      this.memoryCache.delete(oldestKey);
     }
   }
 
-  async exists(key) {
-    if (!this.isConnected) {
-      return false;
+  async invalidate(hash) {
+    if (!this.initialized) await this.init();
+
+    if (this.useRedis && this.redis) {
+      try {
+        await this.redis.del(this._makeKey(hash));
+      } catch (error) {
+        logger.warn('[CacheService] Redis del failed', { error: error.message });
+      }
     }
 
-    try {
-      const result = await this.client.exists(key);
-      return result === 1;
-    } catch (error) {
-      logger.error(`Cache exists error for key ${key}:`, error);
-      return false;
-    }
+    this.memoryCache.delete(hash);
   }
 
-  async ttl(key) {
-    if (!this.isConnected) {
-      return -1;
-    }
-
-    try {
-      return await this.client.ttl(key);
-    } catch (error) {
-      logger.error(`Cache TTL error for key ${key}:`, error);
-      return -1;
-    }
-  }
-
-  async flush() {
-    if (!this.isConnected) {
-      return false;
-    }
-
-    try {
-      await this.client.flushAll();
-      logger.info('Cache flushed');
-      return true;
-    } catch (error) {
-      logger.error('Cache flush error:', error);
-      return false;
-    }
-  }
-
-  async disconnect() {
-    if (this.client && this.isConnected) {
-      await this.client.quit();
-      logger.info('Redis client disconnected gracefully');
-    }
-  }
-
-  // Helper: Cache wrapper pour fonctions
-  async wrap(key, fn, ttl = 3600) {
-    const cached = await this.get(key);
-    if (cached !== null) {
-      return cached;
-    }
-
-    const result = await fn();
-    await this.set(key, result, ttl);
-    return result;
-  }
-
-  // Helper: Générer clé de cache
-  generateKey(prefix, ...parts) {
-    return `${prefix}:${parts.join(':')}`;
+  getStats() {
+    return {
+      memoryCacheSize: this.memoryCache.size,
+      useRedis: this.useRedis,
+      redisConnected: this.redis?.isOpen || false,
+    };
   }
 }
 
-// Singleton
-const cacheService = new CacheService();
-
-module.exports = cacheService;
+module.exports = new CacheService();

@@ -21,6 +21,7 @@ const AgriculturePageWrapper = lazy(() => import('../pages/Dashboard/Agriculture
 const RoutesPageWrapper = lazy(() => import('../pages/Dashboard/RoutesPageWrapper'));
 const MeteoPageWrapper = lazy(() => import('../pages/Dashboard/MeteoPageWrapper'));
 const DashboardPageWrapper = lazy(() => import('../pages/Dashboard/DashboardPageWrapper'));
+const AssistantPageWrapper = lazy(() => import('../pages/Dashboard/AssistantPageWrapper'));
 
 // Shared pages
 const MarketplacePage = lazy(() => import('../pages/Marketplace/MarketplacePage'));
@@ -57,6 +58,7 @@ export const routes = [
       { path: 'analysis', element: withSuspense(AgriculturePageWrapper) },
       { path: 'routes', element: withSuspense(RoutesPageWrapper) },
       { path: 'meteo', element: withSuspense(MeteoPageWrapper) },
+      { path: 'assistant', element: withSuspense(AssistantPageWrapper) },
     ],
   },
 

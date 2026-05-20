@@ -12,6 +12,7 @@ const MAIN_BUTTONS = [
   { key: 'post', path: '/dashboard/post', label: 'Publication' },
   { key: 'network', path: '/dashboard/network', label: 'Réseau' },
   { key: 'messages', path: '/dashboard/messages', label: 'Messages' },
+  { key: 'assistant', path: '/dashboard/assistant', label: 'Assistant' },
   { key: 'dashboard', path: '/dashboard/stats', label: 'Tableau de bord' }
 ];
 

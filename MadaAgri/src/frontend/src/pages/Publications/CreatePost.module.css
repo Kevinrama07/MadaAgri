@@ -1,5 +1,6 @@
 .create-post-card {
   background: var(--surface);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);

@@ -5,7 +5,7 @@ const logger = require('../utils/logger');
 
 const router = express.Router();
 
-router.post('/', 
+router.post('/',
   authMiddleware,
   (req, res, next) => {
     logger.info({
@@ -15,7 +15,6 @@ router.post('/',
     });
 
     upload.single('image')(req, res, (err) => {
-      // Gestion des erreurs multer/cloudinary
       if (err) {
         logger.error({
           message: 'Upload error - Multer/Cloudinary',
@@ -26,50 +25,47 @@ router.post('/',
         });
 
         if (err.code === 'LIMIT_FILE_SIZE') {
-          return res.status(400).json({ 
+          return res.status(400).json({
             success: false,
-            error: 'Fichier trop volumineux. Taille max 5MB.' 
-          });
-        }
-        
-        if (err.message === 'FORMAT_INVALIDE') {
-          return res.status(400).json({ 
-            success: false,
-            error: 'Format invalide. Autorisé: jpg, jpeg, png' 
+            error: 'Fichier trop volumineux. Taille max 5MB.'
           });
         }
 
-        // Erreur Cloudinary ou autre erreur
+        if (err.message === 'FORMAT_INVALIDE') {
+          return res.status(400).json({
+            success: false,
+            error: 'Format invalide. Autorise: jpg, jpeg, png'
+          });
+        }
+
         if (err.message && err.message.includes('Cloudinary')) {
-          return res.status(400).json({ 
+          return res.status(400).json({
             success: false,
             error: 'Erreur Cloudinary: ' + err.message
           });
         }
 
-        return res.status(500).json({ 
+        return res.status(500).json({
           success: false,
-          error: 'Erreur lors du téléchargement',
-          message: err.message 
+          error: 'Erreur lors du telechargement',
+          message: err.message
         });
       }
 
-      // Vérifier que le fichier a été uploadé
       if (!req.file) {
         logger.warn({
           message: 'Upload - no file provided',
           userId: req.user?.id,
         });
-        return res.status(400).json({ 
+        return res.status(400).json({
           success: false,
           error: 'No file provided',
           message: 'Please provide an image file in FormData with field name "image"'
         });
       }
 
-      // Retourner l'URL de l'image uploadée
       const imageUrl = req.file.path || req.file.secure_url;
-      
+
       logger.info({
         message: 'Image uploaded successfully',
         filename: req.file.filename,

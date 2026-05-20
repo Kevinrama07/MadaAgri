@@ -8,16 +8,17 @@ import styles from './SocialFeed.module.css';
 export default function SocialFeed({ onUserProfileClick }) {
   return (
     <div className={clsx(styles['social-feed-container'])}>
-      {/* Left Column - Navigation Sidebar */}
-      <LeftSidebar />
+      <div className={styles['feed-left']}>
+        <LeftSidebar />
+      </div>
 
-      {/* Center Column - Main Feed */}
       <div className={clsx(styles['feed-center'])}>
         <HomeFeed onUserProfileClick={onUserProfileClick} />
       </div>
 
-      {/* Right Column - Suggestions Sidebar */}
-      <RightSidebar onUserProfileClick={onUserProfileClick} />
+      <div className={styles['feed-right']}>
+        <RightSidebar onUserProfileClick={onUserProfileClick} />
+      </div>
     </div>
   );
 }

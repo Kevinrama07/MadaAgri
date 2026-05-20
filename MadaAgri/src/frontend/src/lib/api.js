@@ -648,9 +648,44 @@ export const dataApi = {
     return data.analysis;
   },
 
+  async analyzeImage(imageUrl, parcelId = null) {
+    const body = { image_url: imageUrl };
+    if (parcelId) {
+      body.parcel_id = parcelId;
+    }
+    const endpoint = parcelId
+      ? `/parcels/${encodeURIComponent(parcelId)}/analyze-crop`
+      : '/parcels/analyze-image';
+    const data = await apiFetch(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return data.analysis;
+  },
+
   async fetchAnalysisHistory(parcelId) {
     const data = await apiFetch(`/parcels/${encodeURIComponent(parcelId)}/analysis-history`);
     return data.analyses;
+  },
+
+  async fetchAllAnalysisHistory(limit = 20, offset = 0) {
+    const data = await apiFetch(`/parcels/analysis-history?limit=${limit}&offset=${offset}`);
+    return data;
+  }
+};
+
+export const assistantApi = {
+  async sendMessage(message, history = [], conversationId = null) {
+    const data = await apiFetch('/assistant/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message, history, conversationId })
+    });
+    return data;
+  },
+
+  async healthCheck() {
+    const data = await apiFetch('/assistant/health');
+    return data;
   }
 };
 

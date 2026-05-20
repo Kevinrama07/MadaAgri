@@ -341,6 +341,7 @@
   color: white;
   cursor: pointer;
   transition: all 0.2s ease;
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 

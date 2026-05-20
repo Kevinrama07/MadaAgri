@@ -139,6 +139,90 @@
   animation: spin 0.8s linear infinite;
 }
 
+.modeToggle {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.modeBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.modeBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.modeBtnActive {
+  background: var(--primary);
+  color: var(--text-inverse);
+  border-color: var(--primary);
+}
+
+.polygonInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--info-light);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+}
+
+.polygonInfo > span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--info);
+}
+
+.polygonActions {
+  display: flex;
+  gap: 6px;
+}
+
+.polygonActionBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.polygonActionBtn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.polygonActionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .creationHint {
   display: flex;
   align-items: center;

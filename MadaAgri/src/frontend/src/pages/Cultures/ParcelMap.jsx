@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { FiMapPin, FiPlus, FiX, FiTrash2, FiEdit2, FiInfo, FiDroplet, FiSun, FiWind, FiCheck, FiLayers } from 'react-icons/fi';
+import { FiMapPin, FiPlus, FiX, FiTrash2, FiEdit2, FiInfo, FiDroplet, FiSun, FiWind, FiCheck, FiLayers, FiCornerDownLeft } from 'react-icons/fi';
 import { GiWheat, GiPlantRoots } from 'react-icons/gi';
 import { Card } from '../../components/ui/Card/Card';
 import { Badge } from '../../components/ui/Badge/Badge';
@@ -61,11 +61,66 @@ function matchRegionName(geoName) {
   return map[normalized] || null;
 }
 
+function latLngToGeoJSON(lat, lng) {
+  return [parseFloat(lng.toFixed(6)), parseFloat(lat.toFixed(6))];
+}
+
+function buildGeoJSONPolygon(vertices) {
+  if (vertices.length < 3) return null;
+  const coords = vertices.map((v) => latLngToGeoJSON(v.lat, v.lng));
+  coords.push(coords[0]);
+  return {
+    type: 'Feature',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [coords],
+    },
+  };
+}
+
+function parseParcelPolygon(polygonData) {
+  if (!polygonData) return null;
+  try {
+    const parsed = typeof polygonData === 'string' ? JSON.parse(polygonData) : polygonData;
+
+    if (parsed.type === 'Feature' && parsed.geometry) {
+      return parsed;
+    }
+
+    if (parsed.coordinates) {
+      return {
+        type: 'Feature',
+        geometry: { type: 'Polygon', coordinates: parsed.coordinates },
+      };
+    }
+
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed[0]) && typeof parsed[0][0] === 'number') {
+        return {
+          type: 'Feature',
+          geometry: { type: 'Polygon', coordinates: [parsed] },
+        };
+      }
+      return {
+        type: 'Feature',
+        geometry: { type: 'Polygon', coordinates: parsed },
+      };
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export default function ParcelMap({ region }) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
   const regionLayersRef = useRef([]);
+  const polygonLayerRef = useRef(null);
+  const previewLineRef = useRef(null);
+  const vertexMarkersRef = useRef([]);
   const [parcels, setParcels] = useState([]);
   const [selectedParcel, setSelectedParcel] = useState(null);
   const [creating, setCreating] = useState(false);
@@ -75,6 +130,8 @@ export default function ParcelMap({ region }) {
   const [saving, setSaving] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [regionData, setRegionData] = useState(null);
+  const [polygonVertices, setPolygonVertices] = useState([]);
+  const [polygonMode, setPolygonMode] = useState(true);
 
   const loadParcels = useCallback(async () => {
     try {
@@ -87,11 +144,33 @@ export default function ParcelMap({ region }) {
   }, []);
 
   const creatingRef = useRef(false);
+  const polygonModeRef = useRef(false);
   const clickMarkerRef = useRef(null);
 
   useEffect(() => {
     creatingRef.current = creating;
   }, [creating]);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const mapEl = mapRef.current.getContainer();
+    if (creating) {
+      mapEl.style.cursor = 'crosshair';
+      regionLayersRef.current.forEach((l) => {
+        l.setStyle({ weight: 0.5, fillOpacity: 0.02, color: '#000000', opacity: 0.3 });
+      });
+    } else {
+      mapEl.style.cursor = '';
+      regionLayersRef.current.forEach((l) => {
+        l.setStyle({ weight: 1, fillOpacity: 0.04, color: '#000000', opacity: 0.6 });
+      });
+    }
+  }, [creating]);
+
+  useEffect(() => {
+    polygonModeRef.current = polygonMode;
+  }, [polygonMode]);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -116,15 +195,14 @@ export default function ParcelMap({ region }) {
 
     setTimeout(() => map.invalidateSize(), 100);
 
-    // Load region boundaries from embedded GeoJSON
     const layers = [];
     L.geoJSON(madagascarRegionsGeoJSON, {
       style: {
-        color: '#22c55e',
-        weight: 4,
-        opacity: 1,
+        color: '#2b2b2b',
+        weight: 1,
+        opacity: 0.6,
         fillColor: '#22c55e',
-        fillOpacity: 0.08,
+        fillOpacity: 0.04,
       },
       onEachFeature: (feature, layer) => {
         const geoName = feature.properties.name || '';
@@ -132,21 +210,24 @@ export default function ParcelMap({ region }) {
         const info = matchedName ? madagascarRegions[matchedName] : null;
 
         layer.on('mouseover', function () {
-          this.setStyle({ weight: 5, fillOpacity: 0.15, color: '#16a34a' });
+          if (creatingRef.current) return;
+          if (selectedRegion !== this) {
+            this.setStyle({ weight: 1.5, fillOpacity: 0.1, color: '#000000' });
+          }
         });
         layer.on('mouseout', function () {
+          if (creatingRef.current) return;
           if (selectedRegion !== this) {
-            this.setStyle({ weight: 4, fillOpacity: 0.08, color: '#22c55e' });
+            this.setStyle({ weight: 1, fillOpacity: 0.04, color: '#000000' });
           }
         });
         layer.on('click', function (e) {
+          if (creatingRef.current) return;
           L.DomEvent.stopPropagation(e);
-          // Reset previous selection
           regionLayersRef.current.forEach((l) => {
-            l.setStyle({ weight: 4, fillOpacity: 0.08, color: '#22c55e' });
+            l.setStyle({ weight: 1, fillOpacity: 0.04, color: '#000000' });
           });
-          // Highlight selected
-          this.setStyle({ weight: 5, fillOpacity: 0.2, color: '#15803d' });
+          this.setStyle({ weight: 1.5, fillOpacity: 0.12, color: '#000000' });
           setSelectedRegion(this);
           setRegionData({
             name: matchedName || geoName || 'Région inconnue',
@@ -161,7 +242,6 @@ export default function ParcelMap({ region }) {
               description: 'Données non disponibles pour cette région.',
             },
           });
-          // Zoom to region
           map.fitBounds(this.getBounds());
         });
 
@@ -173,20 +253,68 @@ export default function ParcelMap({ region }) {
     map.on('click', (e) => {
       if (!creatingRef.current) return;
       const { lat, lng } = e.latlng;
-      setClickCoords({ lat, lng });
 
-      if (clickMarkerRef.current) {
-        map.removeLayer(clickMarkerRef.current);
+      if (polygonModeRef.current) {
+        const newVertices = [...polygonVertices, { lat, lng }];
+        setPolygonVertices(newVertices);
+
+        const vertexMarker = L.circleMarker([lat, lng], {
+          radius: 4,
+          color: '#3b82f6',
+          fillColor: '#3b82f6',
+          fillOpacity: 1,
+          weight: 2,
+        }).addTo(map);
+        vertexMarkersRef.current.push(vertexMarker);
+
+        if (previewLineRef.current) {
+          map.removeLayer(previewLineRef.current);
+        }
+        if (newVertices.length >= 2) {
+          const lineCoords = newVertices.map((v) => [v.lat, v.lng]);
+          previewLineRef.current = L.polyline(lineCoords, {
+            color: '#3b82f6',
+            weight: 2,
+            dashArray: '6, 6',
+            opacity: 0.8,
+          }).addTo(map);
+        }
+
+        if (polygonLayerRef.current) {
+          map.removeLayer(polygonLayerRef.current);
+        }
+        if (newVertices.length >= 3) {
+          const geojson = buildGeoJSONPolygon(newVertices);
+          if (geojson) {
+            polygonLayerRef.current = L.geoJSON(geojson, {
+              style: {
+                color: '#3b82f6',
+                weight: 2,
+                opacity: 0.8,
+                fillColor: '#3b82f6',
+                fillOpacity: 0.15,
+              },
+            }).addTo(map);
+          }
+        }
+
+        setClickCoords({ lat, lng });
+      } else {
+        setClickCoords({ lat, lng });
+
+        if (clickMarkerRef.current) {
+          map.removeLayer(clickMarkerRef.current);
+        }
+        const marker = L.marker([lat, lng], {
+          icon: L.divIcon({
+            className: '',
+            html: '<div style="width:22px;height:22px;background:#3b82f6;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
+            iconSize: [22, 22],
+            iconAnchor: [11, 11],
+          }),
+        }).addTo(map);
+        clickMarkerRef.current = marker;
       }
-      const marker = L.marker([lat, lng], {
-        icon: L.divIcon({
-          className: '',
-          html: '<div style="width:22px;height:22px;background:#3b82f6;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
-          iconSize: [22, 22],
-          iconAnchor: [11, 11],
-        }),
-      }).addTo(map);
-      clickMarkerRef.current = marker;
     });
 
     mapRef.current = map;
@@ -209,6 +337,32 @@ export default function ParcelMap({ region }) {
     markersRef.current = [];
 
     parcels.forEach((parcel) => {
+      if (parcel.polygon_coordinates) {
+        try {
+          const geojson = parseParcelPolygon(parcel.polygon_coordinates);
+          if (geojson) {
+            L.geoJSON(geojson, {
+              style: {
+                color: selectedParcel?.id === parcel.id ? '#3b82f6' : '#8b5cf6',
+                weight: selectedParcel?.id === parcel.id ? 3 : 2,
+                opacity: 1,
+                fillColor: selectedParcel?.id === parcel.id ? '#3b82f6' : '#8b5cf6',
+                fillOpacity: selectedParcel?.id === parcel.id ? 0.25 : 0.1,
+              },
+              onEachFeature: (feature, layer) => {
+                layer.on('click', () => {
+                  setSelectedParcel(parcel);
+                  setCreating(false);
+                  setClickCoords(null);
+                });
+              },
+            }).addTo(mapRef.current);
+          }
+        } catch (err) {
+          console.error('[ParcelMap] Invalid polygon:', err);
+        }
+      }
+
       const marker = L.marker([parseFloat(parcel.latitude), parseFloat(parcel.longitude)], {
         icon: createParcelIcon(selectedParcel?.id === parcel.id),
       })
@@ -244,22 +398,37 @@ export default function ParcelMap({ region }) {
     setFormError(null);
     setSaving(true);
     try {
+      const geoJSONPolygon = polygonVertices.length >= 3 ? buildGeoJSONPolygon(polygonVertices) : null;
+
       const result = await dataApi.createParcel({
         name: form.name.trim(),
         description: form.description.trim() || null,
         latitude: clickCoords.lat,
         longitude: clickCoords.lng,
         size_ha: form.size_ha ? parseFloat(form.size_ha) : null,
+        polygon_coordinates: geoJSONPolygon ? JSON.stringify(geoJSONPolygon) : null,
       });
 
       setParcels((prev) => [...prev, result.parcel]);
       setForm({ name: '', description: '', size_ha: '' });
       setClickCoords(null);
+      setPolygonVertices([]);
+      setPolygonMode(true);
       setCreating(false);
       if (clickMarkerRef.current && mapRef.current) {
         mapRef.current.removeLayer(clickMarkerRef.current);
         clickMarkerRef.current = null;
       }
+      if (polygonLayerRef.current && mapRef.current) {
+        mapRef.current.removeLayer(polygonLayerRef.current);
+        polygonLayerRef.current = null;
+      }
+      if (previewLineRef.current && mapRef.current) {
+        mapRef.current.removeLayer(previewLineRef.current);
+        previewLineRef.current = null;
+      }
+      vertexMarkersRef.current.forEach((m) => mapRef.current.removeLayer(m));
+      vertexMarkersRef.current = [];
     } catch (err) {
       setFormError(err.message || 'Erreur lors de la création');
     } finally {
@@ -283,18 +452,104 @@ export default function ParcelMap({ region }) {
     setClickCoords(null);
     setForm({ name: '', description: '', size_ha: '' });
     setFormError(null);
+    setPolygonVertices([]);
+    setPolygonMode(true);
     if (clickMarkerRef.current && mapRef.current) {
       mapRef.current.removeLayer(clickMarkerRef.current);
       clickMarkerRef.current = null;
     }
+    if (polygonLayerRef.current && mapRef.current) {
+      mapRef.current.removeLayer(polygonLayerRef.current);
+      polygonLayerRef.current = null;
+    }
+    if (previewLineRef.current && mapRef.current) {
+      mapRef.current.removeLayer(previewLineRef.current);
+      previewLineRef.current = null;
+    }
+    vertexMarkersRef.current.forEach((m) => mapRef.current.removeLayer(m));
+    vertexMarkersRef.current = [];
   };
 
   const closeRegionPanel = () => {
     setSelectedRegion(null);
     setRegionData(null);
     regionLayersRef.current.forEach((l) => {
-      l.setStyle({ weight: 4, fillOpacity: 0.08, color: '#22c55e' });
+      l.setStyle({ weight: 2, fillOpacity: 0.05, color: '#2b2b2b' });
     });
+  };
+
+  const togglePolygonMode = () => {
+    setPolygonMode((prev) => {
+      const next = !prev;
+      if (!next) {
+        if (polygonLayerRef.current && mapRef.current) {
+          mapRef.current.removeLayer(polygonLayerRef.current);
+          polygonLayerRef.current = null;
+        }
+        if (previewLineRef.current && mapRef.current) {
+          mapRef.current.removeLayer(previewLineRef.current);
+          previewLineRef.current = null;
+        }
+        vertexMarkersRef.current.forEach((m) => mapRef.current.removeLayer(m));
+        vertexMarkersRef.current = [];
+        setPolygonVertices([]);
+      }
+      return next;
+    });
+  };
+
+  const finishPolygon = () => {
+    if (polygonVertices.length < 3) return;
+    const lastVertex = polygonVertices[polygonVertices.length - 1];
+    setClickCoords({ lat: lastVertex.lat, lng: lastVertex.lng });
+  };
+
+  const undoLastVertex = () => {
+    if (polygonVertices.length === 0) return;
+    const newVertices = polygonVertices.slice(0, -1);
+    setPolygonVertices(newVertices);
+
+    const lastMarker = vertexMarkersRef.current.pop();
+    if (lastMarker && mapRef.current) {
+      mapRef.current.removeLayer(lastMarker);
+    }
+
+    if (previewLineRef.current && mapRef.current) {
+      mapRef.current.removeLayer(previewLineRef.current);
+    }
+    if (newVertices.length >= 2) {
+      const lineCoords = newVertices.map((v) => [v.lat, v.lng]);
+      previewLineRef.current = L.polyline(lineCoords, {
+        color: '#3b82f6',
+        weight: 2,
+        dashArray: '6, 6',
+        opacity: 0.8,
+      }).addTo(mapRef.current);
+    }
+
+    if (polygonLayerRef.current && mapRef.current) {
+      mapRef.current.removeLayer(polygonLayerRef.current);
+    }
+    if (newVertices.length >= 3) {
+      const geojson = buildGeoJSONPolygon(newVertices);
+      if (geojson) {
+        polygonLayerRef.current = L.geoJSON(geojson, {
+          style: {
+            color: '#3b82f6',
+            weight: 2,
+            opacity: 0.8,
+            fillColor: '#3b82f6',
+            fillOpacity: 0.15,
+          },
+        }).addTo(mapRef.current);
+      }
+    }
+
+    if (newVertices.length > 0) {
+      setClickCoords({ lat: newVertices[newVertices.length - 1].lat, lng: newVertices[newVertices.length - 1].lng });
+    } else {
+      setClickCoords(null);
+    }
   };
 
   return (
@@ -329,10 +584,48 @@ export default function ParcelMap({ region }) {
                 </button>
               </div>
 
-              <div className={styles.creationHint}>
-                <FiMapPin />
-                <span>Cliquez sur la carte pour placer la parcelle</span>
+              <div className={styles.modeToggle}>
+                <button
+                  className={`${styles.modeBtn} ${polygonMode ? styles.modeBtnActive : ''}`}
+                  onClick={togglePolygonMode}
+                >
+                  <FiLayers /> Tracer un contour
+                </button>
+                <button
+                  className={`${styles.modeBtn} ${!polygonMode ? styles.modeBtnActive : ''}`}
+                  onClick={togglePolygonMode}
+                >
+                  <FiMapPin /> Point unique
+                </button>
               </div>
+
+              {polygonMode && (
+                <div className={styles.creationHint}>
+                  <FiMapPin />
+                  <span>Cliquez pour ajouter des sommets au contour de la parcelle</span>
+                </div>
+              )}
+
+              {!polygonMode && (
+                <div className={styles.creationHint}>
+                  <FiMapPin />
+                  <span>Cliquez sur la carte pour placer la parcelle</span>
+                </div>
+              )}
+
+              {polygonMode && polygonVertices.length > 0 && (
+                <div className={styles.polygonInfo}>
+                  <span>{polygonVertices.length} sommet{polygonVertices.length > 1 ? 's' : ''} défini{polygonVertices.length > 1 ? 's' : ''}</span>
+                  <div className={styles.polygonActions}>
+                    <button className={styles.polygonActionBtn} onClick={undoLastVertex} disabled={polygonVertices.length === 0}>
+                      <FiCornerDownLeft /> Annuler
+                    </button>
+                    <button className={styles.polygonActionBtn} onClick={finishPolygon} disabled={polygonVertices.length < 3}>
+                      <FiCheck /> Terminer
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {clickCoords && (
                 <div className={styles.coordsInfo}>
