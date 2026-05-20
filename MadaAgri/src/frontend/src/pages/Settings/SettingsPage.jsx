@@ -31,6 +31,15 @@ export default function SettingsPage() {
     allowMessages: true,
     showActivity: true,
   });
+  const [preferences, setPreferences] = useState({
+    language: user?.language || 'fr',
+    timezone: user?.timezone || 'Indian/Antananarivo',
+    dateFormat: user?.date_format || 'DD/MM/YYYY',
+  });
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(user?.two_factor_enabled || false);
+  const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
+  const [twoFactorSecret, setTwoFactorSecret] = useState(null);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState(null);
   const [saveError, setSaveError] = useState(null);
@@ -74,6 +83,9 @@ export default function SettingsPage() {
         display_name: profileForm.name,
         location: profileForm.location,
         bio: profileForm.bio,
+        language: preferences.language,
+        timezone: preferences.timezone,
+        date_format: preferences.dateFormat,
       });
       setSaveMessage('Profil mis à jour avec succès');
       authApi.me();
@@ -87,6 +99,55 @@ export default function SettingsPage() {
   const handleLogout = () => {
     signOut();
     navigate('/login');
+  };
+
+  const handleEnable2FA = async () => {
+    setSaveError(null);
+    setSaveMessage(null);
+    setSaving(true);
+    try {
+      const data = await dataApi.enable2FA();
+      setTwoFactorSecret(data.secret);
+      setTwoFactorSecret(data.qrCodeUrl);
+      setShowTwoFactorSetup(true);
+    } catch (err) {
+      setSaveError(err.message || 'Erreur lors de l\'activation de la 2FA');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleVerify2FA = async () => {
+    setSaveError(null);
+    setSaveMessage(null);
+    setSaving(true);
+    try {
+      await dataApi.verify2FA(twoFactorCode);
+      setTwoFactorEnabled(true);
+      setShowTwoFactorSetup(false);
+      setTwoFactorSecret(null);
+      setTwoFactorCode('');
+      setSaveMessage('Authentification à deux facteurs activée');
+    } catch (err) {
+      setSaveError(err.message || 'Code de vérification invalide');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDisable2FA = async () => {
+    setSaveError(null);
+    setSaveMessage(null);
+    setSaving(true);
+    try {
+      await dataApi.disable2FA();
+      setTwoFactorEnabled(false);
+      setSaveMessage('Authentification à deux facteurs désactivée');
+    } catch (err) {
+      setSaveError(err.message || 'Erreur lors de la désactivation de la 2FA');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const renderIcon = (name) => {
@@ -184,6 +245,42 @@ export default function SettingsPage() {
                         onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
                         rows={3}
                       />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>Langue</label>
+                      <select
+                        className={styles.input}
+                        value={preferences.language}
+                        onChange={(e) => setPreferences({ ...preferences, language: e.target.value })}
+                      >
+                        <option value="fr">Français</option>
+                        <option value="en">English</option>
+                        <option value="mg">Malagasy</option>
+                      </select>
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>Fuseau horaire</label>
+                      <select
+                        className={styles.input}
+                        value={preferences.timezone}
+                        onChange={(e) => setPreferences({ ...preferences, timezone: e.target.value })}
+                      >
+                        <option value="Indian/Antananarivo">Antananarivo (UTC+3)</option>
+                        <option value="Europe/Paris">Paris (UTC+1/UTC+2)</option>
+                        <option value="UTC">UTC</option>
+                      </select>
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>Format de date</label>
+                      <select
+                        className={styles.input}
+                        value={preferences.dateFormat}
+                        onChange={(e) => setPreferences({ ...preferences, dateFormat: e.target.value })}
+                      >
+                        <option value="DD/MM/YYYY">JJ/MM/AAAA</option>
+                        <option value="MM/DD/YYYY">MM/JJ/AAAA</option>
+                        <option value="YYYY-MM-DD">AAAA-MM-JJ</option>
+                      </select>
                     </div>
                   </div>
                   <div className={styles.formActions}>
