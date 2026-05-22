@@ -10,6 +10,13 @@ export function clearToken() {
   localStorage.removeItem('madaagri_token');
 }
 
+export function getApiBaseUrl() {
+  // Retourner la base du serveur (sans /api)
+  const fullBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+  // Enlever /api à la fin si présent
+  return fullBase.endsWith('/api') ? fullBase.slice(0, -4) : fullBase;
+}
+
 // Custom error class for deleted user account
 export class UserDeletedError extends Error {
   constructor(message = 'Votre compte a été supprimé') {
@@ -46,7 +53,6 @@ async function apiFetch(path, options = {}, retries = 0) {
 
   let response;
   try {
-    console.log(`[apiFetch] call`, `${API_BASE}${path}`, options);
     response = await fetch(`${API_BASE}${path}`, {
       ...options,
       headers
@@ -106,7 +112,6 @@ export const authApi = {
   async me() {
     const token = getToken();
     if (!token) {
-      console.log('[authApi.me] ℹ️ Pas de token, utilisateur non connecté');
       authMePromise = null;
       apiCache.authMe = { data: null, timestamp: 0 };
       return null;
@@ -119,7 +124,6 @@ export const authApi = {
     }
 
     if (authMePromise) {
-      console.log('[authApi.me] ⏳ Réutilisation de la promesse existante (appel concurrent)');
       return authMePromise;
     }
 
@@ -154,7 +158,6 @@ export const authApi = {
     authMePromise = null;
     apiCache.authMe = { data: null, timestamp: 0 };
     clearToken();
-    console.log('[authApi] ✅ Déconnecté et cache nettoyé');
   }
 };
 
@@ -163,7 +166,6 @@ export const dataApi = {
     // Vérifier le cache
     const now = Date.now();
     if (apiCache.users.data && (now - apiCache.users.timestamp) < CACHE_DURATION) {
-      console.log('[dataApi] Utilisateurs depuis cache');
       return apiCache.users.data;
     }
 
@@ -273,99 +275,91 @@ export const dataApi = {
   },
 
   async fetchConversations() {
-    console.log('[api] fetchConversations debut');
     const data = await apiFetch('/conversations');
-    console.log('[api] fetchConversations result:', data);
-    return data || [];
+    console.log('[API] fetchConversations response:', data);
+    console.log('[API] Is array?:', Array.isArray(data));
+    return Array.isArray(data) ? data : [];
   },
 
   async fetchMessages(conversationId, offset = 0, limit = 50) {
-    console.log('[api] fetchMessages debut:', conversationId, 'offset:', offset, 'limit:', limit);
     const data = await apiFetch(`/messages?conversationId=${encodeURIComponent(conversationId)}&limit=${limit}&offset=${offset}`);
-    console.log('[api] fetchMessages result:', data);
+    console.log('[API] fetchMessages response:', data);
+    console.log('[API] fetchMessages data?.messages:', data?.messages);
     return data;
   },
 
-  async sendMessage(recipient_id, content, attachment_url = null, attachment_type = null) {
-    console.log('[api] sendMessage debut:', { recipient_id, content, attachment_url, attachment_type });
+  async sendMessage(recipient_id, content, attachment_url = null, attachment_type = null, extraFields = {}) {
     const data = await apiFetch('/messages', {
       method: 'POST',
-      body: JSON.stringify({ recipient_id, content, attachment_url, attachment_type })
+      body: JSON.stringify({ recipient_id, content, attachment_url, attachment_type, ...extraFields })
     });
-    console.log('[api] sendMessage result:', data);
     return data.message;
   },
 
   async markMessageAsRead(messageId) {
-    console.log('[api] markMessageAsRead:', messageId);
     const data = await apiFetch(`/messages/${encodeURIComponent(messageId)}/read`, {
       method: 'PUT'
     });
-    console.log('[api] markMessageAsRead result:', data);
     return data;
   },
 
-  async markConversationAsRead(conversationId) {
-    console.log('[api] markConversationAsRead:', conversationId);
+  async markConversationAsRead(conversationId, currentUserId) {
     // Marquer tous les messages non lus de la conversation
-    const messages = await this.fetchMessages(conversationId);
-    const unreadMessages = messages.filter(m => !m.is_read);
+    const result = await this.fetchMessages(conversationId);
+    const messagesList = result?.messages || [];
+    
+    // Ne marquer comme lus QUE les messages reçus (recipient)
+    const unreadMessages = messagesList.filter(m => 
+      !m.is_read && m.recipient_id === currentUserId
+    );
     
     await Promise.all(
-      unreadMessages.map(msg => this.markMessageAsRead(msg.id))
+      unreadMessages.map(msg => this.markMessageAsRead(msg.id).catch(err => {
+        // Ignorer les erreurs 403 (message déjà lu ou non autorisé)
+        if (err.statusCode !== 403) throw err;
+      }))
     );
     
     return { success: true, markedCount: unreadMessages.length };
   },
 
   async deleteMessage(messageId) {
-    console.log('[api] deleteMessage:', messageId);
     const data = await apiFetch(`/messages/${encodeURIComponent(messageId)}`, {
       method: 'DELETE'
     });
-    console.log('[api] deleteMessage result:', data);
     return data;
   },
 
   async editMessage(messageId, content) {
-    console.log('[api] editMessage:', messageId, content);
     const data = await apiFetch(`/messages/${encodeURIComponent(messageId)}`, {
       method: 'PATCH',
       body: JSON.stringify({ content })
     });
-    console.log('[api] editMessage result:', data);
     return data;
   },
 
   async addReaction(messageId, emoji) {
-    console.log('[api] addReaction:', messageId, emoji);
     const data = await apiFetch(`/messages/${encodeURIComponent(messageId)}/reactions`, {
       method: 'POST',
       body: JSON.stringify({ emoji })
     });
-    console.log('[api] addReaction result:', data);
     return data;
   },
 
   async removeReaction(messageId, emoji) {
-    console.log('[api] removeReaction:', messageId, emoji);
     const data = await apiFetch(`/messages/${encodeURIComponent(messageId)}/reactions/${encodeURIComponent(emoji)}`, {
       method: 'DELETE'
     });
-    console.log('[api] removeReaction result:', data);
     return data;
   },
 
   async getReactions(messageId) {
-    console.log('[api] getReactions:', messageId);
     const data = await apiFetch(`/messages/${encodeURIComponent(messageId)}/reactions`);
-    console.log('[api] getReactions result:', data);
     return data;
   },
 
   async fetchRegionCultures(regionId) {
     const data = await apiFetch(`/analysis/region-cultures?regionId=${encodeURIComponent(regionId)}`);
-    console.log('[fetchRegionCultures] Response:', data);
     return data.region_cultures || [];
   },
 
@@ -491,9 +485,21 @@ export const dataApi = {
   },
 
   async createPost(post) {
+    const payload = {};
+    if (post.content) payload.content = post.content;
+    if (post.image_url) payload.image_url = post.image_url;
+    if (post.video_url) payload.video_url = post.video_url;
+    if (post.video_thumbnail) payload.video_thumbnail = post.video_thumbnail;
+    if (post.video_duration) payload.video_duration = post.video_duration;
+
+    if (post.image && !post.image_url) {
+      const imageUrl = await this.uploadImage(post.image);
+      payload.image_url = imageUrl;
+    }
+
     const data = await apiFetch('/posts', {
       method: 'POST',
-      body: JSON.stringify(post),
+      body: JSON.stringify(payload),
     });
     return data.post;
   },
@@ -646,7 +652,6 @@ export const dataApi = {
 
   async fetchKnnCultures(regionId, k = 5) {
     const data = await apiFetch(`/analysis/knn-cultures?regionId=${encodeURIComponent(regionId)}&k=${encodeURIComponent(k)}`);
-    console.log('[fetchKnnCultures] Response:', data);
     return data.recommendations || [];
   },
 

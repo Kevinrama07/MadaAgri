@@ -5,44 +5,42 @@ const { randomUUID } = require('crypto');
 const pool = require('../db');
 const { authMiddleware, JWT_SECRET, asyncHandler } = require('../middlewares/authMiddleware');
 const { authLimiter } = require('../middlewares/security');
+const { authValidators, handleValidationErrors } = require('../middlewares/validators');
 
 const router = express.Router();
 
 // POST /api/auth/signup
-router.post('/signup', authLimiter, asyncHandler(async (req, res) => {
+router.post('/signup', authLimiter, authValidators.signup, handleValidationErrors, asyncHandler(async (req, res) => {
   const { email, password, displayName, role } = req.body;
-  console.log('[SIGNUP] Request received:', { email, role });
   
   // Validation complète
   if (!email || !password || !displayName || !role) {
-    return res.status(400).json({ error: ' Veuillez insérer vos informations' });
+    return res.status(400).json({ success: false, message: ' Veuillez insérer vos informations' });
   }
   
   // Validation du rôle
   const validRoles = ['farmer', 'client', 'admin'];
   if (!validRoles.includes(role)) {
     console.warn(`[SIGNUP] Invalid role attempted: ${role}`);
-    return res.status(400).json({ error: 'Invalid role. Must be: farmer, client, or admin' });
+    return res.status(400).json({ success: false, message: 'Invalid role. Must be: farmer, client, or admin' });
   }
 
   const [rows] = await pool.query('SELECT id FROM users WHERE email = ?', [email.toLowerCase()]);
   if (rows.length) {
-    return res.status(409).json({ error: 'User already exists' });
+    return res.status(409).json({ success: false, message: 'User already exists' });
   }
 
   const hashed = await bcrypt.hash(password, 10);
   const id = randomUUID();
   
-  console.log(`[SIGNUP] Creating user - email: ${email.toLowerCase()}, role: ${role}`);
   
   await pool.query(
     'INSERT INTO users (id, email, password_hash, display_name, role, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
     [id, email.toLowerCase(), hashed, displayName, role]
   );
 
-  const token = jwt.sign({ id, email, role }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id, email, role }, JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
   
-  console.log(`[SIGNUP] User created successfully - email: ${email.toLowerCase()}, role: ${role}`);
   
   const userType = role === 'farmer' ? 'farmer' : 'client';
   res.json({ 
@@ -59,13 +57,11 @@ router.post('/signup', authLimiter, asyncHandler(async (req, res) => {
 }));
 
 // POST /api/auth/login
-router.post('/login', authLimiter, asyncHandler(async (req, res) => {
+router.post('/login', authLimiter, authValidators.login, handleValidationErrors, asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   const startedAt = Date.now();
-  console.log('[LOGIN] Request received:', { email });
-
   if (!email || !password) {
-    return res.status(400).json({ error: 'Veuillez insérer vos informations' });
+    return res.status(400).json({ success: false, message: 'Veuillez insérer vos informations' });
   }
 
   const TIMEOUT_MS = Number(process.env.AUTH_LOGIN_TIMEOUT_MS || 8000);
@@ -79,17 +75,15 @@ router.post('/login', authLimiter, asyncHandler(async (req, res) => {
       timeoutPromise,
     ]);
 
-    console.log('[LOGIN] DB query done in ms:', Date.now() - startedAt);
-
     if (rows.length === 0) {
-      return res.status(401).json({ error: 'Mot de passe ou identifiant incorrect' });
+      return res.status(401).json({ success: false, message: 'Mot de passe ou identifiant incorrect' });
     }
 
     const user = rows[0];
     const ok = await bcrypt.compare(password, user.password_hash);
-    if (!ok) return res.status(401).json({ error: 'Mot de passe ou identifiant incorrect' });
+    if (!ok) return res.status(401).json({ success: false, message: 'Mot de passe ou identifiant incorrect' });
 
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
     const userType = user.role === 'farmer' ? 'farmer' : 'client';
 
     return res.json({
@@ -109,7 +103,8 @@ router.post('/login', authLimiter, asyncHandler(async (req, res) => {
     console.error('[LOGIN] Error:', err.message);
     const elapsed = Date.now() - startedAt;
     return res.status(503).json({
-      error: 'Authentication service unavailable (DB timeout)',
+      success: false,
+      message: 'Authentication service unavailable (DB timeout)',
       details: err.message,
       elapsedMs: elapsed,
     });
@@ -119,7 +114,6 @@ router.post('/login', authLimiter, asyncHandler(async (req, res) => {
 
 router.get('/me', authMiddleware, asyncHandler(async (req, res) => {
   const userId = req.user.id;
-  console.log('[auth/me] Request from user:', userId);
   try {
     const [rows] = await pool.query(
       `SELECT id, email, display_name, role, profile_image_url, bio, region_id, phone, language, created_at, updated_at,
@@ -130,10 +124,8 @@ router.get('/me', authMiddleware, asyncHandler(async (req, res) => {
       [userId, userId, userId, userId]
     );
     if (rows.length === 0) {
-      console.log('[auth/me] User not found for id:', userId);
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
-    console.log('[auth/me] User found:', rows[0].email);
     res.json({ user: rows[0] });
   } catch (err) {
     console.error('[auth/me] Database error:', err.message, err.code);
@@ -143,16 +135,14 @@ router.get('/me', authMiddleware, asyncHandler(async (req, res) => {
 
 // POST /api/auth/logout
 router.post('/logout', authMiddleware, asyncHandler(async (req, res) => {
-  console.log('[LOGOUT] User logged out:', req.user.id);
   res.json({ success: true, message: 'Logged out successfully' });
 }));
 
 // POST /api/auth/refresh
 router.post('/refresh', authMiddleware, asyncHandler(async (req, res) => {
   const { id, email, role } = req.user;
-  console.log('[REFRESH] Refreshing token for user:', id);
   
-  const token = jwt.sign({ id, email, role }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id, email, role }, JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
   res.json({ success: true, token });
 }));
 

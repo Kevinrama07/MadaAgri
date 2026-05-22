@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -10,6 +9,7 @@ import {
   FlatList,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ScreenHeader, Avatar, Button, Badge, PostCard } from '../components';
@@ -72,7 +72,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
 
   if (loading || !user) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.primaryBackground }}>
+      <SafeAreaView edges={["left", "right", "bottom"]} style={{ flex: 1, backgroundColor: colors.primaryBackground }}>
         <ScreenHeader title="Chargement..." showBack onBackPress={() => navigation.goBack()} />
       </SafeAreaView>
     );
@@ -179,7 +179,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
   });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={["left", "right", "bottom"]} style={styles.container}>
       <ScreenHeader
         title={user?.display_name || 'Profil'}
         showBack

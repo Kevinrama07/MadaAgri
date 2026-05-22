@@ -7,10 +7,10 @@ import {
   Pressable,
   RefreshControl,
   ActivityIndicator,
-  SafeAreaView,
   TextInput,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -704,8 +704,8 @@ export default function InvitationsScreen({ navigation }: any) {
   const currentData = getCurrentData();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScreenHeader title="Réseau" showBack onBackPress={() => navigation.goBack()} showMenu={false} />
+    <SafeAreaView edges={["left", "right", "bottom"]} style={styles.container}>
+      <ScreenHeader title="Réseau" showMenu={false} disableTopSafeArea />
 
       {/* Tabs Navigation */}
       <FlatList

@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import React from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { navigationRef } from './src/lib/navigation';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -14,14 +14,13 @@ import './src/i18n';
 import RootNavigator from './src/navigation/RootNavigator';
 
 function AppContent() {
-  const auth = useAuth();
   const theme = useTheme();
+  const auth = useAuth();
 
-  if (auth.loading || theme.isLoading) {
+  if (theme.isLoading || auth.loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors?.background || '#fff' }}>
-        <ActivityIndicator size="large" color={theme.colors?.primary || '#4CAF50'} />
-        <Text style={{ marginTop: 10, color: theme.colors?.text || '#000' }}>Chargement...</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors?.background || '#F6F8FA' }}>
+        <ActivityIndicator size="large" color={theme.colors?.primary || '#1B6B32'} />
       </View>
     );
   }

@@ -2,11 +2,11 @@ import React from 'react';
 import {
   View,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Pressable,
   Text,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -137,7 +137,7 @@ export const FarmerMenuScreen = ({
   });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={["left", "right", "bottom"]} style={styles.container}>
       <ScreenHeader
         title="Menu Agriculteur"
         showBack={true}

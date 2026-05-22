@@ -1,26 +1,23 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   StyleSheet,
-  SafeAreaView,
   FlatList,
   RefreshControl,
   Pressable,
   Text,
   Image,
+  ActivityIndicator,
+  Dimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
-import { ScreenHeader } from '../components/ScreenHeader';
-import { ModernCard } from '../components/ModernCard';
-import { ModernButton } from '../components/ModernButton';
 import { CultureCardSkeleton } from '../components/SkeletonLoader';
-import { SPACING, BORDER_RADIUS, TYPOGRAPHY } from '../theme';
+import { SPACING } from '../theme';
 import { reservationService } from '../services/reservationService';
 
-interface ReceivedOrdersScreenProps {
-  navigation: any;
-}
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 interface Order {
   id: string;
@@ -33,211 +30,35 @@ interface Order {
   total_price: number;
   image_url?: string;
   created_at: string;
-  items?: any[];
 }
 
-export default function ReceivedOrdersScreen({ navigation }: ReceivedOrdersScreenProps) {
-  const { colors } = useTheme();
+const STATUS_CONFIG: Record<string, { label: string; icon: string; color: string; bg: string }> = {
+  pending: { label: 'En attente', icon: 'clock-outline', color: '#D97706', bg: '#FEF3C7' },
+  confirmed: { label: 'Confirmée', icon: 'check-circle', color: '#059669', bg: '#D1FAE5' },
+  delivered: { label: 'Livrée', icon: 'check-all', color: '#2563EB', bg: '#DBEAFE' },
+  cancelled: { label: 'Refusée', icon: 'close-circle', color: '#DC2626', bg: '#FEE2E2' },
+};
+
+export default function ReceivedOrdersScreen({ navigation }: any) {
+  const { colors, mode } = useTheme();
+  const insets = useSafeAreaInsets();
+  const isDark = mode === 'dark';
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'delivered' | 'cancelled'>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.primaryBackground,
-    },
-    content: {
-      padding: SPACING.LG,
-    },
-    pageHeader: {
-      marginBottom: SPACING.LG,
-    },
-    pageTitle: {
-      fontSize: 20,
-      fontWeight: '900',
-      color: colors.text,
-      marginBottom: 4,
-    },
-    pageSubtitle: {
-      fontSize: 13,
-      color: colors.textSecondary,
-    },
-    filterContainer: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: SPACING.SM,
-      marginBottom: SPACING.LG,
-    },
-    filterButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: SPACING.XS,
-      paddingHorizontal: SPACING.MD,
-      paddingVertical: SPACING.SM,
-      borderRadius: BORDER_RADIUS.DEFAULT,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.card,
-    },
-    filterButtonActive: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    filterButtonText: {
-      fontSize: 13,
-      color: colors.text,
-      fontWeight: '600',
-    },
-    filterButtonTextActive: {
-      color: '#FFFFFF',
-      fontWeight: '700',
-    },
-    orderCard: {
-      marginBottom: SPACING.LG,
-    },
-    orderHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: SPACING.MD,
-      paddingBottom: SPACING.SM,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    orderHeaderLeft: {
-      flex: 1,
-    },
-    orderId: {
-      fontSize: 15,
-      fontWeight: '700',
-      color: colors.text,
-      marginBottom: 4,
-    },
-    orderDate: {
-      fontSize: 12,
-      color: colors.textTertiary,
-    },
-    statusBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: SPACING.SM,
-      paddingVertical: SPACING.XS,
-      borderRadius: BORDER_RADIUS.SMALL,
-    },
-    statusText: {
-      fontSize: 12,
-      fontWeight: '700',
-      color: '#FFFFFF',
-    },
-    orderContent: {
-      marginBottom: SPACING.MD,
-    },
-    detailsGrid: {
-      gap: SPACING.SM,
-    },
-    detailRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: SPACING.SM,
-      paddingHorizontal: SPACING.SM,
-      backgroundColor: colors.primaryBackground,
-      borderRadius: BORDER_RADIUS.SMALL,
-    },
-    detailLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: SPACING.SM,
-      flex: 1,
-    },
-    detailLabel: {
-      fontSize: 13,
-      color: colors.textSecondary,
-      fontWeight: '600',
-    },
-    detailValue: {
-      fontSize: 14,
-      color: colors.text,
-      fontWeight: '700',
-    },
-    clientRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: SPACING.SM,
-    },
-    clientAvatar: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: colors.primary,
-    },
-    productImage: {
-      width: '100%',
-      height: 150,
-      borderRadius: BORDER_RADIUS.DEFAULT,
-      marginTop: SPACING.MD,
-      backgroundColor: colors.border,
-    },
-    orderFooter: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingTop: SPACING.MD,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    totalContainer: {
-      flex: 1,
-    },
-    totalLabel: {
-      fontSize: 12,
-      color: colors.textSecondary,
-      marginBottom: 4,
-    },
-    totalAmount: {
-      fontSize: 18,
-      fontWeight: '900',
-      color: colors.primary,
-    },
-    orderActions: {
-      flexDirection: 'row',
-      gap: SPACING.SM,
-      flex: 1,
-    },
-    emptyContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingVertical: SPACING.XL * 2,
-    },
-    emptyText: {
-      fontSize: 16,
-      color: colors.textSecondary,
-      marginTop: SPACING.LG,
-      textAlign: 'center',
-    },
-    loadingContainer: {
-      padding: SPACING.LG,
-    },
-  });
-
-  useEffect(() => {
-    loadOrders();
-  }, []);
+  useEffect(() => { loadOrders(); }, []);
 
   const loadOrders = useCallback(async () => {
     try {
       setLoading(true);
       const data = await reservationService.getReceivedOrders();
-      // S'assurer que data est un tableau
       setOrders(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Erreur chargement commandes:', error);
-      setOrders([]); // Définir un tableau vide en cas d'erreur
+    } catch {
+      setOrders([]);
     } finally {
       setLoading(false);
     }
@@ -253,349 +74,304 @@ export default function ReceivedOrdersScreen({ navigation }: ReceivedOrdersScree
     try {
       setActionLoading(orderId);
       await reservationService.confirmReservation(orderId);
-      // S'assurer que orders est un tableau avant de mapper
-      if (Array.isArray(orders)) {
-        setOrders(orders.map(order => 
-          order.id === orderId ? { ...order, status: 'confirmed' } : order
-        ));
-      }
-    } catch (error) {
-      console.error('Erreur confirmation:', error);
-    } finally {
-      setActionLoading(null);
-    }
-  }, [orders]);
+      setOrders((prev) => prev.map(o => o.id === orderId ? { ...o, status: 'confirmed' } : o));
+    } catch {} finally { setActionLoading(null); }
+  }, []);
 
   const handleCancel = useCallback(async (orderId: string) => {
     try {
       setActionLoading(orderId);
       await reservationService.cancelReservation(orderId);
-      // S'assurer que orders est un tableau avant de mapper
-      if (Array.isArray(orders)) {
-        setOrders(orders.map(order => 
-          order.id === orderId ? { ...order, status: 'cancelled' } : order
-        ));
-      }
-    } catch (error) {
-      console.error('Erreur annulation:', error);
-    } finally {
-      setActionLoading(null);
-    }
-  }, [orders]);
+      setOrders((prev) => prev.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o));
+    } catch {} finally { setActionLoading(null); }
+  }, []);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return '#FFA500';
-      case 'confirmed': return colors.success;
-      case 'delivered': return colors.accent;
-      case 'cancelled': return colors.error;
-      default: return colors.textTertiary;
-    }
-  };
+  const counts = useMemo(() => ({
+    all: orders.length,
+    pending: orders.filter(o => o.status === 'pending').length,
+    confirmed: orders.filter(o => o.status === 'confirmed').length,
+    delivered: orders.filter(o => o.status === 'delivered').length,
+    cancelled: orders.filter(o => o.status === 'cancelled').length,
+  }), [orders]);
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'pending': return 'En attente';
-      case 'confirmed': return 'Confirmée';
-      case 'delivered': return 'Livrée';
-      case 'cancelled': return 'Refusée';
-      default: return status;
-    }
-  };
+  const filteredOrders = useMemo(() => {
+    if (filter === 'all') return orders;
+    return orders.filter(o => o.status === filter);
+  }, [orders, filter]);
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending': return 'clock-outline';
-      case 'confirmed': return 'check-circle';
-      case 'delivered': return 'check-all';
-      case 'cancelled': return 'close-circle';
-      default: return 'help-circle';
-    }
-  };
+  const renderOrder = useCallback(({ item }: { item: Order }) => {
+    const sc = STATUS_CONFIG[item.status] || STATUS_CONFIG.pending;
+    return (
+      <View style={[styles.orderCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+        {/* Header: order ID + status */}
+        <View style={styles.orderHeader}>
+          <View style={styles.orderIdRow}>
+            <MaterialCommunityIcons name="receipt" size={16} color={colors.primary} />
+            <Text style={[styles.orderId, { color: colors.text }]}>#{item.id.slice(0, 8).toUpperCase()}</Text>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: sc.bg }]}>
+            <MaterialCommunityIcons name={sc.icon as any} size={14} color={sc.color} />
+            <Text style={[styles.statusText, { color: sc.color }]}>{sc.label}</Text>
+          </View>
+        </View>
 
-  const filteredOrders = Array.isArray(orders) && filter === 'all' 
-    ? orders 
-    : Array.isArray(orders) ? orders.filter(o => o.status === filter) : [];
+        {/* Content row: product image + details */}
+        <View style={styles.orderContent}>
+          {item.image_url ? (
+            <Image source={{ uri: item.image_url }} style={styles.orderThumb} />
+          ) : (
+            <View style={[styles.orderThumbPlaceholder, { backgroundColor: colors.glassDarker }]}>
+              <MaterialCommunityIcons name="image-outline" size={24} color={colors.textTertiary} />
+            </View>
+          )}
+          <View style={styles.orderDetails}>
+            <Text style={[styles.productTitle, { color: colors.text }]} numberOfLines={1}>{item.title}</Text>
+            <Text style={[styles.productQty, { color: colors.textSecondary }]}>{item.quantity} unités</Text>
+            <Text style={[styles.productPrice, { color: colors.primary }]}>{item.unit_price.toLocaleString('fr-FR')} Ar / unité</Text>
+          </View>
+        </View>
 
-  const getFilterCount = (status: string) => {
-    if (!Array.isArray(orders)) return 0;
-    if (status === 'all') return orders.length;
-    return orders.filter(o => o.status === status).length;
-  };
+        {/* Client info */}
+        <View style={[styles.clientRow, { backgroundColor: colors.primaryBackground }]}>
+          {item.client_avatar ? (
+            <Image source={{ uri: item.client_avatar }} style={styles.clientAvatar} />
+          ) : (
+            <View style={[styles.clientAvatarPlaceholder, { backgroundColor: colors.glassTint }]}>
+              <MaterialCommunityIcons name="account" size={18} color={colors.primary} />
+            </View>
+          )}
+          <View style={styles.clientInfo}>
+            <Text style={[styles.clientLabel, { color: colors.textTertiary }]}>Client</Text>
+            <Text style={[styles.clientName, { color: colors.text }]}>{item.client_name || 'Inconnu'}</Text>
+          </View>
+          <Text style={[styles.orderDate, { color: colors.textTertiary }]}>
+            {new Date(item.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+          </Text>
+        </View>
+
+        {/* Footer: total + actions */}
+        <View style={[styles.orderFooter, { borderTopColor: colors.glassBorder }]}>
+          <View>
+            <Text style={[styles.totalLabel, { color: colors.textTertiary }]}>Total</Text>
+            <Text style={[styles.totalAmount, { color: colors.primary }]}>
+              {item.total_price?.toLocaleString('fr-FR')} Ar
+            </Text>
+          </View>
+          {item.status === 'pending' && (
+            <View style={styles.actionRow}>
+              <Pressable
+                style={[styles.actionBtn, styles.acceptBtn]}
+                onPress={() => handleConfirm(item.id)}
+                disabled={actionLoading === item.id}
+              >
+                {actionLoading === item.id ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons name="check" size={18} color="#FFF" />
+                    <Text style={styles.actionBtnText}>Accepter</Text>
+                  </>
+                )}
+              </Pressable>
+              <Pressable
+                style={[styles.actionBtn, styles.refuseBtn]}
+                onPress={() => handleCancel(item.id)}
+                disabled={actionLoading === item.id}
+              >
+                <MaterialCommunityIcons name="close" size={18} color="#DC2626" />
+                <Text style={[styles.actionBtnText, { color: '#DC2626' }]}>Refuser</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  }, [colors, actionLoading, handleConfirm, handleCancel]);
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ScreenHeader 
-          title="Commandes Reçues" 
-          showBack 
-          onBackPress={() => navigation.goBack()} 
-          showMenu={false} 
-        />
-        <View style={styles.loadingContainer}>
-          {[...Array(3)].map((_, index) => (
-            <CultureCardSkeleton key={index} />
-          ))}
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.header, { paddingTop: insets.top + 8, backgroundColor: isDark ? 'rgba(8,12,20,0.85)' : 'rgba(246,248,250,0.85)', borderBottomColor: colors.glassBorder }]}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.headerBtn}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} />
+          </Pressable>
+          <View style={styles.headerCenter}>
+            <View style={[styles.headerIcon, { backgroundColor: colors.glassTint }]}>
+              <MaterialCommunityIcons name="clipboard-list" size={20} color={colors.primary} />
+            </View>
+            <View>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Commandes reçues</Text>
+              <Text style={[styles.headerSub, { color: colors.textTertiary }]}>Gestion des commandes</Text>
+            </View>
+          </View>
         </View>
-      </SafeAreaView>
+        <View style={styles.loadingContent}>
+          {[1, 2, 3].map(i => <CultureCardSkeleton key={i} />)}
+        </View>
+      </View>
     );
   }
 
+  const FILTERS: { key: typeof filter; label: string; icon: string; count: number }[] = [
+    { key: 'all', label: 'Toutes', icon: 'clipboard-list', count: counts.all },
+    { key: 'pending', label: 'En attente', icon: 'clock-outline', count: counts.pending },
+    { key: 'confirmed', label: 'Confirmées', icon: 'check-circle', count: counts.confirmed },
+    { key: 'cancelled', label: 'Refusées', icon: 'close-circle', count: counts.cancelled },
+  ];
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScreenHeader 
-        title="Commandes Reçues" 
-        showBack 
-        onBackPress={() => navigation.goBack()} 
-        showMenu={false} 
-      />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { paddingTop: insets.top + 8, backgroundColor: isDark ? 'rgba(8,12,20,0.85)' : 'rgba(246,248,250,0.85)', borderBottomColor: colors.glassBorder }]}>
+        <Pressable onPress={() => navigation.goBack()} style={styles.headerBtn}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} />
+        </Pressable>
+        <View style={styles.headerCenter}>
+          <View style={[styles.headerIcon, { backgroundColor: colors.glassTint }]}>
+            <MaterialCommunityIcons name="clipboard-list" size={20} color={colors.primary} />
+          </View>
+          <View>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>Commandes reçues</Text>
+            <Text style={[styles.headerSub, { color: colors.textTertiary }]}>Gestion des commandes</Text>
+          </View>
+        </View>
+      </View>
 
       <FlatList
         data={filteredOrders}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ModernCard shadow="medium" style={styles.orderCard}>
-            {/* En-tête */}
-            <View style={styles.orderHeader}>
-              <View style={styles.orderHeaderLeft}>
-                <Text style={styles.orderId}>Commande #{item.id.slice(0, 8).toUpperCase()}</Text>
-                <Text style={styles.orderDate}>
-                  {new Date(item.created_at).toLocaleDateString('fr-FR')}
-                </Text>
-              </View>
-              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-                <MaterialCommunityIcons 
-                  name={getStatusIcon(item.status) as any} 
-                  size={14} 
-                  color="#FFFFFF" 
-                />
-                <Text style={styles.statusText}>{getStatusLabel(item.status)}</Text>
-              </View>
-            </View>
-
-            {/* Contenu */}
-            <View style={styles.orderContent}>
-              <View style={styles.detailsGrid}>
-                {/* Client */}
-                <View style={styles.detailRow}>
-                  <View style={styles.detailLeft}>
-                    <View style={styles.clientRow}>
-                      {item.client_avatar ? (
-                        <Image 
-                          source={{ uri: item.client_avatar }} 
-                          style={styles.clientAvatar}
-                        />
-                      ) : (
-                        <View style={styles.clientAvatar}>
-                          <MaterialCommunityIcons name="account" size={20} color="#FFFFFF" />
-                        </View>
-                      )}
-                      <View>
-                        <Text style={styles.detailLabel}>Client</Text>
-                        <Text style={styles.detailValue}>{item.client_name || 'Inconnu'}</Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Produit */}
-                <View style={styles.detailRow}>
-                  <View style={styles.detailLeft}>
-                    <MaterialCommunityIcons name="package-variant" size={18} color={colors.primary} />
-                    <View>
-                      <Text style={styles.detailLabel}>Produit</Text>
-                      <Text style={styles.detailValue}>{item.title}</Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Quantité */}
-                <View style={styles.detailRow}>
-                  <View style={styles.detailLeft}>
-                    <MaterialCommunityIcons name="counter" size={18} color={colors.primary} />
-                    <View>
-                      <Text style={styles.detailLabel}>Quantité</Text>
-                      <Text style={styles.detailValue}>{item.quantity} unités</Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Prix unitaire */}
-                <View style={styles.detailRow}>
-                  <View style={styles.detailLeft}>
-                    <MaterialCommunityIcons name="cash" size={18} color={colors.primary} />
-                    <View>
-                      <Text style={styles.detailLabel}>Prix unitaire</Text>
-                      <Text style={styles.detailValue}>
-                        {item.unit_price?.toLocaleString('fr-FR')} Ar
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              {/* Image du produit */}
-              {item.image_url && (
-                <Image 
-                  source={{ uri: item.image_url }} 
-                  style={styles.productImage}
-                  resizeMode="cover"
-                />
-              )}
-            </View>
-
-            {/* Footer */}
-            <View style={styles.orderFooter}>
-              <View style={styles.totalContainer}>
-                <Text style={styles.totalLabel}>Total</Text>
-                <Text style={styles.totalAmount}>
-                  {item.total_price?.toLocaleString('fr-FR')} Ar
-                </Text>
-              </View>
-
-              {item.status === 'pending' && (
-                <View style={styles.orderActions}>
-                  <ModernButton
-                    title={actionLoading === item.id ? 'En cours...' : 'Accepter'}
-                    variant="primary"
-                    size="small"
-                    onPress={() => handleConfirm(item.id)}
-                    disabled={actionLoading === item.id}
-                    style={{ flex: 1 }}
-                  />
-                  <ModernButton
-                    title={actionLoading === item.id ? 'En cours...' : 'Refuser'}
-                    variant="outline"
-                    size="small"
-                    onPress={() => handleCancel(item.id)}
-                    disabled={actionLoading === item.id}
-                    style={{ flex: 1 }}
-                  />
-                </View>
-              )}
-            </View>
-          </ModernCard>
-        )}
+        renderItem={renderOrder}
+        contentContainerStyle={styles.listContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />}
         ListHeaderComponent={
           <>
-            {/* En-tête de page */}
-            <View style={styles.pageHeader}>
-              <Text style={styles.pageTitle}>Commandes Reçues</Text>
-              <Text style={styles.pageSubtitle}>
-                {filteredOrders.length} commande{filteredOrders.length !== 1 ? 's' : ''}
-              </Text>
+            {/* Stats */}
+            <View style={styles.statsRow}>
+              <View style={[styles.statCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+                <Text style={[styles.statValue, { color: colors.text }]}>{counts.all}</Text>
+                <Text style={[styles.statLabel, { color: colors.textTertiary }]}>Total</Text>
+              </View>
+              <View style={[styles.statCard, { backgroundColor: '#FEF3C7', borderColor: '#FCD34D' }]}>
+                <Text style={[styles.statValue, { color: '#92400E' }]}>{counts.pending}</Text>
+                <Text style={[styles.statLabel, { color: '#92400E' }]}>En attente</Text>
+              </View>
+              <View style={[styles.statCard, { backgroundColor: '#D1FAE5', borderColor: '#6EE7B7' }]}>
+                <Text style={[styles.statValue, { color: '#065F46' }]}>{counts.confirmed}</Text>
+                <Text style={[styles.statLabel, { color: '#065F46' }]}>Confirmées</Text>
+              </View>
+              <View style={[styles.statCard, { backgroundColor: '#FEE2E2', borderColor: '#FECACA' }]}>
+                <Text style={[styles.statValue, { color: '#991B1B' }]}>{counts.cancelled}</Text>
+                <Text style={[styles.statLabel, { color: '#991B1B' }]}>Refusées</Text>
+              </View>
             </View>
 
-            {/* Filtres */}
-            <View style={styles.filterContainer}>
-              <Pressable
-                style={[
-                  styles.filterButton,
-                  filter === 'all' && styles.filterButtonActive,
-                ]}
-                onPress={() => setFilter('all')}
-              >
-                <Text
-                  style={[
-                    styles.filterButtonText,
-                    filter === 'all' && styles.filterButtonTextActive,
-                  ]}
+            {/* Filters */}
+            <View style={styles.filterRow}>
+              {FILTERS.map((f) => (
+                <Pressable
+                  key={f.key}
+                  style={[styles.filterChip, { backgroundColor: filter === f.key ? colors.primary : colors.glass, borderColor: filter === f.key ? colors.primary : colors.glassBorder }]}
+                  onPress={() => setFilter(f.key)}
                 >
-                  Toutes ({getFilterCount('all')})
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[
-                  styles.filterButton,
-                  filter === 'pending' && styles.filterButtonActive,
-                ]}
-                onPress={() => setFilter('pending')}
-              >
-                <MaterialCommunityIcons 
-                  name="clock-outline" 
-                  size={16} 
-                  color={filter === 'pending' ? '#FFFFFF' : colors.text} 
-                />
-                <Text
-                  style={[
-                    styles.filterButtonText,
-                    filter === 'pending' && styles.filterButtonTextActive,
-                  ]}
-                >
-                  En attente ({getFilterCount('pending')})
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[
-                  styles.filterButton,
-                  filter === 'confirmed' && styles.filterButtonActive,
-                ]}
-                onPress={() => setFilter('confirmed')}
-              >
-                <MaterialCommunityIcons 
-                  name="check-circle" 
-                  size={16} 
-                  color={filter === 'confirmed' ? '#FFFFFF' : colors.text} 
-                />
-                <Text
-                  style={[
-                    styles.filterButtonText,
-                    filter === 'confirmed' && styles.filterButtonTextActive,
-                  ]}
-                >
-                  Confirmées ({getFilterCount('confirmed')})
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[
-                  styles.filterButton,
-                  filter === 'cancelled' && styles.filterButtonActive,
-                ]}
-                onPress={() => setFilter('cancelled')}
-              >
-                <MaterialCommunityIcons 
-                  name="close-circle" 
-                  size={16} 
-                  color={filter === 'cancelled' ? '#FFFFFF' : colors.text} 
-                />
-                <Text
-                  style={[
-                    styles.filterButtonText,
-                    filter === 'cancelled' && styles.filterButtonTextActive,
-                  ]}
-                >
-                  Refusées ({getFilterCount('cancelled')})
-                </Text>
-              </Pressable>
+                  <MaterialCommunityIcons name={f.icon as any} size={14} color={filter === f.key ? '#FFF' : colors.text} />
+                  <Text style={[styles.filterChipText, { color: filter === f.key ? '#FFF' : colors.text }]}>
+                    {f.label} ({f.count})
+                  </Text>
+                </Pressable>
+              ))}
             </View>
           </>
         }
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons
-              name="clipboard-list-outline"
-              size={80}
-              color={colors.textTertiary}
-            />
-            <Text style={styles.emptyText}>
-              {filter === 'all'
-                ? 'Vous n\'avez pas encore de commandes'
-                : `Aucune commande ${getStatusLabel(filter).toLowerCase()}`}
+          <View style={styles.emptyBox}>
+            <MaterialCommunityIcons name="clipboard-list-outline" size={64} color={colors.textTertiary} />
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              {filter === 'all' ? 'Aucune commande reçue' : `Aucune commande ${STATUS_CONFIG[filter]?.label.toLowerCase() || ''}`}
             </Text>
           </View>
         }
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.primary}
-          />
-        }
       />
-    </SafeAreaView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingBottom: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  headerBtn: { padding: 8 },
+  headerCenter: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 4 },
+  headerIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 16, fontWeight: '600' },
+  headerSub: { fontSize: 11, marginTop: 1 },
+
+  listContent: { padding: SPACING.LG, paddingBottom: 40 },
+  loadingContent: { padding: SPACING.LG, gap: 12 },
+
+  // Stats
+  statsRow: { flexDirection: 'row', gap: 6, marginBottom: 14 },
+  statCard: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    gap: 2,
+  },
+  statValue: { fontSize: 18, fontWeight: '800' },
+  statLabel: { fontSize: 9, fontWeight: '500' },
+
+  // Filters
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  filterChipText: { fontSize: 11, fontWeight: '600' },
+
+  // Order card
+  orderCard: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, marginBottom: 10, overflow: 'hidden' },
+  orderHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, paddingBottom: 8 },
+  orderIdRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  orderId: { fontSize: 14, fontWeight: '700' },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  statusText: { fontSize: 11, fontWeight: '700' },
+
+  orderContent: { flexDirection: 'row', gap: 12, paddingHorizontal: 12, paddingBottom: 10 },
+  orderThumb: { width: 60, height: 60, borderRadius: 10 },
+  orderThumbPlaceholder: { width: 60, height: 60, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  orderDetails: { flex: 1, gap: 2 },
+  productTitle: { fontSize: 15, fontWeight: '600' },
+  productQty: { fontSize: 12 },
+  productPrice: { fontSize: 13, fontWeight: '600' },
+
+  clientRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, paddingVertical: 8, marginHorizontal: 12, marginBottom: 8, borderRadius: 10 },
+  clientAvatar: { width: 32, height: 32, borderRadius: 16 },
+  clientAvatarPlaceholder: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  clientInfo: { flex: 1 },
+  clientLabel: { fontSize: 10, fontWeight: '500' },
+  clientName: { fontSize: 13, fontWeight: '600' },
+  orderDate: { fontSize: 11 },
+
+  orderFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth },
+  totalLabel: { fontSize: 11, fontWeight: '500' },
+  totalAmount: { fontSize: 18, fontWeight: '800' },
+  actionRow: { flexDirection: 'row', gap: 8 },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 9, paddingHorizontal: 16, borderRadius: 10 },
+  acceptBtn: { backgroundColor: '#059669' },
+  refuseBtn: { backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#FECACA' },
+  actionBtnText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
+
+  // Empty
+  emptyBox: { alignItems: 'center', gap: 12, paddingVertical: 60 },
+  emptyText: { fontSize: 15, fontWeight: '500', textAlign: 'center' },
+});

@@ -7,6 +7,10 @@ export interface Post {
   author_image?: string;
   content: string;
   image_url?: string;
+  video_url?: string;
+  video_thumbnail?: string;
+  video_duration?: number;
+  video_views?: number;
   region_id?: number;
   culture_id?: number;
   likes_count: number;
@@ -78,6 +82,9 @@ class PostService {
   async createPost(post: {
     content: string;
     image_url?: string;
+    video_url?: string;
+    video_thumbnail?: string;
+    video_duration?: number;
     region_id?: number;
     culture_id?: number;
   }): Promise<Post> {
@@ -112,6 +119,19 @@ class PostService {
       return result;
     } catch (error) {
       console.error('[PostService] Erreur unlikePost:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Compter une vue vidéo
+   */
+  async trackVideoView(postId: string) {
+    try {
+      const result = await dataApi.trackVideoView(postId);
+      return result;
+    } catch (error) {
+      console.error('[PostService] Erreur trackVideoView:', error);
       throw error;
     }
   }

@@ -58,7 +58,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // Si on essaie de définir null ou undefined, vérifier qu'on a vraiment l'intention de déconnecter
     if (!newUser) {
-      console.log('[AuthContext] ⚠️ Attempting to clear user');
       userRef.current = null;
       setUserState(null);
       return;
@@ -74,7 +73,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const mergedUser = mergeUserData(userRef.current, newUser);
     
     if (mergedUser && isValidUser(mergedUser)) {
-      console.log('[AuthContext] ✅ Setting valid user:', mergedUser.email);
       userRef.current = mergedUser;
       setUserState(mergedUser);
     } else {
@@ -86,7 +84,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const saveUserToStorage = useCallback(async (userData: User | null) => {
     // Éviter les sauvegardes concurrentes
     if (savingRef.current) {
-      console.log('[AuthContext] ⏳ Save already in progress, skipping');
       return;
     }
 
@@ -96,10 +93,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (userData && isValidUser(userData)) {
         const dataToSave = JSON.stringify(userData);
         await AsyncStorage.setItem(USER_STORAGE_KEY, dataToSave);
-        console.log('[AuthContext] 💾 User saved to storage:', userData.email);
       } else if (userData === null) {
         await AsyncStorage.removeItem(USER_STORAGE_KEY);
-        console.log('[AuthContext] 🗑️ User removed from storage');
       }
     } catch (err) {
       console.error('[AuthContext] ❌ Error saving user:', err);
@@ -122,7 +117,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (userData) {
         const parsedUser = JSON.parse(userData);
         if (isValidUser(parsedUser)) {
-          console.log('[AuthContext] 📂 User loaded from storage:', parsedUser.email);
           return parsedUser;
         } else {
           console.warn('[AuthContext] ⚠️ Invalid cached user, clearing');
@@ -143,33 +137,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     let cancelled = false;
 
     const initializeAuth = async () => {
-      console.log('[AuthContext] 🚀 Initializing authentication...');
       
       try {
         // 1. Charger le token
         const savedToken = await loadTokenPersist();
         
         if (!savedToken) {
-          console.log('[AuthContext] ℹ️ No saved token found');
           setLoading(false);
           return;
         }
 
-        console.log('[AuthContext] 🔑 Token found, loading user...');
 
         // 2. Charger l'utilisateur depuis le cache
         const cachedUser = await loadUserFromStorage();
         
         if (cachedUser && !cancelled && isMountedRef.current) {
-          console.log('[AuthContext] ✅ Using cached user:', cachedUser.email);
           setUser(cachedUser);
           
           // Initialiser Socket.io
           try {
             const apiBase = getApiBaseUrl();
-            console.log('[AuthContext] 🔌 Connecting to Socket.io:', apiBase);
             await socketService.connect(apiBase, cachedUser.id);
-            console.log('[AuthContext] ✅ Socket.io connected');
           } catch (socketErr) {
             console.warn('[AuthContext] ⚠️ Socket.io connection failed:', socketErr);
           }
@@ -180,12 +168,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           if (cancelled || !isMountedRef.current) return;
           
           try {
-            console.log('[AuthContext] 🔄 Refreshing profile from API...');
             const freshUser = await getProfile();
             
             if (!cancelled && isMountedRef.current) {
               if (isValidUser(freshUser)) {
-                console.log('[AuthContext] ✅ Fresh profile received:', freshUser.email);
                 setUser(freshUser);
               } else {
                 console.warn('[AuthContext] ⚠️ API returned invalid user, keeping cache');
@@ -199,7 +185,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
             // Si c'est une erreur 401, le token est invalide
             const status = (apiErr as any)?.status;
             if (status === 401) {
-              console.log('[AuthContext] 🔒 Token invalid, logging out');
               if (!cancelled && isMountedRef.current) {
                 setUser(null);
                 await AsyncStorage.removeItem(USER_STORAGE_KEY);
@@ -233,11 +218,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(true);
       setError(null);
       
-      console.log('[AuthContext] 📝 Signing up:', email);
       const response = await apiRegister({ email, password, name, role });
 
       if (isMountedRef.current && response.user && isValidUser(response.user)) {
-        console.log('[AuthContext] ✅ Signup successful:', response.user.email);
         setUser(response.user);
         await saveUserToStorage(response.user);
         
@@ -245,7 +228,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
           const apiBase = getApiBaseUrl();
           await socketService.connect(apiBase, response.user.id);
-          console.log('[AuthContext] ✅ Socket.io connected after signup');
         } catch (socketErr) {
           console.warn('[AuthContext] ⚠️ Socket.io connection failed:', socketErr);
         }
@@ -273,11 +255,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(true);
       setError(null);
       
-      console.log('[AuthContext] 🔐 Signing in:', email);
       const response = await apiLogin(email, password);
 
       if (isMountedRef.current && response.user && isValidUser(response.user)) {
-        console.log('[AuthContext] ✅ Login successful:', response.user.email);
         setUser(response.user);
         await saveUserToStorage(response.user);
         
@@ -285,7 +265,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
           const apiBase = getApiBaseUrl();
           await socketService.connect(apiBase, response.user.id);
-          console.log('[AuthContext] ✅ Socket.io connected after login');
         } catch (socketErr) {
           console.warn('[AuthContext] ⚠️ Socket.io connection failed:', socketErr);
         }
@@ -310,11 +289,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signOut = useCallback(async () => {
     try {
-      console.log('[AuthContext] 🚪 Logging out...');
       
       // Déconnecter Socket.io
       socketService.disconnect();
-      console.log('[AuthContext] 🔌 Socket.io disconnected');
       
       await apiLogout();
     } catch (err) {
@@ -325,7 +302,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setError(null);
         await saveUserToStorage(null);
         await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
-        console.log('[AuthContext] ✅ User logged out');
       }
     }
   }, [setUser, saveUserToStorage]);
@@ -333,16 +309,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const refreshUser = useCallback(async (): Promise<void> => {
     // Ne pas rafraîchir si pas d'utilisateur connecté
     if (!userRef.current) {
-      console.log('[AuthContext] ℹ️ No user to refresh');
       return;
     }
 
     try {
-      console.log('[AuthContext] 🔄 Manually refreshing user profile...');
       const freshUser = await getProfile();
       
       if (isMountedRef.current && isValidUser(freshUser)) {
-        console.log('[AuthContext] ✅ Profile refreshed:', freshUser.email);
         setUser(freshUser);
         await saveUserToStorage(freshUser);
       } else {
@@ -354,7 +327,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Ne pas déconnecter l'utilisateur en cas d'erreur réseau
       const status = (err as any)?.status;
       if (status === 401) {
-        console.log('[AuthContext] 🔒 Token invalid, logging out');
         await signOut();
       }
     }

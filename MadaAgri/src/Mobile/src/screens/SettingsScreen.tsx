@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Pressable,
   Text,
   Switch,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
@@ -73,7 +73,7 @@ export const SettingsScreen = ({ navigation, route }: any) => {
   const currentLangInfo = SUPPORTED_LANGUAGES.find((l) => l.code === currentLanguage);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
       <ScreenHeader title={t('title')} showBack={true} onBackPress={handleBack} showMenu={false} />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>

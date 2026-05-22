@@ -82,6 +82,10 @@ export interface Post {
   author_image?: string;
   content: string;
   image_url?: string;
+  video_url?: string;
+  video_thumbnail?: string;
+  video_duration?: number;
+  video_views?: number;
   region_id?: number;
   culture_id?: number;
   likes_count: number;

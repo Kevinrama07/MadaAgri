@@ -66,7 +66,9 @@ CREATE TABLE IF NOT EXISTS products (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (farmer_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (culture_id) REFERENCES cultures(id) ON DELETE SET NULL,
-  FOREIGN KEY (region_id) REFERENCES regions(id) ON DELETE SET NULL
+  FOREIGN KEY (region_id) REFERENCES regions(id) ON DELETE SET NULL,
+  INDEX idx_products_farmer (farmer_id),
+  INDEX idx_products_region (region_id)
 );
 
 -- Mini réseau social: publications + interactions
@@ -159,6 +161,7 @@ CREATE TABLE IF NOT EXISTS land_parcels (
   description TEXT,
   latitude DECIMAL(10, 8) NOT NULL,
   longitude DECIMAL(11, 8) NOT NULL,
+  polygon_coordinates JSON DEFAULT NULL,
   size_ha DECIMAL(10, 2),
   country VARCHAR(100),
   region VARCHAR(100),
@@ -206,7 +209,8 @@ CREATE TABLE IF NOT EXISTS messages (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE,
-  INDEX idx_conversation_id (conversation_id)
+  INDEX idx_messages_sender (sender_id),
+  INDEX idx_messages_conversation (conversation_id)
 );
 
 CREATE TABLE IF NOT EXISTS deliveries (
@@ -260,8 +264,8 @@ CREATE TABLE IF NOT EXISTS reservations (
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
   FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (farmer_id) REFERENCES users(id) ON DELETE CASCADE,
-  INDEX idx_client (client_id),
-  INDEX idx_farmer (farmer_id),
+  INDEX idx_reservations_client (client_id),
+  INDEX idx_reservations_farmer (farmer_id),
   INDEX idx_product (product_id),
   INDEX idx_status (status)
 );
@@ -276,7 +280,8 @@ CREATE TABLE IF NOT EXISTS cart_items (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY unique_cart_item (user_id, product_id),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+  INDEX idx_cart_items_user (user_id)
 );
 
 -- Seed sample data

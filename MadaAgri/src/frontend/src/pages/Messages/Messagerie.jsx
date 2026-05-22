@@ -96,8 +96,8 @@ export default function Messagerie({ targetUserId }) {
         console.log('[Messagerie] Chargement conversations...');
         const convData = await dataApi.fetchConversations();
         console.log('[Messagerie] Conversations reçues:', convData?.length);
-        // Filtrer pour ne garder que les conversations avec messages
-        const conversationsWithMessages = (convData || []).filter(conv => conv.last_message);
+        // Ne filtrer que les conversations nulles (erreurs API)
+        const conversationsWithMessages = (convData || []).filter(conv => conv !== null);
         console.log('[Messagerie] Conversations avec messages:', conversationsWithMessages.length);
         setConversations(conversationsWithMessages);
 
@@ -122,7 +122,7 @@ export default function Messagerie({ targetUserId }) {
                 other_user_image: targetUser?.profile_image_url || null,
                 other_user_online: false,
                 last_message: null,
-                last_message_time: null,
+                last_message_at: null,
               };
               setSelectedConversation(newConv);
               setShowSidebar(false);
@@ -280,7 +280,7 @@ export default function Messagerie({ targetUserId }) {
     if (selectedConversation && currentUser) {
       fetchConversation(selectedConversation);
       // Marquer la conversation comme lue
-      dataApi.markConversationAsRead(selectedConversation.id).catch(err => {
+      dataApi.markConversationAsRead(selectedConversation.id, currentUser.id).catch(err => {
         console.error('[Messagerie] Erreur marquage comme lu:', err);
       });
       
@@ -325,10 +325,12 @@ export default function Messagerie({ targetUserId }) {
     console.log('[Messagerie] Queue traitée:', results);
   };
 
-  const handleSendMessage = async (messageText, attachedFile = null) => {
-    if (!selectedConversation || !currentUser || (!messageText.trim() && !attachedFile)) return;
+  const handleSendMessage = async (messageText, attachedFile = null, voiceData = null) => {
+    if (!selectedConversation || !currentUser || (!messageText.trim() && !attachedFile && !voiceData)) return;
 
-    console.log('[Messagerie] handleSendMessage debut:', { messageText, attachedFile });
+    const isVoice = voiceData?.type === 'voice';
+
+    console.log('[Messagerie] handleSendMessage debut:', { messageText, attachedFile, voiceData });
     setSendingMessage(true);
     
     const recipientId = selectedConversation.other_user_id;
@@ -341,7 +343,11 @@ export default function Messagerie({ targetUserId }) {
       sender_id: currentUser.id,
       recipient_id: recipientId,
       conversationId,
-      content: messageText || '',
+      content: isVoice ? '' : (messageText || ''),
+      type: isVoice ? 'voice' : 'text',
+      audio_url: voiceData?.audio_url || null,
+      audio_duration: voiceData?.audio_duration || null,
+      public_id: voiceData?.public_id || null,
       attachment_url: attachedFile?.url || null,
       attachment_type: attachedFile?.type || null,
       created_at: new Date().toISOString(),
@@ -364,7 +370,24 @@ export default function Messagerie({ targetUserId }) {
         return;
       }
       
-      if (attachedFile) {
+      if (isVoice) {
+        // Envoyer message vocal via API REST (pour garantir la persistance BD)
+        const sentMessage = await dataApi.sendMessage(
+          recipientId,
+          '',
+          null,
+          null,
+          {
+            type: 'voice',
+            audio_url: voiceData.audio_url,
+            audio_duration: voiceData.audio_duration,
+            public_id: voiceData.public_id,
+          }
+        );
+        setMessages((prev) => prev.map(m => 
+          m.id === tempId ? { ...m, ...sentMessage, status: 'sent' } : m
+        ));
+      } else if (attachedFile) {
         // Envoyer avec pièce jointe via API
         const sentMessage = await dataApi.sendMessage(
           recipientId,

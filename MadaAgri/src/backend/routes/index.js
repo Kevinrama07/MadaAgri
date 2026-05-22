@@ -15,10 +15,11 @@ const parcelsRouter = require('./parcels');
 const followsRouter = require('./follows');
 const collaborationsRouter = require('./collaborations');
 const assistantRouter = require('./assistant');
+const weatherRouter = require('./weather');
 
 const logger = require('../utils/logger');
 const { authLimiter } = require('../middlewares/security');
-const { handleValidationErrors } = require('../middlewares/validators');
+
 
 function registerRoutes(app, uploadServices) {
   // ========================
@@ -91,6 +92,9 @@ function registerRoutes(app, uploadServices) {
 
   // Routes assistant IA
   app.use('/api/assistant', assistantRouter);
+
+  // Météo
+  app.use('/api/weather', weatherRouter);
 
   // ========================
   // ROUTES 404 ET GESTION D'ERREURS

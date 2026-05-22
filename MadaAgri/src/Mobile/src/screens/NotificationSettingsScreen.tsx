@@ -6,10 +6,10 @@ import {
   ScrollView,
   Switch,
   Pressable,
-  SafeAreaView,
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '../contexts/ThemeContext';
@@ -202,7 +202,7 @@ export const NotificationSettingsScreen = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView edges={["left", "right", "bottom"]} style={styles.container}>
         <ScreenHeader title="Paramètres" showBack />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -212,7 +212,7 @@ export const NotificationSettingsScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={["left", "right", "bottom"]} style={styles.container}>
       <ScreenHeader title="Paramètres des notifications" showBack />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>

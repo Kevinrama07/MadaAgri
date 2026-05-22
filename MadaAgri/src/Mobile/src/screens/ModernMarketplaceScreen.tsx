@@ -3,13 +3,13 @@ import {
   View,
   StyleSheet,
   FlatList,
-  SafeAreaView,
   RefreshControl,
   Pressable,
   Text,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { ModernCard } from '../components/ModernCard';
@@ -273,14 +273,14 @@ export const ModernMarketplaceScreen = ({
 
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <SafeAreaView edges={["left", "right", "bottom"]} style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={["left", "right", "bottom"]} style={styles.container}>
       <ScreenHeader
         title="Marketplace"
         showBack

@@ -3,12 +3,12 @@ import {
   View,
   StyleSheet,
   FlatList,
-  SafeAreaView,
   RefreshControl,
   Text,
   ActivityIndicator,
   Pressable,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -220,7 +220,7 @@ export const ModernNotificationsScreen = () => {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
         <ScreenHeader title={fr.notifications.title} showSearch={false} showMenu />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -230,13 +230,14 @@ export const ModernNotificationsScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
       <ScreenHeader
         title={fr.notifications.title}
         showSearch={false}
         showMenu={true}
         showMoreMenu={true}
         onMoreMenuPress={() => navigation.navigate('NotificationSettings' as never)}
+        disableTopSafeArea
       />
 
       {/* Connection Status */}

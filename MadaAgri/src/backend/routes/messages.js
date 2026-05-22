@@ -46,19 +46,22 @@ router.get('/', authMiddleware, asyncHandler(async (req, res) => {
 // POST /api/messages - Envoyer un message
 router.post('/', authMiddleware, asyncHandler(async (req, res) => {
   const senderId = req.user.id;
-  const { recipient_id, content, attachment_url, attachment_type } = req.body;
+  const { recipient_id, content, attachment_url, attachment_type, type, audio_url, audio_duration, public_id } = req.body;
 
-  if (!recipient_id || (!content && !attachment_url)) {
-    return res.status(400).json({ error: 'recipient_id and (content or attachment_url) required' });
+  if (!recipient_id || (!content && !attachment_url && !audio_url)) {
+    return res.status(400).json({ error: 'recipient_id and (content or attachment_url or audio_url) required' });
   }
 
+  const messageType = type || (audio_url ? 'voice' : attachment_type ? 'image' : 'text');
   const conversationId = [senderId, recipient_id].sort().join('_');
   const id = randomUUID();
 
   // Sauvegarder en base de données
   await pool.query(
-    'INSERT INTO messages (id, sender_id, recipient_id, conversation_id, content, attachment_url, attachment_type, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, false, NOW())',
-    [id, senderId, recipient_id, conversationId, content || '', attachment_url || null, attachment_type || null]
+    `INSERT INTO messages (id, sender_id, recipient_id, conversation_id, content, attachment_url, attachment_type, type, audio_url, audio_duration, public_id, is_read, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, false, NOW())`,
+    [id, senderId, recipient_id, conversationId, content || '', attachment_url || null, attachment_type || null,
+     messageType, audio_url || null, audio_duration || null, public_id || null]
   );
 
   const [rows] = await pool.query('SELECT * FROM messages WHERE id = ?', [id]);

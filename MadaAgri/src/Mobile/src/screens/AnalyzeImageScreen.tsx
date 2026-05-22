@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Pressable,
   Image,
@@ -11,6 +10,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -110,7 +110,7 @@ export default function AnalyzeImageScreen({ navigation }) {
   }, []);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.primaryBackground }]}>
+    <SafeAreaView edges={["left", "right", "bottom"]} style={[styles.container, { backgroundColor: colors.primaryBackground }]}>
       <ScreenHeader title={t('aiAnalysis') || 'Analyse IA'} showBack onBackPress={() => navigation.goBack()} showMenu={false} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>

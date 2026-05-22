@@ -21,9 +21,11 @@ import { ModernCard } from '../components/ModernCard';
 import { ModernAvatar } from '../components/ModernAvatar';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { SPACING, BORDER_RADIUS, TYPOGRAPHY } from '../theme';
-import { getMessages, sendMessage } from '../lib/api';
+import { getMessages, sendMessage, dataApi } from '../lib/api';
 import socketService from '../services/socketService';
 import messageQueue from '../utils/messageQueue';
+import VoiceRecorder from '../components/VoiceRecorder';
+import VoiceMessageBubble from '../components/VoiceMessageBubble';
 import { fr } from '../locales/fr';
 
 interface Message {
@@ -32,6 +34,14 @@ interface Message {
   content: string;
   created_at: string;
   read: boolean;
+  type?: string;
+  audio_url?: string;
+  audio_duration?: number;
+  attachment_url?: string;
+  attachment_type?: string;
+  edited_at?: string;
+  status?: string;
+  is_read?: boolean;
 }
 
 interface Participant {
@@ -76,24 +86,18 @@ export const ChatDetailScreen = ({
   const [queuedMessages, setQueuedMessages] = useState<any[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [pendingVoice, setPendingVoice] = useState<{ uri: string; durationMs: number } | null>(null);
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
   
   const participant = propParticipant || routeParams?.participant || (routeParams?.userId ? { id: routeParams.userId, name: 'Utilisateur' } : null);
   const handleBackPress = onBackPress || (() => navigation?.goBack());
 
   // Generate conversationId if only userId is provided
   useEffect(() => {
-    console.log('[ChatDetail] 🔍 Params reçus:', {
-      propConversationId,
-      routeConversationId: routeParams?.conversationId,
-      participantId: participant?.id,
-      userId: user?.id,
-    });
-    
     if (!conversationId && participant?.id && user?.id) {
       // Create a conversation ID from both user IDs (match backend format: id1_id2)
       const ids = [user.id, participant.id].sort();
       const newConvId = `${ids[0]}_${ids[1]}`;
-      console.log('[ChatDetail] ✅ ConversationId généré:', newConvId);
       setConversationId(newConvId);
     }
   }, [participant?.id, user?.id, conversationId]);
@@ -119,18 +123,15 @@ export const ChatDetailScreen = ({
   // Rejoindre la conversation et écouter les nouveaux messages temps réel
   useEffect(() => {
     if (!conversationId) {
-      console.log('[ChatDetail] ⚠️ Pas de conversationId, skip join');
       return;
     }
 
-    console.log('[ChatDetail] 🔌 Vérification connexion Socket.io...');
     if (!socketService.isConnected()) {
       console.warn('[ChatDetail] ⚠️ Socket non connecté, tentative de connexion...');
       // Attendre un peu que le socket se connecte
       const timer = setTimeout(() => {
         if (socketService.isConnected()) {
           socketService.joinConversation(conversationId);
-          console.log('[ChatDetail] 🚪 Rejoint la conversation (delayed):', conversationId);
         } else {
           console.error('[ChatDetail] ❌ Socket toujours non connecté après délai');
         }
@@ -141,20 +142,15 @@ export const ChatDetailScreen = ({
 
     // Rejoindre la conversation via Socket.io
     socketService.joinConversation(conversationId);
-    console.log('[ChatDetail] 🚪 Rejoint la conversation:', conversationId);
 
     const unsubMessage = socketService.onMessage((message: any) => {
-      console.log('[ChatDetail] 📨 Message reçu via socket:', message);
       // Vérifier si le message appartient à cette conversation
       if (message.conversationId === conversationId || message.conversation_id === conversationId) {
-        console.log('[ChatDetail] ✅ Message appartient à cette conversation');
         setMessages((prev) => {
           // Éviter les doublons
           if (prev.some(m => m.id === message.id)) {
-            console.log('[ChatDetail] ⚠️ Message déjà présent, skip');
             return prev;
           }
-          console.log('[ChatDetail] ➕ Ajout du message à la liste');
           return [...prev, {
             id: message.id,
             sender_id: message.sender_id,
@@ -165,12 +161,10 @@ export const ChatDetailScreen = ({
         });
         setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
       } else {
-        console.log('[ChatDetail] ⚠️ Message pour une autre conversation:', message.conversationId || message.conversation_id);
       }
     });
 
     const unsubTyping = socketService.on('user:typing', (data: any) => {
-      console.log('[ChatDetail] Typing reçu:', data);
       if (data.sender_id === participant?.id) {
         setIsTyping(true);
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -179,7 +173,6 @@ export const ChatDetailScreen = ({
     });
 
     const unsubEdited = socketService.on('message:edited', (message: any) => {
-      console.log('[ChatDetail] Message édité:', message);
       if (message.conversation_id === conversationId) {
         setMessages((prev) => prev.map(m => 
           m.id === message.id ? message : m
@@ -188,14 +181,12 @@ export const ChatDetailScreen = ({
     });
 
     const unsubDeleted = socketService.on('message:deleted', (data: any) => {
-      console.log('[ChatDetail] Message supprimé:', data);
       if (data.conversationId === conversationId) {
         setMessages((prev) => prev.filter(m => m.id !== data.messageId));
       }
     });
 
     const unsubRead = socketService.on('message:read', (data: any) => {
-      console.log('[ChatDetail] Message lu:', data);
       if (data.conversationId === conversationId) {
         setMessages((prev) => prev.map(m => 
           m.id === data.messageId ? { ...m, read: true, is_read: true } : m
@@ -211,7 +202,6 @@ export const ChatDetailScreen = ({
       unsubRead();
       socketService.leaveConversation(conversationId);
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      console.log('[ChatDetail] 🚪 Quitté la conversation:', conversationId);
     };
   }, [conversationId]);
 
@@ -229,12 +219,10 @@ export const ChatDetailScreen = ({
   const loadMessages = async () => {
     try {
       setLoading(true);
-      console.log('[ChatDetail] 📥 Chargement messages pour:', conversationId);
       // Charger toujours les messages depuis la BD (le conversationId est maintenant au format correct)
       if (conversationId && conversationId.includes('_')) {
         const data = await getMessages(conversationId, 0, 50);
         const messages = data?.messages || [];
-        console.log('[ChatDetail] ✅ Messages chargés:', messages.length);
         setMessages(messages);
         setHasMoreMessages(data?.hasMore || false);
         setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 100);
@@ -243,7 +231,6 @@ export const ChatDetailScreen = ({
         try {
           const { markConversationAsRead } = await import('../lib/api');
           await markConversationAsRead(conversationId);
-          console.log('[ChatDetail] ✅ Conversation marquée comme lue');
         } catch (err) {
           console.error('[ChatDetail] ⚠️ Erreur marquage comme lu:', err);
         }
@@ -265,10 +252,8 @@ export const ChatDetailScreen = ({
 
     try {
       setLoadingMoreMessages(true);
-      console.log('[ChatDetail] 📥 Chargement plus de messages, offset:', messages.length);
       const data = await getMessages(conversationId, messages.length, 50);
       const newMessages = data?.messages || [];
-      console.log('[ChatDetail] ✅ Nouveaux messages chargés:', newMessages.length);
       // Ajouter les nouveaux messages au début (car ce sont des messages plus anciens)
       setMessages((prev) => [...newMessages, ...prev]);
       setHasMoreMessages(data?.hasMore || false);
@@ -280,57 +265,111 @@ export const ChatDetailScreen = ({
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || sending) return;
+    if (sending) return;
+    if (!newMessage.trim() && !pendingVoice) return;
 
     try {
       setSending(true);
-      const content = newMessage.trim();
-      setNewMessage(''); // Vider le champ immédiatement
-      
-      const tempId = `temp-${Date.now()}-${Math.random()}`;
-      const recipientId = participant?.id;
-      
-      // Créer le message temporaire
-      const tempMessage = {
-        id: tempId,
-        sender_id: user?.id || '',
-        recipient_id: recipientId,
-        conversationId,
-        content,
-        created_at: new Date().toISOString(),
-        read: false,
-        status: 'sending',
-      };
-      
-      // Ajouter immédiatement à l'affichage
-      setMessages((prev) => [...prev, tempMessage]);
-      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
-      
-      if (!isConnected) {
-        // Pas de connexion - ajouter à la queue
-        console.log('[ChatDetail] Hors ligne - ajout à la queue');
-        await messageQueue.add(tempMessage);
-        // Mettre à jour le statut
-        setMessages((prev) => prev.map(m => 
-          m.id === tempId ? { ...m, status: 'queued' } : m
-        ));
-        return;
-      }
-      
-      // Envoyer via Socket.io en temps réel
-      if (recipientId && user?.id) {
+
+      if (pendingVoice) {
+        // Envoyer un message vocal
+        const voice = pendingVoice;
+        setPendingVoice(null);
+
+        const tempId = `temp-${Date.now()}-${Math.random()}`;
+        const recipientId = participant?.id;
+        if (!recipientId) { setSending(false); return; }
+
+        setMessages((prev) => [...prev, {
+          id: tempId,
+          sender_id: user?.id || '',
+          recipient_id: recipientId,
+          conversationId,
+          content: '',
+          type: 'voice',
+          audio_url: 'uploading',
+          audio_duration: Math.round(voice.durationMs / 1000),
+          created_at: new Date().toISOString(),
+          read: false,
+          status: 'sending',
+        }]);
+
         try {
-          await socketService.sendMessage(recipientId, content);
-          console.log('[ChatDetail] Message envoyé via Socket.io');
-          // Retirer le message temporaire (il arrivera via socket)
-          setMessages((prev) => prev.filter(m => m.id !== tempId));
+          const formData = new FormData();
+          const filename = voice.uri.split('/').pop() || 'voice.mp4';
+          const match = /\.(\w+)$/.exec(filename);
+          const type = match ? `audio/${match[1]}` : 'audio/mp4';
+          formData.append('audio', { uri: voice.uri, name: filename, type } as any);
+
+          const token = (await import('../lib/api')).getToken();
+          const baseUrl = (await import('../lib/api')).getApiBaseUrl();
+
+          const uploadRes = await fetch(`${baseUrl}/api/upload/voice`, {
+            method: 'POST',
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            body: formData,
+          });
+          const uploadBody = await uploadRes.json();
+          if (!uploadRes.ok) throw new Error(uploadBody.error || 'Upload failed');
+
+          const result = await sendMessage({
+            recipient_id: recipientId,
+            content: '',
+            type: 'voice',
+            audio_url: uploadBody.audioUrl,
+            audio_duration: uploadBody.duration || Math.round(voice.durationMs / 1000),
+            public_id: uploadBody.public_id,
+          });
+
+          setMessages((prev) => prev.map(m =>
+            m.id === tempId ? { ...m, ...result?.message, status: 'sent' } : m
+          ));
         } catch (error) {
-          console.error('[ChatDetail] Erreur envoi Socket.io:', error);
-          // Ajouter à la queue en cas d'échec
-          await messageQueue.add(tempMessage);
-          setMessages((prev) => prev.map(m => 
+          console.error('[ChatDetail] Erreur envoi vocal:', error);
+          setMessages((prev) => prev.map(m =>
             m.id === tempId ? { ...m, status: 'failed' } : m
           ));
+        }
+      } else {
+        // Envoyer un message texte
+        const content = newMessage.trim();
+        setNewMessage('');
+
+        const tempId = `temp-${Date.now()}-${Math.random()}`;
+        const recipientId = participant?.id;
+
+        const tempMessage = {
+          id: tempId,
+          sender_id: user?.id || '',
+          recipient_id: recipientId,
+          conversationId,
+          content,
+          created_at: new Date().toISOString(),
+          read: false,
+          status: 'sending',
+        };
+
+        setMessages((prev) => [...prev, tempMessage]);
+        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+
+        if (!isConnected) {
+          await messageQueue.add(tempMessage);
+          setMessages((prev) => prev.map(m =>
+            m.id === tempId ? { ...m, status: 'queued' } : m
+          ));
+          return;
+        }
+
+        if (recipientId && user?.id) {
+          try {
+            await socketService.sendMessage(recipientId, content);
+            setMessages((prev) => prev.filter(m => m.id !== tempId));
+          } catch (error) {
+            await messageQueue.add(tempMessage);
+            setMessages((prev) => prev.map(m =>
+              m.id === tempId ? { ...m, status: 'failed' } : m
+            ));
+          }
         }
       }
     } catch (error) {
@@ -343,7 +382,6 @@ export const ChatDetailScreen = ({
   const processMessageQueue = async () => {
     if (!isConnected || !user?.id) return;
 
-    console.log('[ChatDetail] Traitement de la queue...');
     const results = await messageQueue.processQueue(async (queuedMessage: any) => {
       // Envoyer via Socket.io
       await socketService.sendMessage(
@@ -352,7 +390,6 @@ export const ChatDetailScreen = ({
       );
     });
 
-    console.log('[ChatDetail] Queue traitée:', results);
   };
 
   const handleAttachment = async () => {
@@ -415,7 +452,6 @@ export const ChatDetailScreen = ({
 
       // Upload via API
       const imageUrl = await dataApi.uploadImage(selectedImage);
-      console.log('[ChatDetail] Image uploadée:', imageUrl);
 
       // Envoyer le message avec l'image
       await sendMessage({
@@ -447,6 +483,21 @@ export const ChatDetailScreen = ({
     }
   };
 
+  const handleRecordingStart = () => {
+    setIsRecordingVoice(true);
+  };
+
+  const handleRecordingStop = (uri: string | null, durationMs: number) => {
+    setIsRecordingVoice(false);
+    if (uri && durationMs > 500) {
+      setPendingVoice({ uri, durationMs });
+    }
+  };
+
+  const handleCancelPendingVoice = () => {
+    setPendingVoice(null);
+  };
+
   const handleCancelImage = () => {
     setSelectedImage(null);
   };
@@ -460,7 +511,6 @@ export const ChatDetailScreen = ({
         m.id === messageId ? { ...m, content: newContent, edited_at: new Date().toISOString() } : m
       ));
       setEditingMessageId(null);
-      console.log('[ChatDetail] Message édité:', messageId);
     } catch (error) {
       console.error('[ChatDetail] Erreur édition:', error);
       throw error;
@@ -473,7 +523,6 @@ export const ChatDetailScreen = ({
       await deleteMessage(messageId);
       // Retirer localement
       setMessages((prev) => prev.filter(m => m.id !== messageId));
-      console.log('[ChatDetail] Message supprimé:', messageId);
     } catch (error) {
       console.error('[ChatDetail] Erreur suppression:', error);
       throw error;
@@ -777,12 +826,13 @@ export const ChatDetailScreen = ({
     const isOwn = item.sender_id === user?.id;
     const isEditing = editingMessageId === item.id;
     const hasAttachment = item.attachment_url && item.attachment_type === 'image';
+    const isVoice = item.type === 'voice' && item.audio_url;
 
     return (
       <View style={[styles.messageRow, isOwn && styles.messageRowOwn]}>
         <Pressable
           onLongPress={() => {
-            if (isOwn && !hasAttachment) {
+            if (isOwn && !hasAttachment && !isVoice) {
               Alert.alert(
                 'Options',
                 'Que voulez-vous faire ?',
@@ -822,7 +872,6 @@ export const ChatDetailScreen = ({
           {hasAttachment && (
             <Pressable onPress={() => {
               // Ouvrir l'image en plein écran (TODO: implémenter modal)
-              console.log('Ouvrir image:', item.attachment_url);
             }}>
               <Image
                 source={{ uri: item.attachment_url }}
@@ -830,6 +879,13 @@ export const ChatDetailScreen = ({
                 resizeMode="cover"
               />
             </Pressable>
+          )}
+          {isVoice && (
+            <VoiceMessageBubble
+              audioUrl={item.audio_url!}
+              duration={item.audio_duration || 0}
+              isOwn={isOwn}
+            />
           )}
           {isEditing ? (
             <View style={styles.editContainer}>
@@ -1016,7 +1072,7 @@ export const ChatDetailScreen = ({
               </Pressable>
             </View>
           )}
-          {!selectedImage && (
+          {!selectedImage && !pendingVoice && !isRecordingVoice && (
             <>
               <Pressable 
                 style={styles.attachmentButton}
@@ -1039,23 +1095,101 @@ export const ChatDetailScreen = ({
                 multiline
                 editable={!sending && !uploadingImage}
               />
-              <Pressable
-                style={[styles.sendButton, (sending || !newMessage.trim()) && styles.sendButtonDisabled]}
-                onPress={handleSendMessage}
-                disabled={sending || !newMessage.trim()}
-              >
-                {sending ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <MaterialCommunityIcons
-                    name="send"
-                    size={20}
-                    color={newMessage.trim() ? '#fff' : colors.textTertiary}
-                  />
-                )}
-              </Pressable>
             </>
           )}
+          {/* Recording animation in input area */}
+          {isRecordingVoice && (
+            <View style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: colors.card,
+              borderRadius: 20,
+              paddingHorizontal: 12,
+              height: 44,
+              gap: 8,
+            }}>
+              <View style={{
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: colors.error,
+              }} />
+              <Text style={{
+                fontSize: 13,
+                color: colors.error,
+                fontWeight: '600',
+                fontVariant: ['tabular-nums'],
+              }}>
+                {new Date(isRecordingVoice ? Date.now() : 0).toISOString().substr(14, 5)}
+              </Text>
+              <View style={{
+                flex: 1,
+                height: 3,
+                backgroundColor: colors.border,
+                borderRadius: 1.5,
+                overflow: 'hidden',
+              }}>
+                <View style={{
+                  height: '100%',
+                  width: '100%',
+                  backgroundColor: colors.error,
+                  borderRadius: 1.5,
+                  opacity: 0.6,
+                }} />
+              </View>
+            </View>
+          )}
+          {/* Voice preview after recording */}
+          {pendingVoice && (
+            <View style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: colors.primary + '15',
+              borderRadius: 20,
+              paddingHorizontal: 12,
+              height: 44,
+              gap: 8,
+            }}>
+              <MaterialCommunityIcons name="microphone" size={18} color={colors.primary} />
+              <Text style={{
+                fontSize: 13,
+                color: colors.text,
+                fontWeight: '500',
+              }}>
+                Message vocal · {Math.round(pendingVoice.durationMs / 1000)}s
+              </Text>
+              <Pressable
+                onPress={handleCancelPendingVoice}
+                hitSlop={8}
+                style={{ marginLeft: 'auto' }}
+              >
+                <MaterialCommunityIcons name="close-circle" size={20} color={colors.textTertiary} />
+              </Pressable>
+            </View>
+          )}
+          <VoiceRecorder
+            isRecording={isRecordingVoice}
+            onRecordingStart={handleRecordingStart}
+            onRecordingStop={handleRecordingStop}
+            disabled={sending || uploadingImage}
+          />
+          <Pressable
+            style={[styles.sendButton, (sending || (!newMessage.trim() && !pendingVoice)) && styles.sendButtonDisabled]}
+            onPress={handleSendMessage}
+            disabled={sending || (!newMessage.trim() && !pendingVoice)}
+          >
+            {sending ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <MaterialCommunityIcons
+                name="send"
+                size={20}
+                color={(newMessage.trim() || pendingVoice) ? '#fff' : colors.textTertiary}
+              />
+            )}
+          </Pressable>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

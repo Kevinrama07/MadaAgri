@@ -1,5 +1,4 @@
 export const SHADOWS = {
-  // Light shadows for subtle depth
   NONE: {
     shadowColor: 'transparent',
     shadowOffset: { width: 0, height: 0 },
@@ -7,49 +6,62 @@ export const SHADOWS = {
     shadowRadius: 0,
     elevation: 0,
   },
-
-  // Subtle shadow for cards
   SUBTLE: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
-
-  // Default shadow for most components
   DEFAULT: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.06,
     shadowRadius: 4,
     elevation: 2,
   },
-
-  // Medium shadow for elevated components
   MEDIUM: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 4,
   },
-
-  // Large shadow for modals and overlays
   LARGE: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.10,
+    shadowRadius: 12,
+    elevation: 6,
   },
-
-  // Extra large shadow for bottom sheets
   EXTRA_LARGE: {
     shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  // Colored shadows for elevated elements
+  PRIMARY: {
+    shadowColor: '#1B6B32',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.20,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  WARM: {
+    shadowColor: '#EA580C',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  // Deep shadow for modals/drawers
+  DEEP: {
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.2,
-    shadowRadius: 24,
+    shadowOpacity: 0.15,
+    shadowRadius: 28,
     elevation: 12,
   },
 };

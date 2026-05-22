@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
-  SafeAreaView,
   TextInput,
   Pressable,
   Text,
@@ -11,15 +10,18 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { ModernAvatar } from '../components/ModernAvatar';
 import { ModernButton } from '../components/ModernButton';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { VideoUploader } from '../components/VideoUploader';
 import { SPACING, BORDER_RADIUS, TYPOGRAPHY } from '../theme';
 import { postService } from '../services/postService';
 import { cloudinaryService } from '../services/cloudinaryService';
+import { videoService, VideoPickResult, VideoUploadResult } from '../services/videoService';
 
 interface CreatePostScreenProps {
   navigation?: any;
@@ -40,6 +42,10 @@ export const CreatePostScreen = ({
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [posting, setPosting] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<VideoPickResult | null>(null);
+  const [uploadedVideo, setUploadedVideo] = useState<VideoUploadResult | null>(null);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+  const [videoUploading, setVideoUploading] = useState(false);
 
   const styles = StyleSheet.create({
     container: {
@@ -146,29 +152,56 @@ export const CreatePostScreen = ({
     setImageUri(null);
   };
 
+  const handleVideoSelected = (video: VideoPickResult) => {
+    setSelectedVideo(video);
+    setImageUri(null);
+  };
+
+  const handleVideoRemoved = () => {
+    setSelectedVideo(null);
+    setUploadedVideo(null);
+    setVideoUploadProgress(0);
+  };
+
+  const handleUploadVideo = async () => {
+    if (!selectedVideo) return;
+
+    try {
+      setVideoUploading(true);
+      setVideoUploadProgress(0);
+      const result = await videoService.uploadVideo(
+        selectedVideo.uri,
+        (progress) => setVideoUploadProgress(progress)
+      );
+      setUploadedVideo(result);
+      Alert.alert('Succès', 'Vidéo uploadée avec succès');
+    } catch (error: any) {
+      Alert.alert('Erreur', error.message || 'Erreur lors de l\'upload de la vidéo');
+      setVideoUploading(false);
+    }
+  };
+
   const handlePublish = async () => {
-    if (!content.trim() && !imageUri) {
-      Alert.alert('Erreur', 'Veuillez ajouter du contenu ou une image');
+    if (!content.trim() && !imageUri && !selectedVideo) {
+      Alert.alert('Erreur', 'Veuillez ajouter du contenu, une image ou une vidéo');
       return;
     }
 
     try {
       setPosting(true);
-      
+
       let uploadedImageUrl = imageUri;
-      
-      // Si l'image est locale (commence par file://), l'uploader
+      let videoUrl = uploadedVideo?.videoUrl;
+      let videoThumbnail = uploadedVideo?.thumbnailUrl;
+      let videoDuration = uploadedVideo?.duration || selectedVideo?.duration;
+
+      // Upload image si locale
       if (imageUri && imageUri.startsWith('file://')) {
-        console.log('[CreatePost] Image locale détectée, upload en cours...', imageUri);
         setUploading(true);
         try {
           const result = await cloudinaryService.uploadImage(imageUri, 'postImage');
           uploadedImageUrl = result.secure_url;
-          console.log('[CreatePost] Image uploadée:', uploadedImageUrl);
         } catch (uploadError: any) {
-          console.error('[CreatePost] Erreur upload:', uploadError);
-          console.error('[CreatePost] Erreur message:', uploadError.message);
-          console.error('[CreatePost] Erreur stack:', uploadError.stack);
           Alert.alert('Erreur', 'Impossible d\'uploader l\'image: ' + uploadError.message);
           return;
         } finally {
@@ -176,10 +209,31 @@ export const CreatePostScreen = ({
         }
       }
 
-      console.log('[CreatePost] Création du post avec image:', uploadedImageUrl);
+      // Upload video si sélectionnée mais pas encore uploadée
+      if (selectedVideo && !uploadedVideo) {
+        setVideoUploading(true);
+        try {
+          const result = await videoService.uploadVideo(
+            selectedVideo.uri,
+            (progress) => setVideoUploadProgress(progress)
+          );
+          videoUrl = result.videoUrl;
+          videoThumbnail = result.thumbnailUrl;
+          videoDuration = result.duration;
+        } catch (uploadError: any) {
+          Alert.alert('Erreur', 'Impossible d\'uploader la vidéo: ' + uploadError.message);
+          return;
+        } finally {
+          setVideoUploading(false);
+        }
+      }
+
       await postService.createPost({
         content: content.trim(),
         image_url: uploadedImageUrl || undefined,
+        video_url: videoUrl || undefined,
+        video_thumbnail: videoThumbnail || undefined,
+        video_duration: videoDuration || undefined,
       });
 
       Alert.alert('Succès', 'Publication créée avec succès', [
@@ -202,10 +256,10 @@ export const CreatePostScreen = ({
     }
   };
 
-  const canPublish = (content.trim() || imageUri) && !posting && !uploading;
+  const canPublish = (content.trim() || imageUri || selectedVideo) && !posting && !uploading && !videoUploading;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
       <ScreenHeader
         title="Créer une publication"
         showBack={true}
@@ -253,6 +307,26 @@ export const CreatePostScreen = ({
           </View>
         )}
 
+        {/* Video Uploader */}
+        <VideoUploader
+          onVideoSelected={handleVideoSelected}
+          onVideoUploaded={(result) => setUploadedVideo(result)}
+          onRemove={handleVideoRemoved}
+          selectedVideo={selectedVideo}
+          uploadedVideo={uploadedVideo}
+          uploadProgress={videoUploadProgress}
+          isUploading={videoUploading}
+        />
+
+        {/* Upload Video Button */}
+        {selectedVideo && !uploadedVideo && !videoUploading && (
+          <ModernButton
+            title="Uploader la vidéo"
+            onPress={handleUploadVideo}
+            style={{ marginBottom: SPACING.LG }}
+          />
+        )}
+
         {/* Actions */}
         <View style={styles.actionsContainer}>
           <Pressable
@@ -290,11 +364,11 @@ export const CreatePostScreen = ({
       </ScrollView>
 
       {/* Loading Overlay */}
-      {(uploading || posting) && (
+      {(uploading || videoUploading || posting) && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={{ color: '#FFF', marginTop: SPACING.MD }}>
-            {uploading ? 'Upload en cours...' : 'Publication...'}
+            {videoUploading ? `Upload vidéo ${videoUploadProgress}%...` : uploading ? 'Upload en cours...' : 'Publication...'}
           </Text>
         </View>
       )}

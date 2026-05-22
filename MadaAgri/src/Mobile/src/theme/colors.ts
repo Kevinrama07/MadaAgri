@@ -1,49 +1,83 @@
 export const COLORS = {
-  // Primary Colors (Agricultural Green)
-  PRIMARY: '#2E7D32',        // Dark agricultural green
-  PRIMARY_LIGHT: '#4CAF50',  // Light natural green
-  PRIMARY_LIGHTER: '#81C784', // Lighter green for backgrounds
-  PRIMARY_PALE: '#E8F5E9',   // Very light green for backgrounds
+  // Primary - Agricultural Emerald
+  PRIMARY: '#1B6B32',
+  PRIMARY_LIGHT: '#2E8B4F',
+  PRIMARY_LIGHTER: '#6BBF7C',
+  PRIMARY_PALE: '#E6F7EC',
 
   // Neutrals - Light Mode
   WHITE: '#FFFFFF',
-  LIGHT_GRAY: '#F5F5F5',     // Very light gray (main background)
-  GRAY_200: '#E4E6EB',       // Facebook-like gray
-  GRAY_300: '#D0D2D6',       // Secondary gray
-  GRAY_400: '#BCC0C4',       // Medium gray
-  GRAY_500: '#8A8D91',       // Dark gray
-  GRAY_600: '#65676B',       // Text secondary
-  BLACK_SOFT: '#1C1E21',     // Soft black (main text)
+  LIGHT_GRAY: '#F6F8FA',
+  GRAY_100: '#EDEFF2',
+  GRAY_200: '#DDE0E5',
+  GRAY_300: '#C5C9D0',
+  GRAY_400: '#A4A9B2',
+  GRAY_500: '#7A7F8A',
+  GRAY_600: '#5A5E67',
+  BLACK_SOFT: '#141618',
 
   // Neutrals - Dark Mode
-  DARK_BG: '#0A0E27',        // Very dark background
-  DARK_SECONDARY: '#121D3A',  // Dark secondary background
-  DARK_CARD: '#1F2937',      // Card background in dark mode
-  DARK_TEXT: '#F5F5F5',      // Main text in dark mode
-  DARK_TEXT_SECONDARY: '#B0B0B0', // Secondary text in dark mode
+  DARK_BG: '#080C14',
+  DARK_SECONDARY: '#111827',
+  DARK_CARD: '#1A2332',
+  DARK_TEXT: '#EDF2F7',
+  DARK_TEXT_SECONDARY: '#94A3B8',
+  DARK_BORDER: '#1E293B',
 
   // Accent Colors
   FACEBOOK_BLUE: '#1877F2',
-  SUCCESS: '#31A24C',
-  WARNING: '#F57C00',
-  ERROR: '#C62828',
-  INFO: '#1976D2',
+  SUCCESS: '#16A34A',
+  WARNING: '#EA580C',
+  ERROR: '#DC2626',
+  INFO: '#2563EB',
 
   // Secondary Colors
-  ORANGE_SOFT: '#FFB74D',    // Soft orange for promotions
-  RED_LIGHT: '#EF5350',      // Light red for alerts
-  BLUE_LIGHT: '#64B5F6',     // Light blue
+  ORANGE_SOFT: '#FBBF24',
+  RED_LIGHT: '#F87171',
+  BLUE_LIGHT: '#60A5FA',
+  PURPLE_LIGHT: '#A78BFA',
+
+  // Gradients
+  GRADIENT_PRIMARY: ['#1B6B32', '#2E8B4F'] as [string, string],
+  GRADIENT_PRIMARY_REVERSE: ['#2E8B4F', '#1B6B32'] as [string, string],
+  GRADIENT_SUCCESS: ['#16A34A', '#22C55E'] as [string, string],
+  GRADIENT_WARM: ['#F59E0B', '#EA580C'] as [string, string],
+  GRADIENT_COOL: ['#2563EB', '#60A5FA'] as [string, string],
+  GRADIENT_PURPLE: ['#7C3AED', '#A78BFA'] as [string, string],
+  GRADIENT_DARK: ['#0F172A', '#1E293B'] as [string, string],
+
+  // Glassmorphism / Frost
+  GLASS_LIGHT: 'rgba(255, 255, 255, 0.70)',
+  GLASS_LIGHT_2: 'rgba(255, 255, 255, 0.82)',
+  GLASS_LIGHT_3: 'rgba(255, 255, 255, 0.92)',
+  GLASS_DARK: 'rgba(11, 17, 29, 0.72)',
+  GLASS_DARK_2: 'rgba(11, 17, 29, 0.85)',
+  GLASS_DARK_3: 'rgba(11, 17, 29, 0.92)',
+  GLASS_BORDER_LIGHT: 'rgba(255, 255, 255, 0.30)',
+  GLASS_BORDER_DARK: 'rgba(255, 255, 255, 0.06)',
+  GLASS_TINT_PRIMARY: 'rgba(27, 107, 50, 0.10)',
+  GLASS_TINT_PRIMARY_STRONG: 'rgba(27, 107, 50, 0.18)',
 
   // Transparent variants
-  BLACK_10: 'rgba(0, 0, 0, 0.1)',
-  BLACK_20: 'rgba(0, 0, 0, 0.2)',
-  BLACK_30: 'rgba(0, 0, 0, 0.3)',
-  WHITE_30: 'rgba(255, 255, 255, 0.3)',
-  WHITE_50: 'rgba(255, 255, 255, 0.5)',
+  BLACK_5: 'rgba(0, 0, 0, 0.05)',
+  BLACK_10: 'rgba(0, 0, 0, 0.10)',
+  BLACK_15: 'rgba(0, 0, 0, 0.15)',
+  BLACK_20: 'rgba(0, 0, 0, 0.20)',
+  BLACK_30: 'rgba(0, 0, 0, 0.30)',
+  BLACK_40: 'rgba(0, 0, 0, 0.40)',
+  BLACK_50: 'rgba(0, 0, 0, 0.50)',
+  BLACK_60: 'rgba(0, 0, 0, 0.60)',
+  WHITE_5: 'rgba(255, 255, 255, 0.05)',
+  WHITE_10: 'rgba(255, 255, 255, 0.10)',
+  WHITE_15: 'rgba(255, 255, 255, 0.15)',
+  WHITE_20: 'rgba(255, 255, 255, 0.20)',
+  WHITE_30: 'rgba(255, 255, 255, 0.30)',
+  WHITE_50: 'rgba(255, 255, 255, 0.50)',
+  WHITE_80: 'rgba(255, 255, 255, 0.80)',
 };
 
 export const LIGHT_THEME = {
-  background: COLORS.WHITE,
+  background: COLORS.LIGHT_GRAY,
   primaryBackground: COLORS.LIGHT_GRAY,
   secondaryBackground: COLORS.GRAY_200,
   card: COLORS.WHITE,
@@ -62,10 +96,17 @@ export const LIGHT_THEME = {
   error: COLORS.ERROR,
   info: COLORS.INFO,
   placeholder: COLORS.GRAY_500,
-  overlay: 'rgba(0, 0, 0, 0.5)',
+  overlay: 'rgba(0, 0, 0, 0.40)',
   shadow: COLORS.BLACK_10,
   WHITE: COLORS.WHITE,
   BLACK_10: COLORS.BLACK_10,
+
+  glass: COLORS.GLASS_LIGHT,
+  glassBorder: COLORS.GLASS_BORDER_LIGHT,
+  glassTint: COLORS.GLASS_TINT_PRIMARY,
+  glassDark: COLORS.GLASS_LIGHT_2,
+  glassDarker: COLORS.GLASS_LIGHT_3,
+  tabBar: COLORS.GLASS_LIGHT_2,
 };
 
 export const DARK_THEME = {
@@ -77,21 +118,28 @@ export const DARK_THEME = {
   text: COLORS.DARK_TEXT,
   textSecondary: COLORS.DARK_TEXT_SECONDARY,
   textTertiary: COLORS.GRAY_500,
-  border: COLORS.DARK_SECONDARY,
+  border: COLORS.DARK_BORDER,
   borderLight: COLORS.DARK_CARD,
   primary: COLORS.PRIMARY_LIGHT,
   primaryLight: COLORS.PRIMARY_LIGHT,
-  primaryPale: 'rgba(76, 175, 80, 0.15)',
-  accent: '#66B3FF',
-  success: COLORS.SUCCESS,
-  warning: COLORS.WARNING,
-  error: '#FF6B6B',
-  info: '#64B5F6',
+  primaryPale: 'rgba(46, 139, 79, 0.15)',
+  accent: '#60A5FA',
+  success: '#22C55E',
+  warning: '#FB923C',
+  error: '#F87171',
+  info: '#60A5FA',
   placeholder: COLORS.DARK_TEXT_SECONDARY,
-  overlay: 'rgba(0, 0, 0, 0.7)',
-  shadow: 'rgba(0, 0, 0, 0.3)',
+  overlay: 'rgba(0, 0, 0, 0.70)',
+  shadow: 'rgba(0, 0, 0, 0.40)',
   WHITE: COLORS.WHITE,
   BLACK_10: COLORS.BLACK_10,
+
+  glass: COLORS.GLASS_DARK,
+  glassBorder: COLORS.GLASS_BORDER_DARK,
+  glassTint: COLORS.GLASS_TINT_PRIMARY,
+  glassDark: COLORS.GLASS_DARK_2,
+  glassDarker: COLORS.GLASS_DARK_3,
+  tabBar: COLORS.GLASS_DARK_2,
 };
 
 export type ThemeColors = typeof LIGHT_THEME;

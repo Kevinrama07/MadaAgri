@@ -1,8 +1,9 @@
 const db = require('../db');
 const FollowAlgorithm = require('../algos/followAlgo');
+const { asyncHandler } = require('../middlewares/authMiddleware');
 
 // Suivre un utilisateur
-exports.followUser = async (req, res) => {
+exports.followUser = asyncHandler(async (req, res, next) => {
   const followerId = req.user.id;
   const followingId = req.params.userId;
 
@@ -22,16 +23,15 @@ exports.followUser = async (req, res) => {
       collaborationId: result.collaborationId
     });
   } catch (error) {
-    console.error('Error following user:', error);
     if (error.message === 'Vous suivez déjà cet utilisateur') {
       return res.status(400).json({ error: error.message });
     }
-    res.status(500).json({ error: 'Erreur lors du suivi' });
+    next(error);
   }
-};
+});
 
 // Ne plus suivre
-exports.unfollowUser = async (req, res) => {
+exports.unfollowUser = asyncHandler(async (req, res, next) => {
   const followerId = req.user.id;
   const followingId = req.params.userId;
 
@@ -44,16 +44,15 @@ exports.unfollowUser = async (req, res) => {
       collaborationRemoved: result.collaborationRemoved
     });
   } catch (error) {
-    console.error('Error unfollowing user:', error);
     if (error.message === 'Vous ne suivez pas cet utilisateur') {
       return res.status(404).json({ error: error.message });
     }
-    res.status(500).json({ error: 'Erreur lors de l\'arrêt du suivi' });
+    next(error);
   }
-};
+});
 
 // Liste des abonnés
-exports.getFollowers = async (req, res) => {
+exports.getFollowers = asyncHandler(async (req, res, next) => {
   const userId = req.params.userId;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
@@ -99,13 +98,12 @@ exports.getFollowers = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching followers:', error);
-    res.status(500).json({ error: 'Erreur lors de la récupération des abonnés' });
+    next(error);
   }
-};
+});
 
 // Liste des suivis
-exports.getFollowing = async (req, res) => {
+exports.getFollowing = asyncHandler(async (req, res, next) => {
   const userId = req.params.userId;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
@@ -151,13 +149,12 @@ exports.getFollowing = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching following:', error);
-    res.status(500).json({ error: 'Erreur lors de la récupération des suivis' });
+    next(error);
   }
-};
+});
 
 // Statut de relation avec un utilisateur
-exports.getRelationshipStatus = async (req, res) => {
+exports.getRelationshipStatus = asyncHandler(async (req, res, next) => {
   const currentUserId = req.user.id;
   const targetUserId = req.params.userId;
 
@@ -165,9 +162,8 @@ exports.getRelationshipStatus = async (req, res) => {
     const status = await FollowAlgorithm.getRelationshipStatus(currentUserId, targetUserId);
     res.json(status);
   } catch (error) {
-    console.error('Error fetching relationship status:', error);
-    res.status(500).json({ error: 'Erreur lors de la récupération du statut' });
+    next(error);
   }
-};
+});
 
 module.exports = exports;

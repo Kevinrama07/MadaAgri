@@ -11,6 +11,8 @@ const logger = require('./utils/logger');
 const { registerRoutes } = require('./routes');
 const messageSocketService = require('./services/messageSocketService');
 const ImageCleanupScheduler = require('./services/imageCleanupScheduler');
+const { runMigrations } = require('./utils/migrations');
+const pool = require('./db');
 
 // Imports des middlewares
 const { helmetConfig, generalLimiter, readLimiter } = require('./middlewares/security');
@@ -160,12 +162,16 @@ const getNetworkInfo = () => {
   return addresses;
 };
 
-const startServer = () => {
-  server.listen(PORT, HOST, () => {
-    const networkAddresses = getNetworkInfo();
-    const androidEmulatorUrl = `http://10.0.2.2:${PORT}`;
+const startServer = async () => {
+  try {
+    // Run database migrations first
+    await runMigrations(pool);
     
-    let serverLog = `
+    server.listen(PORT, HOST, () => {
+      const networkAddresses = getNetworkInfo();
+      const androidEmulatorUrl = `http://10.0.2.2:${PORT}`;
+      
+      let serverLog = `
 ╔════════════════════════════════════════════════════════════╗
 ║       🌾 MadaAgri Backend Server Started 🌾                ║
 ╠════════════════════════════════════════════════════════════╣
@@ -179,12 +185,12 @@ const startServer = () => {
 ║  Android Emulator:${androidEmulatorUrl.padEnd(39)}  ║
 ║  Localhost:http://localhost:${PORT.toString().padEnd(31)}║`;
 
-    networkAddresses.forEach((addr) => {
-      serverLog += `
+      networkAddresses.forEach((addr) => {
+        serverLog += `
 ║  Network IP:        http://${addr}:${PORT.toString().padEnd(18)} ║`;
-    });
+      });
 
-    serverLog += `
+      serverLog += `
 ║────────────────────────────────────────────────────────────║
 ║  Health Check: GET http://localhost:${PORT}/health${' '.repeat(12)}║
 ╠════════════════════════════════════════════════════════════╣
@@ -208,6 +214,10 @@ const startServer = () => {
     }
     process.exit(1);
   });
+  } catch (err) {
+    logger.error('[startServer] ❌ Error during startup:', err);
+    process.exit(1);
+  }
 };
 
 const gracefulShutdown = (signal) => {
@@ -268,15 +278,22 @@ process.on('SIGINT', shutdown);
 
 // Démarrer le serveur si le script est exécuté directement
 if (require.main === module) {
-  startServer();
-  
-  // Initialize image cleanup scheduler
-  try {
-    ImageCleanupScheduler.start();
-    logger.info('✅ ImageCleanupScheduler démarré (cleanup quotidien à 2h du matin)');
-  } catch (error) {
-    logger.error('❌ Erreur lors du démarrage du scheduler:', error);
-  }
+  (async () => {
+    try {
+      await startServer();
+      
+      // Initialize image cleanup scheduler
+      try {
+        ImageCleanupScheduler.start();
+        logger.info('✅ ImageCleanupScheduler démarré (cleanup quotidien à 2h du matin)');
+      } catch (error) {
+        logger.error('❌ Erreur lors du démarrage du scheduler:', error);
+      }
+    } catch (error) {
+      logger.error('❌ Erreur au démarrage du serveur:', error);
+      process.exit(1);
+    }
+  })();
 }
 
 module.exports = app;

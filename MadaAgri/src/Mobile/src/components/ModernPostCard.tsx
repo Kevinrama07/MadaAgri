@@ -12,6 +12,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { ModernAvatar } from './ModernAvatar';
 import { ModernCard } from './ModernCard';
+import { VideoPostCard } from './VideoPostCard';
 import { SPACING, BORDER_RADIUS, TYPOGRAPHY, SHADOWS } from '../theme';
 
 interface PostCardProps {
@@ -24,6 +25,12 @@ interface PostCardProps {
   };
   content: string;
   image?: { uri: string };
+  video?: {
+    url: string;
+    thumbnail?: string;
+    duration?: number;
+    views?: number;
+  };
   timestamp: string;
   likes: number;
   comments: number;
@@ -34,6 +41,7 @@ interface PostCardProps {
   onShare?: () => void;
   onAuthorPress?: () => void;
   onMenuPress?: () => void;
+  onVideoView?: () => void;
 }
 
 export const ModernPostCard = ({
@@ -41,6 +49,7 @@ export const ModernPostCard = ({
   author,
   content,
   image,
+  video,
   timestamp,
   likes,
   comments,
@@ -51,6 +60,7 @@ export const ModernPostCard = ({
   onShare,
   onAuthorPress,
   onMenuPress,
+  onVideoView,
 }: PostCardProps) => {
   const { colors } = useTheme();
   const [isLiked, setIsLiked] = useState(liked);
@@ -215,7 +225,18 @@ export const ModernPostCard = ({
       {content && <Text style={styles.content}>{content}</Text>}
 
       {/* Image */}
-      {image && <Image source={image} style={styles.image} />}
+      {image && !video && <Image source={image} style={styles.image} />}
+
+      {/* Video */}
+      {video && (
+        <VideoPostCard
+          videoUrl={video.url}
+          thumbnailUrl={video.thumbnail}
+          videoDuration={video.duration}
+          videoViews={video.views}
+          onViewCount={onVideoView}
+        />
+      )}
 
       {/* Stats */}
       {(likeCount > 0 || comments > 0 || shares > 0) && (

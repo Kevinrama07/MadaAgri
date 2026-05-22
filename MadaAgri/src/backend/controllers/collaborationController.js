@@ -1,8 +1,9 @@
 const db = require('../db');
 const CollaborationAlgorithm = require('../algos/collaborationAlgo');
+const { asyncHandler } = require('../middlewares/authMiddleware');
 
 // Envoyer une invitation de collaboration
-exports.sendCollaborationInvitation = async (req, res) => {
+exports.sendCollaborationInvitation = asyncHandler(async (req, res, next) => {
   const senderId = req.user.id;
   const { recipientId, message, level = 'collaborateur' } = req.body;
 
@@ -47,13 +48,12 @@ exports.sendCollaborationInvitation = async (req, res) => {
       invitationId: result.insertId
     });
   } catch (error) {
-    console.error('Error sending collaboration invitation:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'envoi de l\'invitation' });
+    next(error);
   }
-};
+});
 
 // Accepter une invitation
-exports.acceptInvitation = async (req, res) => {
+exports.acceptInvitation = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
   const invitationId = req.params.invitationId;
 
@@ -65,16 +65,15 @@ exports.acceptInvitation = async (req, res) => {
       collaboratorId: result.collaboratorId
     });
   } catch (error) {
-    console.error('Error accepting invitation:', error);
     if (error.message === 'Invitation non trouvée ou déjà traitée') {
       return res.status(404).json({ error: error.message });
     }
-    res.status(500).json({ error: 'Erreur lors de l\'acceptation de l\'invitation' });
+    next(error);
   }
-};
+});
 
 // Refuser une invitation
-exports.rejectInvitation = async (req, res) => {
+exports.rejectInvitation = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
   const invitationId = req.params.invitationId;
 
@@ -85,16 +84,15 @@ exports.rejectInvitation = async (req, res) => {
       message: 'Invitation refusée'
     });
   } catch (error) {
-    console.error('Error rejecting invitation:', error);
     if (error.message === 'Invitation non trouvée ou déjà traitée') {
       return res.status(404).json({ error: error.message });
     }
-    res.status(500).json({ error: 'Erreur lors du refus de l\'invitation' });
+    next(error);
   }
-};
+});
 
 // Annuler une invitation envoyée
-exports.cancelInvitation = async (req, res) => {
+exports.cancelInvitation = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
   const invitationId = req.params.invitationId;
 
@@ -120,13 +118,12 @@ exports.cancelInvitation = async (req, res) => {
       message: 'Invitation annulée'
     });
   } catch (error) {
-    console.error('Error cancelling invitation:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'annulation de l\'invitation' });
+    next(error);
   }
-};
+});
 
 // Supprimer une collaboration
-exports.removeCollaboration = async (req, res) => {
+exports.removeCollaboration = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
   const collaboratorId = req.params.userId;
 
@@ -155,13 +152,12 @@ exports.removeCollaboration = async (req, res) => {
       message: 'Collaboration supprimée'
     });
   } catch (error) {
-    console.error('Error removing collaboration:', error);
-    res.status(500).json({ error: 'Erreur lors de la suppression de la collaboration' });
+    next(error);
   }
-};
+});
 
 // Invitations reçues
-exports.getReceivedInvitations = async (req, res) => {
+exports.getReceivedInvitations = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
@@ -199,13 +195,12 @@ exports.getReceivedInvitations = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching received invitations:', error);
-    res.status(500).json({ error: 'Erreur lors de la récupération des invitations' });
+    next(error);
   }
-};
+});
 
 // Invitations envoyées
-exports.getSentInvitations = async (req, res) => {
+exports.getSentInvitations = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
@@ -244,13 +239,12 @@ exports.getSentInvitations = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching sent invitations:', error);
-    res.status(500).json({ error: 'Erreur lors de la récupération des invitations envoyées' });
+    next(error);
   }
-};
+});
 
 // Liste des collaborateurs actifs
-exports.getCollaborators = async (req, res) => {
+exports.getCollaborators = asyncHandler(async (req, res, next) => {
   const userId = req.params.userId;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
@@ -290,9 +284,8 @@ exports.getCollaborators = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching collaborators:', error);
-    res.status(500).json({ error: 'Erreur lors de la récupération des collaborateurs' });
+    next(error);
   }
-};
+});
 
 module.exports = exports;

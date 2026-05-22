@@ -14,21 +14,18 @@ function resolveApiBase() {
   // 1️⃣ Vérifier les variables d'environnement Expo (prioritaire)
   if (Constants.expoConfig?.extra?.API_URL) {
     const url = normalizeUrl(Constants.expoConfig.extra.API_URL);
-    console.log('[API] 📱 API URL from Expo extra:', url);
     return url;
   }
 
   // 2️⃣ Vérifier la variable d'environnement NODE
   if (process.env.API_BASE) {
     const url = normalizeUrl(process.env.API_BASE);
-    console.log('[API] 🌐 API URL from ENV:', url);
     return url;
   }
 
   // 3️⃣ Vérifier process.env.EXPO_PUBLIC_API_URL (depuis .env)
   if (process.env.EXPO_PUBLIC_API_URL) {
     const url = normalizeUrl(process.env.EXPO_PUBLIC_API_URL);
-    console.log('[API] ✅ API URL from EXPO_PUBLIC_API_URL:', url);
     return url;
   }
 
@@ -42,34 +39,28 @@ function resolveApiBase() {
         const host = String(manifest.debuggerHost).split(':')[0];
         if (host && host !== 'localhost' && host !== '127.0.0.1') {
           const url = `http://${host}:4000`;
-          console.log('[API] 📱 API URL from Expo debuggerHost:', url);
           return url;
         }
       }
       
       // Fallback: Android Device (téléphone physique)
-      console.log('[API] 📱 Using Android Device IP from API_CONFIG:', API_CONFIG.ANDROID_DEVICE_IP);
       return API_CONFIG.ANDROID_DEVICE_IP;
     } catch (e) {
-      console.log('[API] ❌ Error detecting Expo manifest:', e.message);
       return API_CONFIG.ANDROID_DEVICE_IP;
     }
   }
 
   const url = API_CONFIG.DEFAULT_API_BASE;
-  console.log('[API] 🍎 Using localhost for iOS/Web:', url);
   return url;
 }
 
 const API_BASE = resolveApiBase();
-console.log('[API] 🚀 FINAL API BASE CONFIGURED:', API_BASE);
 const TOKEN_KEY = '@madaagri_token';
 let token = null;
 let tokenLoadPromise = null; // Pour éviter les chargements multiples
 
 function logDebug(...args) {
   if (APP_CONFIG.NETWORK_DEBUG) {
-    console.log('[API]', ...args);
   }
 }
 
@@ -109,8 +100,6 @@ async function request(method, path, data = null, options = {}) {
   const url = `${API_BASE}${path}`;
   const timeout = options.timeout || APP_CONFIG.TIMEOUT;
   
-  console.log(`[API] 📡 ${method} ${path} → ${API_BASE}${path}`);
-  console.log(`[API] ⏱️  Timeout: ${timeout}ms`);
 
   try {
     // Configuration de la requête
@@ -565,6 +554,10 @@ export async function likePost(postId) {
   return request('POST', `/api/posts/${postId}/like`);
 }
 
+export async function trackVideoView(postId) {
+  return request('POST', `/api/posts/${postId}/video/view`);
+}
+
 // ============================================
 // 🔧 UTILITAIRES GÉNÉRIQUES
 // ============================================
@@ -625,6 +618,7 @@ export const dataApi = {
   createPost,
   likePost,
   unlikePost: (postId) => request('DELETE', `/api/posts/${postId}/like`),
+  trackVideoView,
   fetchPostComments: async (postId) => {
     const response = await request('GET', `/api/posts/${postId}/comments`);
     const comments = response?.comments || response?.data || response || [];
@@ -716,8 +710,8 @@ export const dataApi = {
       .catch(() => ({ isFollowing: false, isFollowedBy: false, isMutual: false })),
 
   // ── Commandes / réservations ──────────────────────────────────────────────
-  getMyOrders: () => request('GET', '/api/reservations/my-orders').catch((e) => { if (e.status === 404) return []; throw e; }),
-  getReceivedOrders: () => request('GET', '/api/reservations/received').catch((e) => { if (e.status === 404) return []; throw e; }),
+  getMyOrders: () => request('GET', '/api/reservations').then(res => res?.data || res || []).catch((e) => { if (e.status === 404) return []; throw e; }),
+  getReceivedOrders: () => request('GET', '/api/reservations/received').then(res => res?.data || res || []).catch((e) => { if (e.status === 404) return []; throw e; }),
   createReservation: (items) => request('POST', '/api/reservations', { items }),
   confirmReservation: (id) => request('PUT', `/api/reservations/${id}/confirm`),
   cancelReservation: (id) => request('PUT', `/api/reservations/${id}/cancel`),
@@ -763,6 +757,12 @@ export const dataApi = {
   fetchCultures: () => request('GET', '/api/analysis/cultures').then(res => res?.cultures || res?.data || res || []).catch(() => []),
   fetchKnnCultures: (regionId, k = 5) => request('GET', `/api/analysis/knn-cultures?regionId=${regionId}&k=${k}`).then(res => res?.recommendations || res?.data || res || []).catch(() => []),
   fetchRegionCultures: (regionId) => request('GET', `/api/analysis/region-cultures?regionId=${regionId}`).then(res => res?.region_cultures || res?.data || res || []).catch(() => []),
+
+  // ── Météo ─────────────────────────────────────────────────────────────────
+  fetchWeatherForecast: (lat, lon) =>
+    request('GET', `/api/weather/forecast?lat=${lat || -18.8792}&lon=${lon || 47.5079}`)
+      .then(res => res?.data || res || { forecast: [], location: 'Madagascar' })
+      .catch(() => ({ forecast: [], location: 'Madagascar', error: true })),
 
   // ── Produits (agriculteur) ──────────────────────────────────────────────
   getMyProducts: (status) => {

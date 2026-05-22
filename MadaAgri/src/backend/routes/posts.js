@@ -4,6 +4,7 @@ const pool = require('../db');
 const { calculatePostScore } = require('../services/postScoringService');
 const { kmpContains } = require('../algos/kmp');
 const { authMiddleware, asyncHandler } = require('../middlewares/authMiddleware');
+const { postValidators, handleValidationErrors } = require('../middlewares/validators');
 
 const router = express.Router();
 
@@ -33,7 +34,8 @@ router.get('/', authMiddleware, asyncHandler(async (req, res) => {
     `SELECT p.*, p.author_id AS user_id, u.display_name, u.email, u.region_id AS author_region_id, u.profile_image_url,
       (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS likes_count,
       (SELECT IF(COUNT(*) > 0, 1, 0) FROM post_likes WHERE post_id = p.id AND user_id = ?) AS user_likes,
-      (SELECT COUNT(*) FROM post_comments pc WHERE pc.post_id = p.id) AS comments_count
+      (SELECT COUNT(*) FROM post_comments pc WHERE pc.post_id = p.id) AS comments_count,
+      p.video_url, p.video_thumbnail, p.video_duration
      FROM posts p
      JOIN users u ON u.id = p.author_id
      ORDER BY p.created_at DESC`,
@@ -72,15 +74,16 @@ router.get('/', authMiddleware, asyncHandler(async (req, res) => {
 }));
 
 // POST /api/posts - Créer une publication
-router.post('/', authMiddleware, asyncHandler(async (req, res) => {
+router.post('/', authMiddleware, postValidators.create, handleValidationErrors, asyncHandler(async (req, res) => {
   const authorId = req.user.id;
-  const { content, image_url, visibility } = req.body;
+  const { content, image_url, video_url, video_thumbnail, video_duration, visibility } = req.body;
   if (!content || !content.trim()) return res.status(400).json({ error: 'content required' });
 
   const id = randomUUID();
   await pool.query(
-    'INSERT INTO posts (id, author_id, content, image_url, visibility, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
-    [id, authorId, content.trim(), image_url || null, visibility || 'public']
+    `INSERT INTO posts (id, author_id, content, image_url, video_url, video_thumbnail, video_duration, visibility, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+    [id, authorId, content.trim(), image_url || null, video_url || null, video_thumbnail || null, video_duration || null, visibility || 'public']
   );
 
   const [rows] = await pool.query(
@@ -110,7 +113,8 @@ router.get('/user/:authorId', authMiddleware, asyncHandler(async (req, res) => {
     `SELECT p.*, p.author_id AS user_id, u.display_name, u.email, u.region_id AS author_region_id, u.profile_image_url,
       (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS likes_count,
       (SELECT IF(COUNT(*) > 0, 1, 0) FROM post_likes WHERE post_id = p.id AND user_id = ?) AS user_likes,
-      (SELECT COUNT(*) FROM post_comments pc WHERE pc.post_id = p.id) AS comments_count
+      (SELECT COUNT(*) FROM post_comments pc WHERE pc.post_id = p.id) AS comments_count,
+      p.video_url, p.video_thumbnail, p.video_duration
      FROM posts p
      JOIN users u ON u.id = p.author_id
      WHERE p.author_id = ?
@@ -169,7 +173,8 @@ router.get('/:postId', authMiddleware, asyncHandler(async (req, res) => {
     `SELECT p.*, p.author_id AS user_id, u.display_name, u.email, u.region_id AS author_region_id, u.profile_image_url,
       (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS likes_count,
       (SELECT IF(COUNT(*) > 0, 1, 0) FROM post_likes WHERE post_id = p.id AND user_id = ?) AS user_likes,
-      (SELECT COUNT(*) FROM post_comments pc WHERE pc.post_id = p.id) AS comments_count
+      (SELECT COUNT(*) FROM post_comments pc WHERE pc.post_id = p.id) AS comments_count,
+      p.video_url, p.video_thumbnail, p.video_duration
      FROM posts p
      JOIN users u ON u.id = p.author_id
      WHERE p.id = ?`,
@@ -201,25 +206,23 @@ router.get('/:postId/comments', authMiddleware, asyncHandler(async (req, res) =>
      (SELECT COUNT(*) FROM post_comments pc2 WHERE pc2.parent_id = pc.id) as replies_count
      FROM post_comments pc
      JOIN users u ON u.id = pc.user_id
-     WHERE pc.post_id = ? AND pc.parent_id IS NULL
+     WHERE pc.post_id = ?
      ORDER BY pc.created_at ASC`,
     [postId]
   );
-  
-  // Pour chaque commentaire, charger les réponses
-  const commentsWithReplies = await Promise.all(rows.map(async (comment) => {
-    const [replies] = await pool.query(
-      `SELECT pc.*, u.display_name, u.profile_image_url,
-       (SELECT COUNT(*) FROM post_comments pc2 WHERE pc2.parent_id = pc.id) as replies_count
-       FROM post_comments pc
-       JOIN users u ON u.id = pc.user_id
-       WHERE pc.parent_id = ?
-       ORDER BY pc.created_at ASC`,
-      [comment.id]
-    );
-    return { ...comment, replies: replies };
+
+  const topLevel = rows.filter(c => !c.parent_id);
+  const replies = rows.filter(c => c.parent_id);
+  const repliesMap = {};
+  for (const r of replies) {
+    if (!repliesMap[r.parent_id]) repliesMap[r.parent_id] = [];
+    repliesMap[r.parent_id].push(r);
+  }
+  const commentsWithReplies = topLevel.map(c => ({
+    ...c,
+    replies: repliesMap[c.id] || []
   }));
-  
+
   res.json({ comments: commentsWithReplies });
 }));
 
@@ -317,6 +320,28 @@ router.get('/comments/:commentId/replies', authMiddleware, asyncHandler(async (r
     [commentId]
   );
   res.json({ replies: rows });
+}));
+
+// POST /api/posts/:postId/video/view - Compter une vue vidéo
+router.post('/:postId/video/view', authMiddleware, asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const postId = req.params.postId;
+
+  const id = randomUUID();
+  await pool.query(
+    'INSERT IGNORE INTO video_views (id, post_id, user_id, viewed_at) VALUES (?, ?, ?, NOW())',
+    [id, postId, userId]
+  );
+
+  await pool.query(
+    'UPDATE posts SET video_views = video_views + 1 WHERE id = ?',
+    [postId]
+  );
+
+  const [rows] = await pool.query('SELECT video_views FROM posts WHERE id = ?', [postId]);
+  const video_views = rows[0]?.video_views || 0;
+
+  res.json({ ok: true, video_views });
 }));
 
 module.exports = router;

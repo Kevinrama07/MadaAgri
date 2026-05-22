@@ -1621,6 +1621,270 @@
   }
 }
 
+/* ====== VOICE MESSAGE (Web) ====== */
+.voice-bubble-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 160px;
+  max-width: 220px;
+}
+
+.voice-play-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary-light);
+  color: var(--primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.voice-play-btn:hover {
+  background: var(--primary);
+  color: var(--text-inverse);
+  transform: scale(1.1);
+}
+
+.voice-play-btn-own {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.voice-play-btn-own:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.voice-waveform {
+  flex: 1;
+  min-width: 0;
+}
+
+.voice-waveform-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: height 0.15s;
+}
+
+.voice-waveform-bar:hover {
+  height: 6px;
+}
+
+.voice-waveform-bar-own {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.voice-waveform-progress {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--primary);
+  transition: width 0.1s linear;
+}
+
+.voice-waveform-progress-own {
+  background: #fff;
+}
+
+.voice-time-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.voice-time {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.voice-time-own {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Voice Recorder */
+.voice-mic-btn {
+  color: var(--primary);
+}
+
+.voice-mic-btn:hover:not(:disabled) {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.voice-mic-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.voice-mic-recording {
+  color: var(--error) !important;
+  animation: micPulse 1s ease-in-out infinite;
+}
+
+@keyframes micPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Recording animation inside the input field */
+.voice-recording-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+  width: 100%;
+}
+
+.voice-recording-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--error);
+  animation: voicePulse 0.8s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.voice-recording-timer {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--error);
+  min-width: 40px;
+  font-variant-numeric: tabular-nums;
+}
+
+.voice-recording-bar-container {
+  flex: 1;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.voice-recording-animated-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--error);
+  border-radius: 2px;
+  animation: recordingWave 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes recordingWave {
+  0% { opacity: 0.3; transform: scaleX(0.3); transform-origin: left; }
+  25% { opacity: 0.6; transform: scaleX(0.6); transform-origin: left; }
+  50% { opacity: 0.4; transform: scaleX(0.8); transform-origin: left; }
+  75% { opacity: 0.7; transform: scaleX(0.5); transform-origin: left; }
+  100% { opacity: 1; transform: scaleX(1); transform-origin: left; }
+}
+
+/* Voice pending preview */
+.voice-pending-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  width: 100%;
+  color: var(--primary);
+}
+
+.voice-pending-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+}
+
+.voice-pending-cancel {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.voice-pending-cancel:hover {
+  background: var(--background-hover);
+  color: var(--error);
+}
+
+.voice-recorder-active {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 20px;
+  background: var(--error-light);
+  min-width: 120px;
+}
+
+.voice-recorder-cancel {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--error);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.voice-recorder-cancel:hover {
+  background: rgba(255, 0, 0, 0.1);
+}
+
+.voice-recorder-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--error);
+  animation: voicePulse 1s ease-in-out infinite;
+}
+
+@keyframes voicePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.voice-recorder-time {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--error);
+  min-width: 36px;
+  font-variant-numeric: tabular-nums;
+}
+
+.voice-recorder-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.voice-recorder-progress {
+  height: 100%;
+  background: var(--error);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

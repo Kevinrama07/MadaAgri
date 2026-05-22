@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
-import { View, StyleSheet, ViewStyle, Pressable } from 'react-native';
+import React, { useMemo, useRef, useCallback } from 'react';
+import { View, StyleSheet, ViewStyle, Pressable, Animated } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { SPACING, BORDER_RADIUS, SHADOWS } from '../theme';
+import * as Haptics from 'expo-haptics';
 
 interface ModernCardProps {
   children: React.ReactNode;
@@ -10,8 +11,9 @@ interface ModernCardProps {
   padding?: number;
   borderRadius?: number;
   shadow?: 'none' | 'subtle' | 'default' | 'medium' | 'large';
-  variant?: 'default' | 'elevated' | 'outlined';
+  variant?: 'default' | 'elevated' | 'outlined' | 'glass';
   disabled?: boolean;
+  haptic?: boolean;
 }
 
 export const ModernCard = ({
@@ -23,11 +25,22 @@ export const ModernCard = ({
   shadow = 'default',
   variant = 'default',
   disabled = false,
+  haptic = false,
 }: ModernCardProps) => {
   const { colors } = useTheme();
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = useCallback(() => {
+    Animated.spring(scaleAnim, { toValue: 0.98, friction: 8, tension: 200, useNativeDriver: true }).start();
+    if (haptic) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+  }, [scaleAnim, haptic]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(scaleAnim, { toValue: 1, friction: 5, tension: 180, useNativeDriver: true }).start();
+  }, [scaleAnim]);
 
   const styles = useMemo(() => {
-    const variantStyles = {
+    const variantStyles: Record<string, any> = {
       default: {
         backgroundColor: colors.card,
         borderWidth: 0,
@@ -41,6 +54,11 @@ export const ModernCard = ({
         borderWidth: 1,
         borderColor: colors.border,
       },
+      glass: {
+        backgroundColor: colors.glass,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: colors.glassBorder,
+      },
     };
 
     return StyleSheet.create({
@@ -53,14 +71,20 @@ export const ModernCard = ({
     });
   }, [colors, padding, borderRadius, variant, shadow]);
 
-  const Component = onPress ? Pressable : View;
+  const Component = onPress ? Animated.View : View;
+  const pressHandlers = onPress ? {
+    onPress: (onPress as any),
+    onPressIn: handlePressIn,
+    onPressOut: handlePressOut,
+  } : {};
 
   return (
     <Component
-      style={[styles.card, disabled && { opacity: 0.6 }, style]}
-      onPress={onPress}
-      disabled={disabled}
-      android_ripple={onPress ? { color: colors.BLACK_10 } : undefined}
+      // @ts-ignore
+      style={[styles.card, disabled && { opacity: 0.6 }, onPress ? { transform: [{ scale: scaleAnim }] } : {}, style]}
+      {...pressHandlers}
+      // @ts-ignore
+      android_ripple={onPress ? { color: colors.BLACK_10, borderless: true } : undefined}
     >
       {children}
     </Component>

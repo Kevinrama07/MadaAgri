@@ -3,8 +3,9 @@ const router = express.Router();
 const ProductController = require('../controllers/productController');
 const ReservationController = require('../controllers/reservationController');
 const { authMiddleware } = require('../middlewares/authMiddleware');
+const { productValidators, handleValidationErrors } = require('../middlewares/validators');
 
-router.post('/', authMiddleware, ProductController.createProduct);
+router.post('/', authMiddleware, productValidators.create, handleValidationErrors, ProductController.createProduct);
 router.get('/my', authMiddleware, ProductController.getMyProducts);
 router.put('/:id', authMiddleware, ProductController.updateProduct);
 router.delete('/:id', authMiddleware, ProductController.deleteProduct);

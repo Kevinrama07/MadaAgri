@@ -460,6 +460,17 @@
   animation: spin 0.8s linear infinite;
 }
 
+/* Video Views */
+.video-views {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border);
+}
+
 /* Animations */
 @keyframes slideInUp {
   from {

@@ -1,78 +1,88 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
+import React, { useRef, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+  Image,
+  Animated,
+  Platform,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../contexts/ThemeContext';
+import { BORDER_RADIUS } from '../theme';
+import * as Haptics from 'expo-haptics';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
+
+const FEATURES = [
+  { icon: 'store', title: 'Marketplace', desc: 'Vendez vos produits', color: '#22c55e' },
+  { icon: 'account-group', title: 'Communauté', desc: 'Partagez vos expériences', color: '#8B5CF6' },
+  { icon: 'chart-line', title: 'Optimisation', desc: 'Améliorez vos rendements', color: '#4A90E2' },
+];
 
 export default function LandingScreen({ navigation }: any) {
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const buttonScale = useRef(new Animated.Value(1)).current;
+
+  const handlePress = useCallback((navigateTo: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    Animated.sequence([
+      Animated.timing(buttonScale, { toValue: 0.94, duration: 80, useNativeDriver: true }),
+      Animated.spring(buttonScale, { toValue: 1, friction: 5, tension: 180, useNativeDriver: true }),
+    ]).start();
+    setTimeout(() => navigation.navigate(navigateTo), 120);
+  }, [navigation, buttonScale]);
+
   return (
     <View style={styles.container}>
-      {/* Background avec gradient vert */}
       <LinearGradient
         colors={['#f0fdf4', '#dcfce7', '#bbf7d0']}
-        style={styles.background}
+        style={[StyleSheet.absoluteFill, styles.background]}
       >
-        {/* Decorative circles */}
         <View style={[styles.circle, styles.circle1]} />
         <View style={[styles.circle, styles.circle2]} />
         <View style={[styles.circle, styles.circle3]} />
 
-        <View style={styles.content}>
-          {/* Logo Section */}
+        <Animated.ScrollView
+          contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 20 }]}
+          showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+        >
           <View style={styles.logoSection}>
-            <View style={styles.logoContainer}>
-              <Image 
-                source={require('../assets/logo.png')} 
-                style={styles.logo}
-                resizeMode="contain"
-              />
+            <View style={styles.logoGlow}>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require('../assets/logo.png')}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </View>
             </View>
-            <Text style={styles.appName}>Mada Agri</Text>
-            <View style={styles.tagline}>
+            <Text style={styles.appName}>MadaAgri</Text>
+            <View style={[styles.tagline, { backgroundColor: colors.glass }]}>
               <MaterialCommunityIcons name="leaf" size={18} color="#15803d" />
               <Text style={styles.taglineText}>Agriculture Intelligente</Text>
             </View>
           </View>
 
-          {/* Features */}
           <View style={styles.featuresContainer}>
-            <View style={styles.featureCard}>
-              <LinearGradient
-                colors={['#22c55e', '#16a34a']}
-                style={styles.featureIconContainer}
-              >
-                <MaterialCommunityIcons name="store" size={28} color="#fff" />
-              </LinearGradient>
-              <Text style={styles.featureTitle}>Marketplace</Text>
-              <Text style={styles.featureDesc}>Vendez vos produits </Text>
-            </View>
-
-            <View style={styles.featureCard}>
-              <LinearGradient
-                colors={['#22c55e', '#16a34a']}
-                style={styles.featureIconContainer}
-              >
-                <MaterialCommunityIcons name="account-group" size={28} color="#fff" />
-              </LinearGradient>
-              <Text style={styles.featureTitle}>Communauté</Text>
-              <Text style={styles.featureDesc}>Partagez vos expériences</Text>
-            </View>
-
-            <View style={styles.featureCard}>
-              <LinearGradient
-                colors={['#22c55e', '#16a34a']}
-                style={styles.featureIconContainer}
-              >
-                <MaterialCommunityIcons name="chart-line" size={28} color="#fff" />
-              </LinearGradient>
-              <Text style={styles.featureTitle}>Optimisation</Text>
-              <Text style={styles.featureDesc}>Améliorez vos rendements</Text>
-            </View>
+            {FEATURES.map((feat, i) => (
+              <FeatureCard key={feat.title} {...feat} index={i} />
+            ))}
           </View>
 
-          {/* Stats */}
-          <View style={styles.statsContainer}>
+          <View style={[styles.statsContainer, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: StyleSheet.hairlineWidth }]}>
             <View style={styles.stat}>
               <Text style={styles.statNumber}>500+</Text>
               <Text style={styles.statLabel}>Agriculteurs</Text>
@@ -88,51 +98,84 @@ export default function LandingScreen({ navigation }: any) {
               <Text style={styles.statLabel}>Régions</Text>
             </View>
           </View>
-        </View>
 
-        {/* Buttons */}
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity
-            style={styles.buttonPrimary}
-            onPress={() => navigation.navigate('Login')}
-            activeOpacity={0.9}
-          >
-            <LinearGradient
-              colors={['#22c55e', '#16a34a']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.gradientButton}
+          <View style={[styles.buttonsContainer, { paddingBottom: Math.max(insets.bottom, 40) + 60 }]}>
+            <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+              <TouchableOpacity
+                style={styles.buttonPrimary}
+                onPress={() => handlePress('Login')}
+                activeOpacity={0.95}
+              >
+                <LinearGradient
+                  colors={['#22c55e', '#16a34a']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.gradientButton}
+                >
+                  <Text style={styles.buttonPrimaryText}>Se connecter</Text>
+                  <MaterialCommunityIcons name="arrow-right" size={20} color="#fff" />
+                </LinearGradient>
+              </TouchableOpacity>
+            </Animated.View>
+
+            <TouchableOpacity
+              style={styles.buttonSecondary}
+              onPress={() => handlePress('Signup')}
+              activeOpacity={0.8}
             >
-              <Text style={styles.buttonPrimaryText}>Se connecter</Text>
-              <MaterialCommunityIcons name="arrow-right" size={20} color="#fff" />
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.buttonSecondary}
-            onPress={() => navigation.navigate('Signup')}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.buttonSecondaryText}>Créer un compte</Text>
-          </TouchableOpacity>
-        </View>
+              <Text style={styles.buttonSecondaryText}>Créer un compte</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.ScrollView>
       </LinearGradient>
     </View>
   );
 }
+
+interface FeatureCardProps {
+  icon: string;
+  title: string;
+  desc: string;
+  color: string;
+  index: number;
+}
+
+const FeatureCard = React.memo(({ icon, title, desc, color, index }: FeatureCardProps) => {
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    Animated.parallel([
+      Animated.spring(scaleAnim, { toValue: 1, friction: 8, tension: 120, delay: index * 120, useNativeDriver: true }),
+      Animated.timing(opacityAnim, { toValue: 1, duration: 400, delay: index * 120, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={[styles.featureCard, { opacity: opacityAnim, transform: [{ scale: scaleAnim }], backgroundColor: 'rgba(255,255,255,0.85)' }]}>
+      <LinearGradient
+        colors={[color, color + 'cc']}
+        style={styles.featureIconContainer}
+      >
+        <MaterialCommunityIcons name={icon as any} size={28} color="#fff" />
+      </LinearGradient>
+      <Text style={[styles.featureTitle, { color }]}>{title}</Text>
+      <Text style={styles.featureDesc}>{desc}</Text>
+    </Animated.View>
+  );
+});
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   background: {
-    flex: 1,
     position: 'relative',
   },
   circle: {
     position: 'absolute',
     borderRadius: 999,
-    opacity: 0.1,
+    opacity: 0.08,
   },
   circle1: {
     width: 300,
@@ -155,40 +198,41 @@ const styles = StyleSheet.create({
     top: '40%',
     right: -30,
   },
-  content: {
-    flex: 1,
-    paddingTop: 60,
+  scrollContent: {
     paddingHorizontal: 24,
   },
   logoSection: {
     alignItems: 'center',
     marginBottom: 40,
+    paddingTop: 20,
+  },
+  logoGlow: {
+    shadowColor: '#16a34a',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    elevation: 16,
   },
   logoContainer: {
     borderRadius: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#16a34a',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 20,
   },
   logo: {
-    width: 150,
-    height: 150,
+    width: 120,
+    height: 120,
   },
   appName: {
     fontSize: 42,
     fontWeight: '900',
     color: '#15803d',
     letterSpacing: -1,
+    marginTop: 16,
     marginBottom: 8,
   },
   tagline: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -211,7 +255,6 @@ const styles = StyleSheet.create({
   },
   featureCard: {
     flex: 1,
-    backgroundColor: '#fff',
     borderRadius: 20,
     padding: 16,
     alignItems: 'center',
@@ -232,7 +275,6 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#15803d',
     marginBottom: 4,
   },
   featureDesc: {
@@ -242,7 +284,6 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
     borderRadius: 20,
     padding: 20,
     justifyContent: 'space-around',
@@ -271,9 +312,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#e2e8f0',
   },
   buttonsContainer: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
     gap: 12,
+    paddingTop: 24,
   },
   buttonPrimary: {
     borderRadius: 16,
@@ -298,7 +338,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   buttonSecondary: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.85)',
     padding: 18,
     borderRadius: 16,
     alignItems: 'center',
@@ -310,11 +350,5 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     letterSpacing: 0.5,
-  },
-  footer: {
-    fontSize: 13,
-    color: '#64748b',
-    textAlign: 'center',
-    marginTop: 8,
   },
 });

@@ -3,7 +3,6 @@ import {
   View,
   StyleSheet,
   FlatList,
-  SafeAreaView,
   RefreshControl,
   Pressable,
   Text,
@@ -12,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -387,21 +387,20 @@ export const ModernMessagesScreen = ({
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <SafeAreaView edges={["left", "right", "bottom"]} style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={["left", "right", "bottom"]} style={styles.container}>
       <ScreenHeader
         title={fr.messages.title}
-        showBack
-        onBackPress={() => navigation?.goBack()}
         showSearch={false}
         showMenu={true}
         showMoreMenu={true}
+        disableTopSafeArea
         onMoreMenuPress={onMoreMenuPress}
       />
 

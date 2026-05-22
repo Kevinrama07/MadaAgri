@@ -12,13 +12,11 @@ class MessageSocketClient {
 
   connect(userId) {
     if (this.socket?.connected) {
-      console.log('[Socket] Already connected');
       return Promise.resolve();
     }
 
     return new Promise((resolve, reject) => {
       try {
-        console.log('[Socket] Connecting to:', SOCKET_SERVER_URL);
         
         this.socket = io(SOCKET_SERVER_URL, {
           auth: {
@@ -35,7 +33,6 @@ class MessageSocketClient {
         });
 
         this.socket.on('connect', () => {
-          console.log('[Socket] Connected:', this.socket.id);
           this.isConnected = true;
           
           this.socket.emit('user:connect', userId);
@@ -49,7 +46,6 @@ class MessageSocketClient {
         });
 
         this.socket.on('disconnect', () => {
-          console.log('[Socket] Disconnected');
           this.isConnected = false;
         });
 
@@ -83,14 +79,12 @@ class MessageSocketClient {
   joinConversation(conversationId) {
     if (this.socket?.connected) {
       this.socket.emit('conversation:join', conversationId);
-      console.log(`[Socket] Joined conversation: ${conversationId}`);
     }
   }
 
   leaveConversation(conversationId) {
     if (this.socket?.connected) {
       this.socket.emit('conversation:leave', conversationId);
-      console.log(`[Socket] Left conversation: ${conversationId}`);
     }
   }
 
@@ -100,7 +94,6 @@ class MessageSocketClient {
         conversationId,
         message,
       });
-      console.log(`[Socket] Message sent to ${conversationId}`);
     } else {
       console.warn('[Socket] Socket not connected');
     }
@@ -123,7 +116,6 @@ class MessageSocketClient {
       this.listeners.set(event, []);
     }
     this.listeners.get(event).push(callback);
-    console.log(`[Socket] Listener registered for ${event}`);
   }
 
   off(event, callback) {
@@ -152,7 +144,6 @@ class MessageSocketClient {
     if (this.socket?.connected) {
       this.socket.disconnect();
       this.isConnected = false;
-      console.log('[Socket] Disconnected');
     }
   }
 

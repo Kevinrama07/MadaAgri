@@ -15,6 +15,7 @@ interface BarChartProps {
   color?: string;
   showValues?: boolean;
   labelSize?: number;
+  maxValue?: number;
 }
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -27,21 +28,22 @@ export default function BarChart({
   color = '#4CAF50',
   showValues = true,
   labelSize = 10,
+  maxValue,
 }: BarChartProps) {
   if (!data || data.length === 0) return null;
 
-  const maxValue = Math.max(...data.map((d) => d.value), 1);
+  const max = maxValue ?? Math.max(...data.map((d) => d.value), 1);
 
   return (
     <View style={[styles.container, { height: height + 40 }]}>
       <View style={[styles.chartArea, { height }]}>
         {data.map((item, index) => {
-          const barHeight = (item.value / maxValue) * (height - 8);
+          const barHeight = (item.value / max) * (height - 8);
           return (
             <View key={index} style={styles.barColumn}>
               {showValues && item.value > 0 && (
                 <Text style={[styles.value, { fontSize: labelSize }]}>
-                  {item.value}
+                  {item.value >= 1000 ? (item.value / 1000).toFixed(1) + 'k' : item.value}
                 </Text>
               )}
               <View

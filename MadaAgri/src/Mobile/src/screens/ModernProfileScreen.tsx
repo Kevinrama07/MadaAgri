@@ -2,7 +2,6 @@ import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react'
 import {
   View,
   StyleSheet,
-  SafeAreaView,
   FlatList,
   Image,
   Pressable,
@@ -11,6 +10,7 @@ import {
   ActivityIndicator,
   Animated,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
@@ -520,13 +520,14 @@ export const ModernProfileScreen = ({
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
       <ScreenHeader
         title="Profil"
         showSearch={false}
         showMenu={false}
         showMoreMenu={true}
         onMoreMenuPress={onMoreMenuPress}
+        disableTopSafeArea
       />
 
       {/* Toast animé */}

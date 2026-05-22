@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import { FiCheck, FiCheckCircle, FiMoreVertical, FiEdit2, FiCopy, FiTrash2, FiX, FiSave, FiClock, FiAlertCircle, FiSmile } from 'react-icons/fi';
+import VoiceMessageBubble from './VoiceMessageBubble';
 import styles from './MessagerieStyles.module.css';
 
 export default function MessageBubble({ message, currentUserId, onDelete, onEdit, onCopy, onReaction }) {
   const isSent = message.sender_id === currentUserId;
   const hasAttachment = message.attachment_url && message.attachment_type;
+  const isVoice = message.type === 'voice' && message.audio_url;
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(message.content || '');
@@ -109,6 +111,13 @@ export default function MessageBubble({ message, currentUserId, onDelete, onEdit
               onClick={() => window.open(message.attachment_url, '_blank')}
             />
           </div>
+        )}
+        {isVoice && (
+          <VoiceMessageBubble
+            audioUrl={message.audio_url}
+            duration={message.audio_duration || 0}
+            isOwn={isSent}
+          />
         )}
         {isEditing ? (
           <div className={clsx(styles['message-edit-container'])}>

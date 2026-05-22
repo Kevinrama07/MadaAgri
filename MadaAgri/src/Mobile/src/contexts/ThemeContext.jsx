@@ -1,38 +1,44 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { storageService } from '../services';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LIGHT_THEME, DARK_THEME, SPACING, BORDER_RADIUS, TYPOGRAPHY, SHADOWS, ANIMATION_TIMINGS } from '../theme';
 
+const THEME_KEY = '@madaagri_theme';
 const ThemeContext = createContext();
+
+const loadThemeFromStorage = async () => {
+  try {
+    const saved = await AsyncStorage.getItem(THEME_KEY);
+    return saved || 'light';
+  } catch {
+    return 'light';
+  }
+};
 
 export const ThemeProvider = ({ children }) => {
   const [mode, setModeState] = useState('light');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadTheme();
+    let mounted = true;
+    loadThemeFromStorage().then((savedMode) => {
+      if (mounted) {
+        setModeState(savedMode);
+        setIsLoading(false);
+      }
+    });
+    return () => { mounted = false; };
   }, []);
-
-  const loadTheme = async () => {
-    try {
-      const savedTheme = await storageService.getTheme();
-      setModeState(savedTheme || 'light');
-    } catch (error) {
-      console.error('Error loading theme:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const toggleTheme = async () => {
     const newMode = mode === 'light' ? 'dark' : 'light';
     setModeState(newMode);
-    await storageService.saveTheme(newMode);
+    try {
+      await AsyncStorage.setItem(THEME_KEY, newMode);
+    } catch {}
   };
 
-  // Get current theme based on mode
   const currentColors = mode === 'light' ? LIGHT_THEME : DARK_THEME;
 
-  // Complete theme object
   const theme = {
     mode,
     colors: currentColors,

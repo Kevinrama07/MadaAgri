@@ -3,7 +3,7 @@
  * Utilise console avec timestamps
  */
 
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isDevelopment = import.meta.env.MODE === 'development';
 
 const getTimestamp = () => {
   const now = new Date();

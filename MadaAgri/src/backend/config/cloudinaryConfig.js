@@ -52,4 +52,60 @@ const imageStorage = new CloudinaryStorage({
   }
 });
 
-module.exports = { cloudinary, imageStorage };
+const videoStorage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => {
+    const folder = 'madaagri/post_videos';
+    const ext = (file.originalname.split('.').pop() || 'mp4').toLowerCase();
+
+    logger.info({
+      message: 'Cloudinary video storage params',
+      folder,
+      ext,
+      fieldname: file.fieldname,
+    });
+
+    return {
+      folder,
+      public_id: `${req.user?.id || 'anonymous'}_${Date.now()}`,
+      resource_type: 'video',
+      eager: [
+        { width: 480, height: 360, crop: 'pad', quality: 'auto', fetch_format: 'auto' },
+        { width: 720, height: 480, crop: 'pad', quality: 'auto', fetch_format: 'auto' },
+      ],
+      eager_async: true,
+      eager_notification_url: null,
+      format: 'mp4',
+      transformation: [
+        { quality: 'auto', fetch_format: 'auto', flags: 'streaming_attachment' }
+      ],
+      chunk_size: 6000000,
+    };
+  }
+});
+
+const voiceStorage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => {
+    const folder = 'madaagri/voice-messages';
+    const ext = (file.originalname.split('.').pop() || 'mp3').toLowerCase();
+
+    logger.info({
+      message: 'Cloudinary voice storage params',
+      folder,
+      ext,
+      fieldname: file.fieldname,
+    });
+
+    return {
+      folder,
+      public_id: `${req.user?.id || 'anonymous'}_${Date.now()}`,
+      resource_type: 'video',
+      format: ext === 'mp3' ? 'mp3' : ext === 'wav' ? 'wav' : 'ogg',
+      transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+      chunk_size: 2000000,
+    };
+  }
+});
+
+module.exports = { cloudinary, imageStorage, videoStorage, voiceStorage };

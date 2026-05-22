@@ -1,6 +1,7 @@
 const RouteOptimizer = require('../services/routeOptimizer');
+const { asyncHandler } = require('../middlewares/authMiddleware');
 
-async function optimizeRoutes(req, res) {
+const optimizeRoutes = asyncHandler(async (req, res, next) => {
   try {
     const { deliveries, options } = req.body;
 
@@ -27,16 +28,11 @@ async function optimizeRoutes(req, res) {
 
     res.json(result);
   } catch (error) {
-    console.error('Erreur optimisation:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erreur lors de l\'optimisation',
-      error: error.message
-    });
+    next(error);
   }
-}
+});
 
-function calculateDistance(req, res) {
+const calculateDistance = asyncHandler(async (req, res, next) => {
   try {
     const { lat1, lon1, lat2, lon2 } = req.query;
 
@@ -60,15 +56,11 @@ function calculateDistance(req, res) {
       unit: 'km'
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Erreur calcul distance',
-      error: error.message
-    });
+    next(error);
   }
-}
+});
 
-async function reoptimizeAfterRemoval(req, res) {
+const reoptimizeAfterRemoval = asyncHandler(async (req, res, next) => {
   try {
     const { currentRoute, deliveryId } = req.body;
 
@@ -96,15 +88,11 @@ async function reoptimizeAfterRemoval(req, res) {
       route: newRoute
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Erreur ré-optimisation',
-      error: error.message
-    });
+    next(error);
   }
-}
+});
 
-async function compareAlgorithms(req, res) {
+const compareAlgorithms = asyncHandler(async (req, res, next) => {
   try {
     const { deliveries, depot } = req.body;
 
@@ -143,13 +131,9 @@ async function compareAlgorithms(req, res) {
       }
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Erreur comparaison',
-      error: error.message
-    });
+    next(error);
   }
-}
+});
 
 module.exports = {
   optimizeRoutes,

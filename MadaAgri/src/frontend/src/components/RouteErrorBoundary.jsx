@@ -29,7 +29,7 @@ class RouteErrorBoundary extends Component {
             <p className={styles.errorMessage}>
               {this.state.error?.message || 'Une erreur est survenue lors du chargement de la page'}
             </p>
-            {process.env.NODE_ENV === 'development' && (
+            {import.meta.env.MODE === 'development' && (
               <details className={styles.errorDetails}>
                 <summary>Détails techniques (développement)</summary>
                 <pre>{this.state.error?.toString()}</pre>

@@ -21,7 +21,7 @@ interface ModernInputProps extends TextInputProps {
   error?: string;
   containerStyle?: ViewStyle;
   multiline?: boolean;
-  variant?: 'default' | 'outlined' | 'filled';
+  variant?: 'default' | 'outlined' | 'filled' | 'glass';
 }
 
 export const ModernInput = ({
@@ -53,6 +53,11 @@ export const ModernInput = ({
       filled: {
         backgroundColor: colors.secondaryBackground,
         borderWidth: 0,
+      },
+      glass: {
+        backgroundColor: colors.glass,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: isFocused ? colors.primary : colors.glassBorder,
       },
     };
 

@@ -33,22 +33,32 @@ const resources = {
   mg: { common: mgCommon, auth: mgAuth, navigation: mgNavigation, dashboard: mgDashboard, marketplace: mgMarketplace, settings: mgSettings, assistant: mgAssistant },
 };
 
-i18n
-  .use(initReactI18next)
-  .init({
-    resources,
-    fallbackLng: DEFAULT_LANGUAGE,
-    debug: false,
-    ns: NAMESPACES,
-    defaultNS: 'common',
-    interpolation: { escapeValue: false },
-    load: 'languageOnly',
-    returnObjects: true,
-    react: { useSuspense: false },
-  });
+let initialized = false;
+
+export const initI18n = () => {
+  if (initialized) return;
+  initialized = true;
+  i18n
+    .use(initReactI18next)
+    .init({
+      resources,
+      fallbackLng: DEFAULT_LANGUAGE,
+      debug: false,
+      ns: NAMESPACES,
+      defaultNS: 'common',
+      interpolation: { escapeValue: false },
+      load: 'languageOnly',
+      returnObjects: true,
+      react: { useSuspense: false },
+    });
+};
+
+// Eager init at module level (called by 'import './src/i18n'' side-effect)
+initI18n();
 
 export const changeLanguage = async (langCode) => {
   if (!langCode) return;
+  initI18n();
   await AsyncStorage.setItem('madaagri_language', langCode);
   await i18n.changeLanguage(langCode);
 };
@@ -57,6 +67,7 @@ export const loadSavedLanguage = async () => {
   try {
     const saved = await AsyncStorage.getItem('madaagri_language');
     if (saved) {
+      initI18n();
       await i18n.changeLanguage(saved);
       return saved;
     }

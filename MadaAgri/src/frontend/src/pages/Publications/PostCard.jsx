@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
-import { FiMoreVertical, FiCornerDownLeft, FiEdit, FiTrash2, FiXCircle, FiCheck, FiClock, FiMessageSquare } from 'react-icons/fi';
+import { FiMoreVertical, FiCornerDownLeft, FiEdit, FiTrash2, FiXCircle, FiCheck, FiClock, FiMessageSquare, FiEye } from 'react-icons/fi';
 import { useAuth } from '../../contexts/ContextAuthentification';
 import { useFadeIn, animateLikeButton, animateCounter } from '../../lib/animations';
 import { dataApi } from '../../lib/api';
+import VideoPlayer from './VideoPlayer';
 import styles from './PostCard.module.css';
 
 function getTimeAgo(date, t) {
@@ -303,9 +304,44 @@ export default function PostCard({ post, onLike, onUnlike, onRefresh, onUserProf
       </div>
 
       {/* Image */}
-      {post.image_url && (
+      {post.image_url && !post.video_url && (
         <div className={clsx(styles['instagram-image-container'])}>
           <img src={post.image_url} alt="Post" className={clsx(styles['instagram-image'])} />
+        </div>
+      )}
+
+      {/* Video */}
+      {post.video_url && (
+        <div className={clsx(styles['instagram-image-container'])}>
+          <VideoPlayer
+            src={post.video_url}
+            poster={post.video_thumbnail}
+            duration={post.video_duration}
+            onView={() => dataApi.fetchPostById(post.id).catch(() => {})}
+          />
+          {post.video_views > 0 && (
+            <div className={clsx(styles['video-views'])}>
+              <FiEye size={14} />
+              <span>{post.video_views >= 1000 ? `${(post.video_views / 1000).toFixed(1)}k` : post.video_views} vues</span>
+            </div>
+          )}
+          {/* SEO: JSON-LD structured data for video */}
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "VideoObject",
+              "name": post.content?.slice(0, 100) || 'Vidéo MadaAgri',
+              "description": post.content || 'Publication vidéo sur MadaAgri',
+              "thumbnailUrl": post.video_thumbnail || post.video_url,
+              "contentUrl": post.video_url,
+              "uploadDate": post.created_at,
+              "duration": post.video_duration ? `PT${Math.floor(post.video_duration / 60)}M${Math.floor(post.video_duration % 60)}S` : undefined,
+              "author": {
+                "@type": "Person",
+                "name": post.display_name || post.author_name
+              }
+            })}
+          </script>
         </div>
       )}
 
