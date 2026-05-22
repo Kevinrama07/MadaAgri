@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { FiArrowLeft, FiMail, FiPhone, FiMapPin, FiMessageSquare, FiUserPlus, FiUserCheck, FiUserX, FiUsers, FiAtSign, FiFileText } from 'react-icons/fi';
 import clsx from 'clsx';
 import { usePageLoading } from '../../hooks/usePageLoading';
@@ -11,6 +12,7 @@ import styles from './UserProfile.module.css';
 
 export default function UserProfile({ userId, onBack, onUserProfileClick }) {
   const { user: currentUser } = useAuth();
+  const { t } = useTranslation(['common', 'dashboard', 'auth']);
   const navigate = useNavigate();
   const { isLoading, startLoading, stopLoading, hasShownSkeletons, markSkeletonsShown } = usePageLoading();
   
@@ -39,7 +41,7 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
   const [messageLoading, setMessageLoading] = useState(false);
 
   useEffect(() => {
-    if (!userId) { setError('ID utilisateur manquant'); stopLoading(); return; }
+    if (!userId) { setError(t('common:notAvailable')); stopLoading(); return; }
     fetchUserProfile();
   }, [userId]);
 
@@ -52,25 +54,21 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
       const posts = await dataApi.fetchUserPosts(userId);
       setUserPosts(posts || []);
 
-      const [followersData, followingData] = await Promise.all([
+      const [followersData, followingData, collaboratorsData] = await Promise.all([
         dataApi.fetchFollowers(userId),
-        dataApi.fetchFollowing(userId)
+        dataApi.fetchFollowing(userId),
+        dataApi.fetchCollaborators(userId)
       ]);
       setFollowers(followersData || []);
       setFollowing(followingData || []);
-      
-      const followerIds = new Set(followersData.map(f => f.follower_id));
-      const collaboratorsList = followingData.filter(f => followerIds.has(f.followee_id));
-      setCollaborators(collaboratorsList);
+      setCollaborators(collaboratorsData?.collaborators || []);
 
       // Check follow status
       try {
         const followStatus = await dataApi.fetchFollowStatus(userId);
-        console.log('[UserProfile] Follow status for', userId, ':', followStatus);
         setIsFollowing(followStatus.isFollowing || false);
         setIsFollowedBy(followStatus.isFollowedBy || false);
         setIsCollaborator(followStatus.isCollaborator || false);
-        console.log('[UserProfile] isCollaborator set to:', followStatus.isCollaborator);
       } catch (err) {
         console.error('[UserProfile] Error fetching follow status:', err);
         setIsFollowing(false);
@@ -81,7 +79,6 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
       // Check invitation status
       try {
         const invitationStatus = await dataApi.fetchInvitationStatus(userId);
-        console.log('[UserProfile] Invitation status:', invitationStatus);
         if (invitationStatus?.status === 'accepted') {
           // Déjà collaborateurs
           setIsCollaborator(true);
@@ -103,7 +100,7 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
         setReceivedInvitation(null);
       }
     } catch (err) {
-      setError(err.message || 'Erreur lors du chargement du profil');
+      setError(err.message || t('common:error'));
     } finally {
       stopLoading();
     }
@@ -157,7 +154,6 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
   const handleRemoveCollaborator = async () => {
     setFollowLoading(true);
     try {
-      console.log('[UserProfile] Removing collaborator:', userId);
       await dataApi.removeCollaboration(userId);
       setIsCollaborator(false);
       await fetchUserProfile();
@@ -214,14 +210,14 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
     } catch (err) { console.error('Erreur unlike:', err); }
   };
 
-  const roleDisplay = { farmer: 'Agriculteur', client: 'Client', trader: 'Commercant' };
+  const roleDisplay = { farmer: t('auth:farmer'), client: t('auth:client'), trader: 'Commercant' };
 
   if (isLoading && !hasShownSkeletons) {
     return (
       <div className={styles.container}>
         <div className={styles.header}>
           <button className={styles.backBtn} onClick={onBack}><FiArrowLeft /></button>
-          <h2>Chargement...</h2>
+          <h2>{t('common:loading')}</h2>
         </div>
         <div className={styles.skeletonContent}>
           <SkeletonAvatar width="120px" height="120px" />
@@ -238,9 +234,9 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
       <div className={styles.container}>
         <div className={styles.header}>
           <button className={styles.backBtn} onClick={onBack}><FiArrowLeft /></button>
-          <h2>Profil utilisateur</h2>
+          <h2>{t('dashboard:myProfile')}</h2>
         </div>
-        <div className={styles.errorState}>{error || 'Utilisateur non trouv\u00e9'}</div>
+        <div className={styles.errorState}>{error || t('common:notFound')}</div>
       </div>
     );
   }
@@ -277,22 +273,22 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
             <div className={styles.statsRow}>
               <button className={styles.statBtn} onClick={() => setShowFollowersModal(true)}>
                 <span className={styles.statNumber}>{followersCount}</span>
-                <span className={styles.statLabel}>abonn{followersCount > 1 ? '\u00e9s' : '\u00e9'}</span>
+                <span className={styles.statLabel}>{t('dashboard:followers')}</span>
               </button>
               <div className={styles.statDivider} />
               <button className={styles.statBtn} onClick={() => setShowFollowingModal(true)}>
                 <span className={styles.statNumber}>{followingCount}</span>
-                <span className={styles.statLabel}>abonnement{followingCount > 1 ? 's' : ''}</span>
+                <span className={styles.statLabel}>{t('dashboard:following')}</span>
               </button>
               <div className={styles.statDivider} />
               <button className={styles.statBtn} onClick={() => setShowCollaboratorsModal(true)}>
                 <span className={styles.statNumber}>{collaboratorsCount}</span>
-                <span className={styles.statLabel}>collaborateur{collaboratorsCount > 1 ? 's' : ''}</span>
+                <span className={styles.statLabel}>{t('dashboard:collaborators')}</span>
               </button>
               <div className={styles.statDivider} />
               <div className={styles.statItem}>
                 <span className={styles.statNumber}>{publicationsCount}</span>
-                <span className={styles.statLabel}>publication{publicationsCount > 1 ? 's' : ''}</span>
+                <span className={styles.statLabel}>{t('dashboard:publications')}</span>
               </div>
             </div>
 
@@ -314,7 +310,7 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
               )}
               <div className={styles.infoItem}>
                 <FiMail className={styles.infoIcon} />
-                <span>{userProfile.email || 'Non disponible'}</span>
+                <span>{userProfile.email || t('common:notAvailable')}</span>
               </div>
               {userProfile.phone && (
                 <div className={styles.infoItem}>
@@ -327,50 +323,52 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
             {/* Action Buttons */}
             <div className={styles.actionButtons}>
               <button className={clsx(styles.actionBtn, styles.messageBtn)} onClick={handleMessage} disabled={messageLoading}>
-                <FiMessageSquare /> Message
+                <FiMessageSquare /> {t('common:sendMessage')}
               </button>
 
               {isCollaborator ? (
                 <button className={clsx(styles.actionBtn, styles.removeCollabBtn)} onClick={handleRemoveCollaborator} disabled={followLoading}>
-                  <FiUserX /> Retirer des collaborateurs
+                  <FiUserX /> {t('common:removeCollaborator')}
                 </button>
               ) : receivedInvitation ? (
                 <div className={styles.invitationGroup}>
                   <button className={clsx(styles.actionBtn, styles.acceptBtn)} onClick={handleAcceptInvitation} disabled={invitationLoading}>
-                    <FiUserCheck /> Accepter
+                    <FiUserCheck /> {t('common:accept')}
                   </button>
                   <button className={clsx(styles.actionBtn, styles.declineBtn)} onClick={handleDeclineInvitation} disabled={invitationLoading}>
-                    <FiUserX /> Refuser
+                    <FiUserX /> {t('common:decline')}
                   </button>
                 </div>
               ) : invitationSent ? (
                 <button className={clsx(styles.actionBtn, styles.pendingBtn)} onClick={handleCancelInvitation} disabled={invitationLoading}>
-                  <FiUserX /> Annuler la demande
+                  <FiUserX /> {t('common:cancelRequest')}
                 </button>
               ) : (
                 <button className={clsx(styles.actionBtn, styles.addBtn)} onClick={handleSendInvitation} disabled={invitationLoading}>
-                  <FiUserPlus /> Ajouter
+                  <FiUserPlus /> {t('common:add')}
                 </button>
               )}
 
-              {isFollowing ? (
-                isFollowedBy ? (
+              {!isCollaborator && (
+                isFollowing ? (
+                  isFollowedBy ? (
+                    <button className={clsx(styles.actionBtn, styles.followBackBtn)} onClick={handleFollow} disabled={followLoading}>
+                      <FiUserCheck /> {t('common:followingBack')}
+                    </button>
+                  ) : (
+                    <button className={clsx(styles.actionBtn, styles.unfollowBtn)} onClick={handleFollow} disabled={followLoading}>
+                      <FiUserX /> {t('common:unfollow')}
+                    </button>
+                  )
+                ) : isFollowedBy ? (
                   <button className={clsx(styles.actionBtn, styles.followBackBtn)} onClick={handleFollow} disabled={followLoading}>
-                    <FiUserCheck /> Suivi en retour
+                    <FiAtSign /> {t('common:followBack')}
                   </button>
                 ) : (
-                  <button className={clsx(styles.actionBtn, styles.unfollowBtn)} onClick={handleFollow} disabled={followLoading}>
-                    <FiUserX /> Ne plus suivre
+                  <button className={clsx(styles.actionBtn, styles.followBtn)} onClick={handleFollow} disabled={followLoading}>
+                    <FiUserPlus /> {t('common:follow')}
                   </button>
                 )
-              ) : isFollowedBy ? (
-                <button className={clsx(styles.actionBtn, styles.followBackBtn)} onClick={handleFollow} disabled={followLoading}>
-                  <FiAtSign /> Suivre en retour
-                </button>
-              ) : (
-                <button className={clsx(styles.actionBtn, styles.followBtn)} onClick={handleFollow} disabled={followLoading}>
-                  <FiUserPlus /> Suivre
-                </button>
               )}
             </div>
           </div>
@@ -379,11 +377,11 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
 
       {/* Publications */}
       <div className={styles.postsSection}>
-        <h3 className={styles.sectionTitle}>Publications ({publicationsCount})</h3>
+        <h3 className={styles.sectionTitle}>{t('dashboard:publications')} ({publicationsCount})</h3>
         {userPosts.length === 0 ? (
           <div className={styles.emptyPosts}>
             <FiFileText className={styles.emptyIcon} />
-            <p>Aucune publication pour le moment</p>
+            <p>{t('dashboard:noPosts')}</p>
           </div>
         ) : (
           <div className={styles.postsList}>
@@ -396,13 +394,13 @@ export default function UserProfile({ userId, onBack, onUserProfileClick }) {
 
       {/* Modals */}
       {showFollowersModal && (
-        <UserListModal title={`Abonn\u00e9s (${followersCount})`} users={followers} idKey="follower_id" onClose={() => setShowFollowersModal(false)} onUserClick={onUserProfileClick} />
+        <UserListModal title={`${t('dashboard:followers')} (${followersCount})`} users={followers} idKey="follower_id" onClose={() => setShowFollowersModal(false)} onUserClick={onUserProfileClick} />
       )}
       {showFollowingModal && (
-        <UserListModal title={`Abonnements (${followingCount})`} users={following} idKey="followee_id" onClose={() => setShowFollowingModal(false)} onUserClick={onUserProfileClick} />
+        <UserListModal title={`${t('dashboard:following')} (${followingCount})`} users={following} idKey="followee_id" onClose={() => setShowFollowingModal(false)} onUserClick={onUserProfileClick} />
       )}
       {showCollaboratorsModal && (
-        <UserListModal title={`Collaborateurs (${collaboratorsCount})`} users={collaborators} idKey="followee_id" onClose={() => setShowCollaboratorsModal(false)} onUserClick={onUserProfileClick} />
+        <UserListModal title={`${t('dashboard:collaborators')} (${collaboratorsCount})`} users={collaborators} idKey="id" onClose={() => setShowCollaboratorsModal(false)} onUserClick={onUserProfileClick} />
       )}
     </div>
   );
@@ -418,7 +416,7 @@ function UserListModal({ title, users, idKey, onClose, onUserClick }) {
         </div>
         <div className={styles.modalBody}>
           {users.length === 0 ? (
-            <p className={styles.emptyMessage}>Aucun r\u00e9sultat</p>
+            <p className={styles.emptyMessage}>{t('common:noResults')}</p>
           ) : (
             <ul className={styles.userList}>
               {users.map((u) => (

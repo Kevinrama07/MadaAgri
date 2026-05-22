@@ -57,7 +57,7 @@ exports.getFollowers = async (req, res) => {
   const userId = req.params.userId;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
-  const offset = (page - 1) * limit;
+  const offset = req.query.offset !== undefined ? parseInt(req.query.offset) : (page - 1) * limit;
 
   try {
     const [followers] = await db.query(`
@@ -109,7 +109,7 @@ exports.getFollowing = async (req, res) => {
   const userId = req.params.userId;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
-  const offset = (page - 1) * limit;
+  const offset = req.query.offset !== undefined ? parseInt(req.query.offset) : (page - 1) * limit;
 
   try {
     const [following] = await db.query(`
@@ -159,7 +159,7 @@ exports.getFollowing = async (req, res) => {
 // Statut de relation avec un utilisateur
 exports.getRelationshipStatus = async (req, res) => {
   const currentUserId = req.user.id;
-  const targetUserId = parseInt(req.params.userId);
+  const targetUserId = req.params.userId;
 
   try {
     const status = await FollowAlgorithm.getRelationshipStatus(currentUserId, targetUserId);

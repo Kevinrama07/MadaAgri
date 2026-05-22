@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/ui/Card/Card';
 import { Badge } from '../../components/ui/Badge/Badge';
 import PostCard from '../Publications/PostCard';
@@ -9,6 +10,7 @@ import styles from './ProfilePage.module.css';
 
 export default function ProfilePage() {
   const { user: currentUser } = useAuth();
+  const { t } = useTranslation(['common', 'dashboard', 'auth']);
   const { id } = useParams();
   const navigate = useNavigate();
   const isOwnProfile = !id || id === currentUser?.id;
@@ -131,7 +133,7 @@ export default function ProfilePage() {
         <main className={styles.main}>
           <div className={styles.container}>
             <Card className={styles.loadingCard}>
-              <p className={styles.loadingText}>Chargement...</p>
+              <p className={styles.loadingText}>{t('common:loading')}</p>
             </Card>
           </div>
         </main>
@@ -152,7 +154,7 @@ export default function ProfilePage() {
               </svg>
               <p className={styles.errorText}>{error}</p>
               <button className={styles.retryBtn} onClick={() => window.location.reload()}>
-                Réessayer
+                {t('common:retry')}
               </button>
             </Card>
           </div>
@@ -169,7 +171,7 @@ export default function ProfilePage() {
     .slice(0, 2);
 
   const memberSince = profileUser.created_at
-    ? new Date(profileUser.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+    ? new Date(profileUser.created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
     : '';
 
   const userStats = {
@@ -195,11 +197,11 @@ export default function ProfilePage() {
               <div className={styles.profileInfo}>
                 <div className={styles.nameRow}>
                   <h1 className={styles.name}>{profileUser.display_name || profileUser.email}</h1>
-                  {profileUser.role === 'farmer' && <Badge variant="success" size="md" dot>Agriculteur</Badge>}
-                  {profileUser.role === 'client' && <Badge variant="info" size="md" dot>Client</Badge>}
+                  {profileUser.role === 'farmer' && <Badge variant="success" size="md" dot>{t('auth:farmer')}</Badge>}
+                  {profileUser.role === 'client' && <Badge variant="info" size="md" dot>{t('auth:client')}</Badge>}
                 </div>
                 <p className={styles.location}>{profileUser.location || 'Madagascar'}</p>
-                {memberSince && <p className={styles.member}>Membre depuis {memberSince}</p>}
+                {memberSince && <p className={styles.member}>{t('dashboard:memberSince')} {memberSince}</p>}
               </div>
               {isOwnProfile ? (
                 <Link to="/settings" className={styles.editBtn}>
@@ -207,12 +209,12 @@ export default function ProfilePage() {
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                   </svg>
-                  Modifier
+                  {t('common:edit')}
                 </Link>
               ) : (
                 <div className={styles.followContainer}>
                   <button className={styles.followBtn} onClick={handleFollow}>
-                    {followStatus?.is_following ? 'Suivi' : 'Suivre'}
+                    {followStatus?.is_following ? t('common:following') : t('common:follow')}
                   </button>
                   {followError && <span className={styles.followError}>{followError}</span>}
                 </div>
@@ -223,10 +225,10 @@ export default function ProfilePage() {
 
           <div className={styles.statsGrid}>
             {[
-              { label: 'Produits', value: userStats.products },
-              { label: 'Publications', value: userStats.posts },
-              { label: 'Abonnés', value: userStats.followers },
-              { label: 'Abonnements', value: userStats.following },
+              { label: t('dashboard:products'), value: userStats.products },
+              { label: t('dashboard:publications'), value: userStats.posts },
+              { label: t('dashboard:followers'), value: userStats.followers },
+              { label: t('dashboard:following'), value: userStats.following },
             ].map((stat, i) => (
               <Card key={i} className={styles.statCard}>
                 <span className={styles.statValue}>{stat.value}</span>
@@ -238,7 +240,7 @@ export default function ProfilePage() {
           {posts.length > 0 && (
             <Card className={styles.listingsCard}>
               <div className={styles.cardHeader}>
-                <h2 className={styles.cardTitle}>Publications</h2>
+                <h2 className={styles.cardTitle}>{t('dashboard:publications')}</h2>
               </div>
               <div className={styles.postsList}>
                 {posts.map((post) => (
@@ -257,8 +259,8 @@ export default function ProfilePage() {
           {products.length > 0 && (
             <Card className={styles.listingsCard}>
               <div className={styles.cardHeader}>
-                <h2 className={styles.cardTitle}>Produits</h2>
-                {isOwnProfile && <Link to="/marketplace" className={styles.cardLink}>Voir le marketplace</Link>}
+                <h2 className={styles.cardTitle}>{t('dashboard:products')}</h2>
+                {isOwnProfile && <Link to="/marketplace" className={styles.cardLink}>{t('dashboard:viewMarketplace')}</Link>}
               </div>
               <div className={styles.listingsGrid}>
                 {products.map((product) => (
@@ -282,7 +284,7 @@ export default function ProfilePage() {
                             {product.price} {product.unit}
                           </span>
                           <Badge variant={product.status === 'active' ? 'success' : 'default'} size="sm">
-                            {product.status === 'active' ? 'Actif' : 'Brouillon'}
+                            {product.status === 'active' ? t('dashboard:active') : t('dashboard:draft')}
                           </Badge>
                         </div>
                       </div>
@@ -301,7 +303,7 @@ export default function ProfilePage() {
                   <circle cx="12" cy="7" r="4" />
                 </svg>
                 <p className={styles.emptyText}>
-                  {isOwnProfile ? 'Aucune publication ou produit pour le moment' : 'Cet utilisateur n\'a pas encore de contenu'}
+                  {isOwnProfile ? t('dashboard:noPosts') : t('dashboard:noUserContent')}
                 </p>
               </div>
             </Card>

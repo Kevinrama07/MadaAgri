@@ -26,7 +26,11 @@ interface SecondaryMenuItem {
 
 const SECONDARY_ITEMS: SecondaryMenuItem[] = [
   // Commun
-  { id: 'weather',    label: 'Météo',           icon: 'weather-partly-cloudy', screen: 'Weather',          color: '#4A90E2', roles: ['all'] },
+  { id: 'dashboard',    label: 'Dashboard',     icon: 'view-dashboard',      screen: 'DashboardAnalytics', color: '#10B981', roles: ['all'] },
+  { id: 'ai-assistant', label: 'Assistant IA', icon: 'robot',              screen: 'AIChat',              color: '#8B5CF6', roles: ['all'] },
+  { id: 'parcels',      label: 'Parcelles',    icon: 'terrain',            screen: 'Parcels',             color: '#22C55E', roles: ['farmer', 'client'] },
+  { id: 'analyze-img',  label: 'Analyse Photo', icon: 'image-auto',       screen: 'AnalyzeImage',        color: '#F59E0B', roles: ['all'] },
+  { id: 'weather',      label: 'Météo',         icon: 'weather-partly-cloudy',  screen: 'Weather',          color: '#4A90E2', roles: ['all'] },
 
   // Client uniquement
   { id: 'market',     label: 'Marketplace',     icon: 'shopping',              screen: 'Marketplace',      color: '#E67E22', roles: ['client'] },

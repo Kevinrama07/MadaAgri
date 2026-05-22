@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FiMenu, FiX, FiShoppingCart, FiUser, FiBell } from 'react-icons/fi';
 import { ThemeSelector } from '../ThemeSelector/ThemeSelector';
+import LanguageSwitcher from '../../i18n/components/LanguageSwitcher';
 import styles from './Navbar.module.css';
 
 const navLinks = [
@@ -41,6 +42,7 @@ export function Navbar() {
         </nav>
 
         <div className={styles.actions}>
+          <LanguageSwitcher />
           <ThemeSelector />
           <button className={styles.iconBtn} aria-label="Notifications">
             <FiBell size={18} />

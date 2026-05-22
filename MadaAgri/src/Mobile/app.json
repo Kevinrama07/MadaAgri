@@ -42,8 +42,8 @@
       "favicon": "./src/assets/logo.png"
     },
     "extra": {
-      "API_URL": "http://10.56.104.116:4000",
-      "SOCKET_URL": "http://10.56.104.116:4000",
+      "API_URL": "http://192.168.10.169:4000",
+      "SOCKET_URL": "http://192.168.10.169:4000",
       "DEBUG_NETWORK": true,
       "ENABLE_DARK_MODE": true,
       "_comment": "Mise à jour via .env - ne pas modifier directement"

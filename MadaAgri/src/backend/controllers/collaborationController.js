@@ -14,7 +14,7 @@ exports.sendCollaborationInvitation = async (req, res) => {
     // Vérifier si déjà collaborateurs
     const [existing] = await db.query(
       `SELECT id, status FROM collaboration_invitations 
-       WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))`,
+       WHERE ((sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?))`,
       [senderId, recipientId, recipientId, senderId]
     );
 
@@ -55,7 +55,7 @@ exports.sendCollaborationInvitation = async (req, res) => {
 // Accepter une invitation
 exports.acceptInvitation = async (req, res) => {
   const userId = req.user.id;
-  const invitationId = parseInt(req.params.invitationId);
+  const invitationId = req.params.invitationId;
 
   try {
     const result = await CollaborationAlgorithm.processInvitationAcceptance(invitationId, userId);
@@ -76,7 +76,7 @@ exports.acceptInvitation = async (req, res) => {
 // Refuser une invitation
 exports.rejectInvitation = async (req, res) => {
   const userId = req.user.id;
-  const invitationId = parseInt(req.params.invitationId);
+  const invitationId = req.params.invitationId;
 
   try {
     await CollaborationAlgorithm.processInvitationRejection(invitationId, userId);
@@ -96,7 +96,7 @@ exports.rejectInvitation = async (req, res) => {
 // Annuler une invitation envoyée
 exports.cancelInvitation = async (req, res) => {
   const userId = req.user.id;
-  const invitationId = parseInt(req.params.invitationId);
+  const invitationId = req.params.invitationId;
 
   try {
     // Vérifier que c'est bien l'envoyeur
@@ -267,15 +267,13 @@ exports.getCollaborators = async (req, res) => {
         c.created_at as collaboration_since
       FROM collaboration_invitations c
       JOIN users u ON (
-        CASE 
-          WHEN c.sender_id = ? THEN u.id = c.recipient_id
-          ELSE u.id = c.sender_id
-        END
+        (c.sender_id = ? AND c.recipient_id = u.id) OR
+        (c.recipient_id = ? AND c.sender_id = u.id)
       )
-      WHERE (c.sender_id = ? OR c.recipient_id = ?) AND c.status = 'accepted'
+      WHERE c.status = 'accepted'
       ORDER BY c.created_at DESC
       LIMIT ? OFFSET ?
-    `, [userId, userId, userId, limit, offset]);
+    `, [userId, userId, limit, offset]);
 
     const [total] = await db.query(
       'SELECT COUNT(*) as count FROM collaboration_invitations WHERE (sender_id = ? OR recipient_id = ?) AND status = \'accepted\'',

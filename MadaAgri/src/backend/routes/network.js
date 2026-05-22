@@ -2,6 +2,7 @@ const express = require('express');
 const pool = require('../db');
 const { randomUUID } = require('crypto');
 const { authMiddleware, asyncHandler } = require('../middlewares/authMiddleware');
+const FollowAlgorithm = require('../algos/followAlgo');
 const router = express.Router();
 
 // Rate limiting simple en mémoire
@@ -263,7 +264,7 @@ router.get('/invitations/status/:targetUserId', authMiddleware, asyncHandler(asy
 // POST /api/network/follows/:userId - Suivre un utilisateur
 router.post('/follows/:userId', authMiddleware, rateLimit, asyncHandler(async (req, res) => {
   const followerId = req.user.id;
-  const followeeId = req.params.userId; // Accepter string ou int
+  const followeeId = req.params.userId;
   
   if (!followeeId) {
     return res.status(400).json({ error: 'Invalid user ID' });
@@ -289,40 +290,32 @@ router.post('/follows/:userId', authMiddleware, rateLimit, asyncHandler(async (r
     return res.status(400).json({ error: 'Already following' });
   }
 
-  // Créer le suivi
-  await pool.query(
-    'INSERT INTO follows (follower_id, followee_id, status, created_at) VALUES (?, ?, "following", NOW())',
-    [followerId, followeeId]
-  );
+  // Utiliser l'algorithme de suivi (gère la collaboration automatique)
+  const result = await FollowAlgorithm.processFollow(followerId, followeeId);
 
-  // Créer une notification pour l'utilisateur suivi
-  const [followerRows] = await pool.query('SELECT display_name, profile_image_url FROM users WHERE id = ?', [followerId]);
-  const follower = followerRows[0];
-  const notifId = randomUUID();
-  await pool.query(
-    `INSERT INTO notifications (id, user_id, type, actor_id, actor_name, actor_image, content, related_type, related_id, priority, created_at)
-     VALUES (?, ?, 'follow', ?, ?, ?, ?, 'user', ?, 'normal', NOW())`,
-    [notifId, followeeId, followerId, follower?.display_name || 'Utilisateur', follower?.profile_image_url || null, 'a commencé à vous suivre', followeeId]
-  );
-
-  res.json({ ok: true });
+  res.json({ 
+    ok: true,
+    isNowCollaborator: result.isNowCollaborator,
+    collaborationId: result.collaborationId
+  });
 }));
 
 // DELETE /api/network/follows/:userId - Arrêter de suivre
 router.delete('/follows/:userId', authMiddleware, asyncHandler(async (req, res) => {
   const followerId = req.user.id;
-  const followeeId = req.params.userId; // Accepter string ou int
+  const followeeId = req.params.userId;
   
   if (!followeeId) {
     return res.status(400).json({ error: 'Invalid user ID' });
   }
-  
-  await pool.query(
-    'DELETE FROM follows WHERE follower_id = ? AND followee_id = ?',
-    [followerId, followeeId]
-  );
 
-  res.json({ ok: true });
+  // Utiliser l'algorithme de désabonnement (gère la suppression de collaboration automatique)
+  const result = await FollowAlgorithm.processUnfollow(followerId, followeeId);
+
+  res.json({ 
+    ok: true,
+    collaborationRemoved: result.collaborationRemoved
+  });
 }));
 
 // GET /api/network/follows/status/:userId - Vérifier si on suit un utilisateur

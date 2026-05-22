@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/ui/Card/Card';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/ContextAuthentification';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { dataApi, authApi } from '../../lib/api';
 import styles from './SettingsPage.module.css';
 
 export default function SettingsPage() {
+  const { t } = useTranslation('settings');
   const { theme, preset, themes, selectTheme, mode, setMode, customPrimary, setPrimaryColor } = useTheme();
   const { user, signOut } = useAuth();
+  const { changeLanguage } = useLanguage();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
   const [colorMode, setColorMode] = useState(customPrimary ? 'custom' : 'preset');
@@ -54,12 +58,12 @@ export default function SettingsPage() {
   const [saveError, setSaveError] = useState(null);
 
   const tabs = [
-    { id: 'profile', label: 'Profil', icon: 'user' },
-    { id: 'security', label: 'Sécurité', icon: 'lock' },
-    { id: 'privacy', label: 'Confidentialité', icon: 'eye' },
-    { id: 'appearance', label: 'Apparence', icon: 'palette' },
-    { id: 'notifications', label: 'Notifications', icon: 'bell' },
-    { id: 'about', label: 'À propos', icon: 'info' },
+    { id: 'profile', label: t('profile'), icon: 'user' },
+    { id: 'security', label: t('security'), icon: 'lock' },
+    { id: 'privacy', label: t('privacy'), icon: 'eye' },
+    { id: 'appearance', label: t('appearance'), icon: 'palette' },
+    { id: 'notifications', label: t('notifications'), icon: 'bell' },
+    { id: 'about', label: t('about'), icon: 'info' },
   ];
 
   const handlePasswordChange = async (e) => {
@@ -67,16 +71,16 @@ export default function SettingsPage() {
     setSaveError(null);
     setSaveMessage(null);
     if (passwordForm.new !== passwordForm.confirm) {
-      setSaveError('Les mots de passe ne correspondent pas');
+      setSaveError(t('passwordMismatch'));
       return;
     }
     setSaving(true);
     try {
       await dataApi.changePassword(passwordForm.current, passwordForm.new);
-      setSaveMessage('Mot de passe mis à jour avec succès');
+      setSaveMessage(t('passwordUpdated'));
       setPasswordForm({ current: '', new: '', confirm: '' });
     } catch (err) {
-      setSaveError(err.message || 'Erreur lors de la mise à jour du mot de passe');
+      setSaveError(err.message || t('passwordUpdateError'));
     } finally {
       setSaving(false);
     }
@@ -96,10 +100,13 @@ export default function SettingsPage() {
         timezone: preferences.timezone,
         date_format: preferences.dateFormat,
       });
-      setSaveMessage('Profil mis à jour avec succès');
+      if (preferences.language) {
+        changeLanguage(preferences.language);
+      }
+      setSaveMessage(t('saveSuccess'));
       authApi.me();
     } catch (err) {
-      setSaveError(err.message || 'Erreur lors de la sauvegarde du profil');
+      setSaveError(err.message || t('saveError'));
     } finally {
       setSaving(false);
     }
@@ -120,7 +127,7 @@ export default function SettingsPage() {
       setTwoFactorSecret(data.qrCodeUrl);
       setShowTwoFactorSetup(true);
     } catch (err) {
-      setSaveError(err.message || 'Erreur lors de l\'activation de la 2FA');
+      setSaveError(err.message || t('saveError'));
     } finally {
       setSaving(false);
     }
@@ -136,7 +143,7 @@ export default function SettingsPage() {
       setShowTwoFactorSetup(false);
       setTwoFactorSecret(null);
       setTwoFactorCode('');
-      setSaveMessage('Authentification à deux facteurs activée');
+      setSaveMessage(t('twoFactor') + ' activée');
     } catch (err) {
       setSaveError(err.message || 'Code de vérification invalide');
     } finally {
@@ -151,9 +158,9 @@ export default function SettingsPage() {
     try {
       await dataApi.disable2FA();
       setTwoFactorEnabled(false);
-      setSaveMessage('Authentification à deux facteurs désactivée');
+      setSaveMessage(t('twoFactor') + ' désactivée');
     } catch (err) {
-      setSaveError(err.message || 'Erreur lors de la désactivation de la 2FA');
+      setSaveError(err.message || t('saveError'));
     } finally {
       setSaving(false);
     }
@@ -173,9 +180,9 @@ export default function SettingsPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      setSaveMessage('Export de données en cours de téléchargement');
+      setSaveMessage(t('exportSuccess'));
     } catch (err) {
-      setSaveError(err.message || 'Erreur lors de l\'export de vos données');
+      setSaveError(err.message || t('exportError'));
     } finally {
       setSaving(false);
     }
@@ -183,7 +190,7 @@ export default function SettingsPage() {
 
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== 'SUPPRIMER MON COMPTE') {
-      setSaveError('Veuillez taper "SUPPRIMER MON COMPTE" pour confirmer');
+      setSaveError(t('deleteConfirm'));
       return;
     }
     setSaveError(null);
@@ -194,7 +201,7 @@ export default function SettingsPage() {
       signOut();
       navigate('/login');
     } catch (err) {
-      setSaveError(err.message || 'Erreur lors de la suppression du compte');
+      setSaveError(err.message || t('saveError'));
       setSaving(false);
     }
   };
@@ -205,9 +212,9 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       await dataApi.updateNotificationPreferences(notificationSettings);
-      setSaveMessage('Préférences de notification sauvegardées');
+      setSaveMessage(t('settingsSaved'));
     } catch (err) {
-      setSaveError(err.message || 'Erreur lors de la sauvegarde des notifications');
+      setSaveError(err.message || t('saveError'));
     } finally {
       setSaving(false);
     }
@@ -229,7 +236,7 @@ export default function SettingsPage() {
     <div className={styles.page}>
       <main className={styles.main}>
         <div className={styles.container}>
-          <h1 className={styles.title}>Paramètres</h1>
+          <h1 className={styles.title}>{t('title')}</h1>
 
           {(saveMessage || saveError) && (
             <div className={`${styles.notification} ${saveError ? styles.notificationError : styles.notificationSuccess}`}>
@@ -268,11 +275,11 @@ export default function SettingsPage() {
           {activeTab === 'profile' && (
             <>
               <Card className={styles.settingsCard}>
-                <h2 className={styles.sectionTitle}>Informations du profil</h2>
+                <h2 className={styles.sectionTitle}>{t('profile')}</h2>
                 <form onSubmit={handleProfileSave}>
                   <div className={styles.formGrid}>
                     <div className={styles.formGroup}>
-                      <label className={styles.label}>Nom complet</label>
+                      <label className={styles.label}>{t('bio')}</label>
                       <input
                         className={styles.input}
                         value={profileForm.name}
@@ -289,7 +296,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className={styles.formGroup}>
-                      <label className={styles.label}>Localisation</label>
+                      <label className={styles.label}>{t('location')}</label>
                       <input
                         className={styles.input}
                         value={profileForm.location}
@@ -297,11 +304,11 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className={styles.formGroup}>
-                      <label className={styles.label}>Rôle</label>
-                      <input className={styles.input} value={user?.role === 'farmer' ? 'Agriculteur' : 'Client'} disabled />
+                      <label className={styles.label}>{t('role')}</label>
+                      <input className={styles.input} value={user?.role === 'farmer' ? t('farmer') : t('client')} disabled />
                     </div>
                     <div className={styles.formGroup}>
-                      <label className={styles.label}>Bio</label>
+                      <label className={styles.label}>{t('bio')}</label>
                       <textarea
                         className={styles.textarea}
                         value={profileForm.bio}
@@ -310,19 +317,23 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className={styles.formGroup}>
-                      <label className={styles.label}>Langue</label>
+                      <label className={styles.label}>{t('language')}</label>
                       <select
                         className={styles.input}
                         value={preferences.language}
-                        onChange={(e) => setPreferences({ ...preferences, language: e.target.value })}
+                        onChange={(e) => {
+                          const newLang = e.target.value;
+                          setPreferences({ ...preferences, language: newLang });
+                          changeLanguage(newLang);
+                        }}
                       >
-                        <option value="fr">Français</option>
-                        <option value="en">English</option>
-                        <option value="mg">Malagasy</option>
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="en">🇬🇧 English</option>
+                        <option value="mg">🇲🇬 Malagasy</option>
                       </select>
                     </div>
                     <div className={styles.formGroup}>
-                      <label className={styles.label}>Fuseau horaire</label>
+                      <label className={styles.label}>{t('timezone')}</label>
                       <select
                         className={styles.input}
                         value={preferences.timezone}
@@ -334,7 +345,7 @@ export default function SettingsPage() {
                       </select>
                     </div>
                     <div className={styles.formGroup}>
-                      <label className={styles.label}>Format de date</label>
+                      <label className={styles.label}>{t('dateFormat')}</label>
                       <select
                         className={styles.input}
                         value={preferences.dateFormat}
@@ -348,21 +359,21 @@ export default function SettingsPage() {
                   </div>
                   <div className={styles.formActions}>
                     <button type="submit" className={styles.saveBtn} disabled={saving}>
-                      {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                      {saving ? t('saving') : t('saveSettings')}
                     </button>
                   </div>
                 </form>
               </Card>
 
               <Card className={styles.settingsCard}>
-                <h2 className={styles.sectionTitle}>Compte</h2>
+                <h2 className={styles.sectionTitle}>{t('account')}</h2>
                 <button className={styles.dangerBtn} onClick={handleLogout}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                     <polyline points="16 17 21 12 16 7" />
                     <line x1="21" y1="12" x2="9" y2="12" />
                   </svg>
-                  Se déconnecter
+                  {t('logout')}
                 </button>
               </Card>
             </>
@@ -371,11 +382,11 @@ export default function SettingsPage() {
           {activeTab === 'security' && (
             <>
               <Card className={styles.settingsCard}>
-                <h2 className={styles.sectionTitle}>Modifier le mot de passe</h2>
+                <h2 className={styles.sectionTitle}>{t('changePassword')}</h2>
                 <form onSubmit={handlePasswordChange}>
                   <div className={styles.formGrid}>
                     <div className={styles.formGroup}>
-                      <label className={styles.label}>Mot de passe actuel</label>
+                      <label className={styles.label}>{t('currentPassword')}</label>
                       <input
                         className={styles.input}
                         type={showPassword ? 'text' : 'password'}
@@ -385,7 +396,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className={styles.formGroup}>
-                      <label className={styles.label}>Nouveau mot de passe</label>
+                      <label className={styles.label}>{t('newPassword')}</label>
                       <input
                         className={styles.input}
                         type={showPassword ? 'text' : 'password'}
@@ -396,7 +407,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className={styles.formGroup}>
-                      <label className={styles.label}>Confirmer le nouveau mot de passe</label>
+                      <label className={styles.label}>{t('confirmNewPassword')}</label>
                       <input
                         className={styles.input}
                         type={showPassword ? 'text' : 'password'}
@@ -411,24 +422,24 @@ export default function SettingsPage() {
                         <input type="checkbox" checked={showPassword} onChange={() => setShowPassword(!showPassword)} />
                         <span className={styles.toggleSlider} />
                       </label>
-                      Afficher les mots de passe
+                      {t('showPasswords')}
                     </div>
                   </div>
                   {passwordForm.new && passwordForm.confirm && passwordForm.new !== passwordForm.confirm && (
-                    <p className={styles.errorText}>Les mots de passe ne correspondent pas</p>
+                    <p className={styles.errorText}>{t('passwordMismatch')}</p>
                   )}
                   <div className={styles.formActions}>
                     <button type="submit" className={styles.saveBtn} disabled={saving || passwordForm.new !== passwordForm.confirm || !passwordForm.new}>
-                      {saving ? 'Mise à jour...' : 'Mettre à jour'}
+                      {saving ? t('updating') : t('update')}
                     </button>
                   </div>
                 </form>
               </Card>
 
               <Card className={styles.settingsCard}>
-                <h2 className={styles.sectionTitle}>Authentification à deux facteurs (2FA)</h2>
+                <h2 className={styles.sectionTitle}>{t('twoFactor')}</h2>
                 <p className={styles.aboutText} style={{ marginBottom: 16 }}>
-                  Ajoutez une couche de sécurité supplémentaire en要求 un code de vérification lors de la connexion.
+                  {t('twoFactorDesc')}
                 </p>
 
                 {!showTwoFactorSetup && !twoFactorEnabled && (
@@ -437,7 +448,7 @@ export default function SettingsPage() {
                     onClick={handleEnable2FA}
                     disabled={saving}
                   >
-                    {saving ? 'Activation...' : 'Activer la 2FA'}
+                    {saving ? t('updating') : t('enable2FA')}
                   </button>
                 )}
 
@@ -445,21 +456,21 @@ export default function SettingsPage() {
                   <div>
                     <div style={{ marginBottom: 16 }}>
                       <p className={styles.aboutText}>
-                        1. Scannez ce QR code avec votre application d'authentification (Google Authenticator, Authy, etc.)
+                        {t('scanQR')}
                       </p>
                       <img src={twoFactorSecret.qrCodeUrl} alt="QR Code 2FA" style={{ maxWidth: 200, margin: '12px 0' }} />
                       <p className={styles.aboutText}>
-                        2. Ou entrez manuellement cette clé : <code style={{ background: 'var(--background-secondary)', padding: '2px 6px', borderRadius: 4 }}>{twoFactorSecret.secret}</code>
+                        {t('enterKey')} : <code style={{ background: 'var(--background-secondary)', padding: '2px 6px', borderRadius: 4 }}>{twoFactorSecret.secret}</code>
                       </p>
                     </div>
                     <div className={styles.formGroup}>
-                      <label className={styles.label}>Code de vérification</label>
+                      <label className={styles.label}>{t('verificationCode')}</label>
                       <input
                         className={styles.input}
                         type="text"
                         value={twoFactorCode}
                         onChange={(e) => setTwoFactorCode(e.target.value)}
-                        placeholder="Entrez le code à 6 chiffres"
+                        placeholder={t('verificationCode')}
                         maxLength={6}
                         pattern="[0-9]{6}"
                       />
@@ -470,14 +481,14 @@ export default function SettingsPage() {
                         onClick={handleVerify2FA}
                         disabled={saving || twoFactorCode.length !== 6}
                       >
-                        {saving ? 'Vérification...' : 'Vérifier et activer'}
+                        {saving ? t('verifying') : t('verify')}
                       </button>
                       <button
                         className={styles.saveBtn}
                         style={{ background: 'var(--background-secondary)', color: 'var(--text)' }}
                         onClick={() => { setShowTwoFactorSetup(false); setTwoFactorSecret(null); setTwoFactorCode(''); }}
                       >
-                        Annuler
+                        {t('cancel')}
                       </button>
                     </div>
                   </div>
@@ -490,23 +501,23 @@ export default function SettingsPage() {
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                         <polyline points="22 4 12 14.01 9 11.01" />
                       </svg>
-                      <span style={{ color: 'var(--success)', fontWeight: 600 }}>2FA activée</span>
+                      <span style={{ color: 'var(--success)', fontWeight: 600 }}>2FA {t('activated')}</span>
                     </div>
                     <button
                       className={styles.dangerBtn}
                       onClick={handleDisable2FA}
                       disabled={saving}
                     >
-                      {saving ? 'Désactivation...' : 'Désactiver la 2FA'}
+                      {saving ? t('disabling') : t('disable2FA')}
                     </button>
                   </div>
                 )}
               </Card>
 
               <Card className={styles.settingsCard}>
-                <h2 className={styles.sectionTitle}>Sessions actives</h2>
+                <h2 className={styles.sectionTitle}>{t('activeSessions')}</h2>
                 <p className={styles.aboutText} style={{ marginBottom: 16 }}>
-                  Gérez les appareils connectés à votre compte.
+                  {t('activeSessionsDesc')}
                 </p>
                 <button
                   className={styles.saveBtn}
@@ -515,16 +526,16 @@ export default function SettingsPage() {
                     setSaving(true);
                     try {
                       await dataApi.revokeAllSessions();
-                      setSaveMessage('Toutes les autres sessions ont été fermées');
+                      setSaveMessage(t('sessionsClosed'));
                     } catch (err) {
-                      setSaveError(err.message || 'Erreur lors de la fermeture des sessions');
+                      setSaveError(err.message || t('sessionsError'));
                     } finally {
                       setSaving(false);
                     }
                   }}
                   disabled={saving}
                 >
-                  Fermer toutes les autres sessions
+                  {t('closeOtherSessions')}
                 </button>
               </Card>
             </>
@@ -533,13 +544,13 @@ export default function SettingsPage() {
           {activeTab === 'privacy' && (
             <>
               <Card className={styles.settingsCard}>
-                <h2 className={styles.sectionTitle}>Paramètres de confidentialité</h2>
+                <h2 className={styles.sectionTitle}>{t('privacy')}</h2>
                 {[
-                  { key: 'profileVisible', label: 'Profil visible', desc: 'Les autres utilisateurs peuvent voir votre profil' },
-                  { key: 'showEmail', label: 'Afficher l\'email', desc: 'Montrer votre email sur votre profil public' },
-                  { key: 'showLocation', label: 'Afficher la localisation', desc: 'Montrer votre région sur votre profil' },
-                  { key: 'allowMessages', label: 'Autoriser les messages', desc: 'Recevoir des messages d\'autres utilisateurs' },
-                  { key: 'showActivity', label: 'Afficher l\'activité', desc: 'Montrer votre activité récente sur le profil' },
+                  { key: 'profileVisible', label: t('profileVisible'), desc: t('profileVisibleDesc') },
+                  { key: 'showEmail', label: t('showEmail'), desc: t('showEmailDesc') },
+                  { key: 'showLocation', label: t('showLocation'), desc: t('showLocationDesc') },
+                  { key: 'allowMessages', label: t('allowMessages'), desc: t('allowMessagesDesc') },
+                  { key: 'showActivity', label: t('showActivity'), desc: t('showActivityDesc') },
                 ].map((pref) => (
                   <div key={pref.key} className={styles.prefRow}>
                     <div>
@@ -559,9 +570,9 @@ export default function SettingsPage() {
               </Card>
 
               <Card className={styles.settingsCard}>
-                <h2 className={styles.sectionTitle}>Vos données (RGPD)</h2>
+                <h2 className={styles.sectionTitle}>{t('yourData')}</h2>
                 <p className={styles.aboutText} style={{ marginBottom: 16 }}>
-                  Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez d'un droit d'accès, de rectification et de suppression de vos données personnelles.
+                  {t('gdprText')}
                 </p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -575,7 +586,7 @@ export default function SettingsPage() {
                       <polyline points="7 10 12 15 17 10" />
                       <line x1="12" y1="15" x2="12" y2="3" />
                     </svg>
-                    {saving ? 'Préparation de l\'export...' : 'Exporter mes données'}
+                    {saving ? t('exporting') : t('exportData')}
                   </button>
 
                   <button
@@ -589,21 +600,21 @@ export default function SettingsPage() {
                       <line x1="10" y1="11" x2="10" y2="17" />
                       <line x1="14" y1="11" x2="14" y2="17" />
                     </svg>
-                    Supprimer mon compte
+                    {t('deleteAccount')}
                   </button>
                 </div>
 
                 {showDeleteConfirm && (
                   <div style={{ marginTop: 20, padding: 16, background: 'var(--error-light, rgba(239, 68, 68, 0.1))', borderRadius: 'var(--radius-md)', border: '1px solid var(--error)' }}>
                     <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--error)', marginBottom: 8 }}>
-                      Confirmation de suppression
+                      {t('confirmDelete')}
                     </h3>
                     <p className={styles.aboutText} style={{ marginBottom: 12 }}>
-                      Cette action est irréversible. Toutes vos données seront supprimées définitivement.
+                      {t('deleteAccountWarning')}
                     </p>
                     <div className={styles.formGroup}>
                       <label className={styles.label}>
-                        Tapez <strong>"SUPPRIMER MON COMPTE"</strong> pour confirmer
+                        {t('deleteConfirm')}
                       </label>
                       <input
                         className={styles.input}
@@ -619,14 +630,14 @@ export default function SettingsPage() {
                         onClick={handleDeleteAccount}
                         disabled={deleteConfirmText !== 'SUPPRIMER MON COMPTE' || saving}
                       >
-                        {saving ? 'Suppression...' : 'Confirmer la suppression'}
+                        {saving ? t('deleting') : t('confirmDelete')}
                       </button>
                       <button
                         className={styles.saveBtn}
                         style={{ background: 'var(--background-secondary)', color: 'var(--text)' }}
                         onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }}
                       >
-                        Annuler
+                        {t('cancel')}
                       </button>
                     </div>
                   </div>
@@ -634,23 +645,23 @@ export default function SettingsPage() {
               </Card>
 
               <Card className={styles.settingsCard}>
-                <h2 className={styles.sectionTitle}>Conservation des données</h2>
+                <h2 className={styles.sectionTitle}>{t('dataRetention')}</h2>
                 <div className={styles.aboutInfo}>
                   <div className={styles.aboutItem}>
-                    <span className={styles.aboutLabel}>Données de compte</span>
-                    <span className={styles.aboutValue}>Conservées jusqu'à suppression</span>
+                    <span className={styles.aboutLabel}>{t('accountData')}</span>
+                    <span className={styles.aboutValue}>{t('keptUntilDeletion')}</span>
                   </div>
                   <div className={styles.aboutItem}>
-                    <span className={styles.aboutLabel}>Historique des transactions</span>
-                    <span className={styles.aboutValue}>7 ans (obligation légale)</span>
+                    <span className={styles.aboutLabel}>{t('transactionHistory')}</span>
+                    <span className={styles.aboutValue}>{t('yearsRetention')}</span>
                   </div>
                   <div className={styles.aboutItem}>
-                    <span className={styles.aboutLabel}>Logs de connexion</span>
-                    <span className={styles.aboutValue}>12 mois</span>
+                    <span className={styles.aboutLabel}>{t('loginLogs')}</span>
+                    <span className={styles.aboutValue}>{t('monthsRetention')}</span>
                   </div>
                   <div className={styles.aboutItem}>
-                    <span className={styles.aboutLabel}>Cookies</span>
-                    <span className={styles.aboutValue}>13 mois</span>
+                    <span className={styles.aboutLabel}>{t('cookies')}</span>
+                    <span className={styles.aboutValue}>{t('cookiesRetention')}</span>
                   </div>
                 </div>
               </Card>
@@ -660,7 +671,7 @@ export default function SettingsPage() {
           {activeTab === 'appearance' && (
             <>
               <Card className={styles.settingsCard}>
-                <h2 className={styles.sectionTitle}>Mode d'affichage</h2>
+                <h2 className={styles.sectionTitle}>{t('displayMode')}</h2>
                 <div className={styles.modeToggle}>
                   <button
                     className={`${styles.modeBtn} ${mode === 'light' ? styles.modeBtnActive : ''}`}
@@ -670,7 +681,7 @@ export default function SettingsPage() {
                       <circle cx="12" cy="12" r="5" />
                       <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
                     </svg>
-                    <span>Clair</span>
+                    <span>{t('light')}</span>
                   </button>
                   <button
                     className={`${styles.modeBtn} ${mode === 'dark' ? styles.modeBtnActive : ''}`}
@@ -679,27 +690,27 @@ export default function SettingsPage() {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
                       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                     </svg>
-                    <span>Sombre</span>
+                    <span>{t('dark')}</span>
                   </button>
                 </div>
               </Card>
 
               <Card className={styles.settingsCard}>
-                <h2 className={styles.sectionTitle}>Couleur principale</h2>
-                <p className={styles.colorDescription}>Choisissez une couleur qui sera appliquée globalement à toutes les pages.</p>
+                <h2 className={styles.sectionTitle}>{t('primaryColor')}</h2>
+                <p className={styles.colorDescription}>{t('primaryColorDesc')}</p>
 
                 <div className={styles.secondaryModeToggle}>
                   <button
                     className={`${styles.secondaryModeBtn} ${colorMode === 'preset' ? styles.secondaryModeBtnActive : ''}`}
                     onClick={() => { setColorMode('preset'); setPrimaryColor(null); }}
                   >
-                    Thèmes
+                    {t('themes')}
                   </button>
                   <button
                     className={`${styles.secondaryModeBtn} ${colorMode === 'custom' ? styles.secondaryModeBtnActive : ''}`}
                     onClick={() => setColorMode('custom')}
                   >
-                    Personnalisé
+                    {t('custom')}
                   </button>
                 </div>
 
@@ -730,7 +741,7 @@ export default function SettingsPage() {
                       onChange={(e) => setPrimaryColor(e.target.value)}
                       className={styles.customColorInput}
                     />
-                    <span className={styles.customColorLabel}>Choisir une couleur</span>
+                    <span className={styles.customColorLabel}>{t('chooseColor')}</span>
                     <span className={styles.customColorValue}>
                       {customPrimary ? customPrimary[mode] : theme.primary}
                     </span>
@@ -738,11 +749,11 @@ export default function SettingsPage() {
                 )}
 
                 <div className={styles.secondaryPreview}>
-                  <span className={styles.previewLabel}>Aperçu</span>
+                  <span className={styles.previewLabel}>{t('preview')}</span>
                   <div className={styles.previewRow}>
-                    <button className={styles.previewBtnPrimary}>Bouton principal</button>
-                    <span className={styles.previewBadge}>Badge</span>
-                    <span className={styles.previewText} style={{ color: theme.primary }}>Texte coloré</span>
+                    <button className={styles.previewBtnPrimary}>{t('previewButton')}</button>
+                    <span className={styles.previewBadge}>{t('previewBadge')}</span>
+                    <span className={styles.previewText} style={{ color: theme.primary }}>{t('previewText')}</span>
                   </div>
                 </div>
               </Card>
@@ -751,13 +762,13 @@ export default function SettingsPage() {
 
           {activeTab === 'notifications' && (
             <Card className={styles.settingsCard}>
-              <h2 className={styles.sectionTitle}>Préférences de notification</h2>
+              <h2 className={styles.sectionTitle}>{t('notificationSettings')}</h2>
               {[
-                { key: 'newOrders', label: 'Nouvelles commandes', desc: 'Être notifié lors d\'une nouvelle commande' },
-                { key: 'messages', label: 'Messages', desc: 'Être notifié lors d\'un nouveau message' },
-                { key: 'reviews', label: 'Avis', desc: 'Être notifié lors d\'un nouvel avis' },
-                { key: 'priceAlerts', label: 'Alertes prix', desc: 'Être notifié des changements de prix' },
-                { key: 'weatherAlerts', label: 'Alertes météo', desc: 'Être notifié des conditions météorologiques sévères' },
+                { key: 'newOrders', label: t('notifNewOrders'), desc: t('notifNewOrdersDesc') },
+                { key: 'messages', label: t('notifMessages'), desc: t('notifMessagesDesc') },
+                { key: 'reviews', label: t('notifReviews'), desc: t('notifReviewsDesc') },
+                { key: 'priceAlerts', label: t('notifPriceAlerts'), desc: t('notifPriceAlertsDesc') },
+                { key: 'weatherAlerts', label: t('notifWeatherAlerts'), desc: t('notifWeatherAlertsDesc') },
               ].map((pref) => (
                 <div key={pref.key} className={styles.prefRow}>
                   <div>
@@ -776,7 +787,7 @@ export default function SettingsPage() {
               ))}
               <div className={styles.formActions}>
                 <button type="button" className={styles.saveBtn} onClick={handleNotificationSave} disabled={saving}>
-                  {saving ? 'Sauvegarde...' : 'Sauvegarder les préférences'}
+                  {saving ? t('saving') : t('savePreferences')}
                 </button>
               </div>
             </Card>
@@ -785,20 +796,18 @@ export default function SettingsPage() {
           {activeTab === 'about' && (
             <>
               <Card className={styles.settingsCard}>
-                <h2 className={styles.sectionTitle}>À propos de MadaAgri</h2>
+                <h2 className={styles.sectionTitle}>{t('aboutTitle')}</h2>
                 <div className={styles.aboutContent}>
                   <p className={styles.aboutText}>
-                    MadaAgri est une plateforme agricole innovante conçue pour les agriculteurs de Madagascar.
-                    Notre mission est de connecter les producteurs avec les acheteurs, faciliter le commerce
-                    agricole et fournir des outils d'analyse pour optimiser la production.
+                    {t('aboutDesc')}
                   </p>
                   <div className={styles.aboutInfo}>
                     <div className={styles.aboutItem}>
-                      <span className={styles.aboutLabel}>Version</span>
+                      <span className={styles.aboutLabel}>{t('version')}</span>
                       <span className={styles.aboutValue}>1.0.0</span>
                     </div>
                     <div className={styles.aboutItem}>
-                      <span className={styles.aboutLabel}>Développé par</span>
+                      <span className={styles.aboutLabel}>{t('developedBy')}</span>
                       <span className={styles.aboutValue}>MadaAgri Team</span>
                     </div>
                   </div>
@@ -806,7 +815,7 @@ export default function SettingsPage() {
               </Card>
 
               <Card className={styles.settingsCard}>
-                <h2 className={styles.sectionTitle}>Conditions d'utilisation</h2>
+                <h2 className={styles.sectionTitle}>{t('termsOfUse')}</h2>
                 <div className={styles.termsContent}>
                   <p className={styles.termsText}>
                     En utilisant MadaAgri, vous acceptez les conditions suivantes :
@@ -823,7 +832,7 @@ export default function SettingsPage() {
               </Card>
 
               <Card className={styles.settingsCard}>
-                <h2 className={styles.sectionTitle}>Politique de confidentialité</h2>
+                <h2 className={styles.sectionTitle}>{t('privacyPolicy')}</h2>
                 <div className={styles.termsContent}>
                   <p className={styles.termsText}>
                     MadaAgri s'engage à protéger vos données personnelles :

@@ -33,9 +33,10 @@ const SettingsPage = lazy(() => import('../pages/Settings/SettingsPage'));
 const OwnProfileWrapper = lazy(() => import('../pages/Utilisateurs/OwnProfileWrapper'));
 const OtherProfileWrapper = lazy(() => import('../pages/Utilisateurs/OtherProfileWrapper'));
 
-const withSuspense = (Component) => (
+// Helper to wrap lazy components with Suspense
+const withSuspense = (LazyComponent) => (
   <Suspense fallback={<PageLoadingFallback />}>
-    <Component />
+    <LazyComponent />
   </Suspense>
 );
 

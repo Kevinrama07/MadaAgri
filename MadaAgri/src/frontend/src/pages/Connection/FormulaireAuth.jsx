@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { FiEye, FiEyeOff, FiArrowLeft } from 'react-icons/fi';
 import { FaFacebookF, FaGoogle, FaLinkedinIn } from 'react-icons/fa';
 import { useAuth } from '../../contexts/ContextAuthentification';
@@ -88,6 +89,7 @@ function MobileSwipe({ isSignUp, setIsSignUp }) {
 export default function FormulaireAuth() {
   const { signIn, signUp, user, loading: authLoading } = useAuth();
   const { theme } = useTheme();
+  const { t } = useTranslation('auth');
   const navigate = useNavigate();
   const [isSignUp, setIsSignUp] = useState(false);
   const [signUpForm, setSignUpForm] = useState({ name: '', email: '', password: '', confirmPassword: '', role: 'client' });
@@ -124,19 +126,19 @@ export default function FormulaireAuth() {
     e.preventDefault();
     setError('');
     if (signUpForm.password !== signUpForm.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
+      setError(t('passwordMismatch'));
       return;
     }
     if (!signUpForm.name.trim()) {
-      setError('Le nom complet est requis');
+      setError(t('nameRequired'));
       return;
     }
     if (!signUpForm.email.trim()) {
-      setError("L'email est requis");
+      setError(t('emailRequired'));
       return;
     }
     if (signUpForm.password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères');
+      setError(t('passwordMin6'));
       return;
     }
     setSubmitting(true);
@@ -146,7 +148,7 @@ export default function FormulaireAuth() {
       // Rediriger vers le tableau de bord après inscription réussie
       setTimeout(() => navigate('/dashboard'), 500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de la création du compte');
+      setError(err instanceof Error ? err.message : t('signUpError'));
     } finally {
       setSubmitting(false);
     }
@@ -162,7 +164,7 @@ export default function FormulaireAuth() {
       // Rediriger vers le tableau de bord après connexion réussie
       setTimeout(() => navigate('/dashboard'), 500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de la connexion');
+      setError(err instanceof Error ? err.message : t('signInError'));
     } finally {
       setSubmitting(false);
     }
@@ -187,16 +189,16 @@ export default function FormulaireAuth() {
         {/* Sign Up */}
         <div className={styles.formContainer}>
           <form onSubmit={handleSignUpSubmit} className={styles.signUpForm}>
-            <h1>Créer un compte</h1>
+            <h1>{t('createAccountTitle')}</h1>
             <div className={styles.socialContainer}>
               <a href="#" className={styles.social} onClick={(e) => e.preventDefault()}><FaFacebookF /></a>
               <a href="#" className={styles.social} onClick={(e) => e.preventDefault()}><FaGoogle /></a>
               <a href="#" className={styles.social} onClick={(e) => e.preventDefault()}><FaLinkedinIn /></a>
             </div>
-            <span>ou utilisez votre email pour vous inscrire</span>
+            <span>{t('orUseEmail')}</span>
 
             <div className={styles.roleSelector}>
-              <label className={styles.roleLabel}>Type d'utilisateur</label>
+              <label className={styles.roleLabel}>{t('userType')}</label>
               <div className={styles.roleOptions}>
                 <button
                   type="button"
@@ -208,7 +210,7 @@ export default function FormulaireAuth() {
                     <path d="M2 17l10 5 10-5" />
                     <path d="M2 12l10 5 10-5" />
                   </svg>
-                  Agriculteur
+                  {t('farmer')}
                 </button>
                 <button
                   type="button"
@@ -219,21 +221,21 @@ export default function FormulaireAuth() {
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                     <circle cx="12" cy="7" r="4" />
                   </svg>
-                  Client
+                  {t('client')}
                 </button>
               </div>
             </div>
 
-            <input type="text" name="name" placeholder="Nom complet" value={signUpForm.name} onChange={handleSignUpChange} className={styles.input} />
-            <input type="email" name="email" placeholder="Email" value={signUpForm.email} onChange={handleSignUpChange} className={styles.input} />
+            <input type="text" name="name" placeholder={t('fullName')} value={signUpForm.name} onChange={handleSignUpChange} className={styles.input} />
+            <input type="email" name="email" placeholder={t('email')} value={signUpForm.email} onChange={handleSignUpChange} className={styles.input} />
             <div className={styles.pwWrapper}>
-              <input type={showSignUpPassword ? 'text' : 'password'} name="password" placeholder="Mot de passe" value={signUpForm.password} onChange={handleSignUpChange} className={styles.input} />
+              <input type={showSignUpPassword ? 'text' : 'password'} name="password" placeholder={t('password')} value={signUpForm.password} onChange={handleSignUpChange} className={styles.input} />
               <button type="button" className={styles.pwToggle} onClick={() => setShowSignUpPassword(!showSignUpPassword)}>
                 {showSignUpPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
               </button>
             </div>
             <div className={`${styles.pwWrapper} ${styles.hasMatchCheck}`}>
-              <input type={showSignUpPassword ? 'text' : 'password'} name="confirmPassword" placeholder="Confirmer le mot de passe" value={signUpForm.confirmPassword} onChange={handleSignUpChange} className={`${styles.input} ${passwordMatch === true ? styles.pwMatch : ''} ${passwordMatch === false ? styles.pwMismatch : ''}`} />
+              <input type={showSignUpPassword ? 'text' : 'password'} name="confirmPassword" placeholder={t('confirmPassword')} value={signUpForm.confirmPassword} onChange={handleSignUpChange} className={`${styles.input} ${passwordMatch === true ? styles.pwMatch : ''} ${passwordMatch === false ? styles.pwMismatch : ''}`} />
               <button type="button" className={styles.pwToggle} onClick={() => setShowSignUpPassword(!showSignUpPassword)}>
                 {showSignUpPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
               </button>
@@ -250,7 +252,7 @@ export default function FormulaireAuth() {
             {error && <div className={styles.errorMsg}>{error}</div>}
             <button type="submit" className={styles.submitBtn} disabled={submitting}>
               <span className={styles.btnShimmer} />
-              {submitting ? 'Création...' : 'S\'inscrire'}
+              {submitting ? t('signingUp') : t('signUpBtn')}
             </button>
           </form>
         </div>
@@ -258,26 +260,26 @@ export default function FormulaireAuth() {
         {/* Sign In */}
         <div className={styles.formContainer}>
           <form onSubmit={handleSignInSubmit} className={styles.signInForm}>
-            <h1>Se connecter</h1>
+            <h1>{t('signInTitle')}</h1>
             <div className={styles.socialContainer}>
               <a href="#" className={styles.social} onClick={(e) => e.preventDefault()}><FaFacebookF /></a>
               <a href="#" className={styles.social} onClick={(e) => e.preventDefault()}><FaGoogle /></a>
               <a href="#" className={styles.social} onClick={(e) => e.preventDefault()}><FaLinkedinIn /></a>
             </div>
-            <span>ou utilisez votre compte</span>
+            <span>{t('orUseAccount')}</span>
 
-            <input type="email" name="email" placeholder="Email" value={signInForm.email} onChange={handleSignInChange} className={styles.input} />
+            <input type="email" name="email" placeholder={t('email')} value={signInForm.email} onChange={handleSignInChange} className={styles.input} />
             <div className={styles.pwWrapper}>
-              <input type={showSignInPassword ? 'text' : 'password'} name="password" placeholder="Mot de passe" value={signInForm.password} onChange={handleSignInChange} className={styles.input} />
+              <input type={showSignInPassword ? 'text' : 'password'} name="password" placeholder={t('password')} value={signInForm.password} onChange={handleSignInChange} className={styles.input} />
               <button type="button" className={styles.pwToggle} onClick={() => setShowSignInPassword(!showSignInPassword)}>
                 {showSignInPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
               </button>
             </div>
-            <a href="#">Mot de passe oublié ?</a>
+            <a href="#">{t('forgotPassword')}</a>
             {error && <div className={styles.errorMsg}>{error}</div>}
             <button type="submit" className={styles.submitBtn} disabled={submitting}>
               <span className={styles.btnShimmer} />
-              {submitting ? 'Connexion...' : 'Se connecter'}
+              {submitting ? t('signingIn') : t('signInBtn')}
             </button>
           </form>
         </div>
@@ -286,14 +288,14 @@ export default function FormulaireAuth() {
         <div className={styles.overlayContainer}>
           <div className={styles.overlay}>
             <div className={`${styles.overlayPanel} ${styles.overlayLeft}`}>
-              <h1>Bon retour !</h1>
-              <p>Pour rester connecté, connectez-vous avec vos informations personnelles</p>
-              <button type="button" className={styles.ghost} onClick={() => setIsSignUp(false)}>Se connecter</button>
+              <h1>{t('welcomeBackTitle')}</h1>
+              <p>{t('welcomeBackDesc')}</p>
+              <button type="button" className={styles.ghost} onClick={() => setIsSignUp(false)}>{t('signInBtn')}</button>
             </div>
             <div className={`${styles.overlayPanel} ${styles.overlayRight}`}>
-              <h1>Salut, l'ami !</h1>
-              <p>Entrez vos informations personnelles et commencez votre aventure avec nous</p>
-              <button type="button" className={styles.ghost} onClick={() => setIsSignUp(true)}>S'inscrire</button>
+              <h1>{t('helloFriend')}</h1>
+              <p>{t('helloFriendDesc')}</p>
+              <button type="button" className={styles.ghost} onClick={() => setIsSignUp(true)}>{t('signUpBtn')}</button>
             </div>
           </div>
         </div>

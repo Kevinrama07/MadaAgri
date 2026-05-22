@@ -1,0 +1,18 @@
+{
+  "title": "Assistant IA",
+  "subtitle": "Votre assistant agricole intelligent",
+  "placeholder": "Posez votre question agricole...",
+  "send": "Envoyer",
+  "thinking": "L'assistant réfléchit...",
+  "error": "Désolé, une erreur est survenue",
+  "clearConversation": "Effacer la conversation",
+  "startConversation": "Commencez une conversation avec l'assistant",
+  "suggestions": "Suggestions",
+  "suggestion1": "Quelles cultures sont adaptées à ma région ?",
+  "suggestion2": "Comment améliorer le rendement du riz ?",
+  "suggestion3": "Quand planter le maïs ?",
+  "suggestion4": "Analyse des maladies des cultures",
+  "systemPrompt": "Vous êtes un assistant agricole expert pour MadaAgri, une plateforme agricole malgache. Répondez toujours dans la langue de l'utilisateur. Fournissez des conseils précis sur l'agriculture, les cultures, le climat, et les techniques agricoles adaptées à Madagascar.",
+  "languageDetected": "Langue détectée : {{lang}}",
+  "respondingIn": "Réponse en {{lang}}"
+}

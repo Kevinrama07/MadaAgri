@@ -1,4 +1,5 @@
 const db = require('../db');
+const { randomUUID } = require('crypto');
 
 /**
  * Algorithme de gestion des suivis (Follow)
@@ -35,7 +36,7 @@ class FollowAlgorithm {
    */
   static async createFollow(followerId, followeeId) {
     await db.query(
-      'INSERT INTO follows (follower_id, followee_id) VALUES (?, ?)',
+      'INSERT INTO follows (follower_id, followee_id, status, created_at) VALUES (?, ?, "following", NOW())',
       [followerId, followeeId]
     );
   }
@@ -44,22 +45,23 @@ class FollowAlgorithm {
    * Crée une collaboration automatique
    */
   static async createAutoCollaboration(userA, userB) {
-    const [result] = await db.query(
-      `INSERT INTO collaboration_invitations (id, sender_id, recipient_id, message, status, updated_at) 
-       VALUES (UUID(), ?, ?, 'Collaboration automatique via suivi mutuel', 'accepted', NOW())`,
-      [userA, userB]
+    const collabId = randomUUID();
+    await db.query(
+      `INSERT INTO collaboration_invitations (id, sender_id, recipient_id, message, status, created_at, updated_at) 
+       VALUES (?, ?, ?, 'Collaboration automatique via suivi mutuel', 'accepted', NOW(), NOW())`,
+      [collabId, userA, userB]
     );
-    return result.insertId;
+    return collabId;
   }
 
   /**
    * Envoie une notification
    */
-  static async sendNotification(userId, type, actorId, entityType, entityId, content) {
+  static async sendNotification(userId, type, actorId, actorName, actorImage, relatedType, relatedId, content) {
     await db.query(
-      `INSERT INTO notifications (user_id, type, actor_id, entity_type, entity_id, content) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [userId, type, actorId, entityType, entityId, content]
+      `INSERT INTO notifications (id, user_id, type, actor_id, actor_name, actor_image, related_type, related_id, content, priority, created_at) 
+       VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, 'normal', NOW())`,
+      [userId, type, actorId, actorName || 'Utilisateur', actorImage || null, relatedType, relatedId, content]
     );
   }
 
@@ -98,6 +100,8 @@ class FollowAlgorithm {
           followingId, 
           'COLLAB_AUTO', 
           followerId, 
+          null,
+          null,
           'collaboration', 
           collaborationId, 
           'Vous êtes maintenant collaborateurs via suivi mutuel'
@@ -107,6 +111,8 @@ class FollowAlgorithm {
           followerId, 
           'COLLAB_AUTO', 
           followingId, 
+          null,
+          null,
           'collaboration', 
           collaborationId, 
           'Vous êtes maintenant collaborateurs via suivi mutuel'
@@ -118,7 +124,9 @@ class FollowAlgorithm {
         followingId, 
         'FOLLOW', 
         followerId, 
-        'follow', 
+        null,
+        null,
+        'user', 
         null, 
         'a commencé à vous suivre'
       );

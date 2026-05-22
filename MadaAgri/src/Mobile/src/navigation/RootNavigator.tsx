@@ -55,6 +55,10 @@ import ChatDetailScreen from '../screens/ChatDetailScreen.tsx';
 import CultureAnalysisScreen from '../screens/CultureAnalysisScreen.tsx';
 import RouteOptimizationScreen from '../screens/RouteOptimizationScreen.tsx';
 import MyProductsScreen from '../screens/MyProductsScreen.tsx';
+import AIChatScreen from '../screens/AIChatScreen.tsx';
+import DashboardAnalyticsScreen from '../screens/DashboardAnalyticsScreen.tsx';
+import ParcelsScreen from '../screens/ParcelsScreen.tsx';
+import AnalyzeImageScreen from '../screens/AnalyzeImageScreen.tsx';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -273,6 +277,12 @@ function RootNavigator() {
 
           {/* ── Menu secondaire commun ───────────────────────────────────── */}
           <Stack.Screen name="Weather" component={WeatherScreen} />
+
+          {/* ── Tous les utilisateurs ────────────────────────────────────── */}
+          <Stack.Screen name="AIChat" component={AIChatScreen} />
+          <Stack.Screen name="DashboardAnalytics" component={DashboardAnalyticsScreen} />
+          <Stack.Screen name="Parcels" component={ParcelsScreen} />
+          <Stack.Screen name="AnalyzeImage" component={AnalyzeImageScreen} />
 
           {/* ── Client uniquement ────────────────────────────────────────── */}
           {!isFarmer && (

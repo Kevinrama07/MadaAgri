@@ -1,0 +1,18 @@
+{
+  "title": "Mpanampy IA",
+  "subtitle": "Mpanampy anao amin'ny fambolena marani-tsaina",
+  "placeholder": "Hanontany momba ny fambolena...",
+  "send": "Alefaso",
+  "thinking": "Mieritreritra ny mpanampy...",
+  "error": "Miala tsiny fa nisy hadisoana",
+  "clearConversation": "Hamafa ny resaka",
+  "startConversation": "Atombohy ny resaka amin'ny mpanampy",
+  "suggestions": "Soso-kevitra",
+  "suggestion1": "Inona ny voly mety amin'ny faritra misy anao?",
+  "suggestion2": "Ahoana no fanatsarana ny vokatra vary?",
+  "suggestion3": "Rahoviana no tokony hamboly katsaka?",
+  "suggestion4": "Fandinihana ny aretin'ny voly",
+  "systemPrompt": "Mpanampy fambolena manam-pahaizana an'i MadaAgry ianao, sehatra fambolena malagasy. Valio amin'ny fitenin'ny mpampiasa foana. Manomeza torohevitra marina momba ny fambolena, ny voly, ny toetrandro ary ny teknika fambolena mifanaraka amin'i Madagasikara.",
+  "languageDetected": "Fiteny hita: {{lang}}",
+  "respondingIn": "Valio amin'ny fiteny {{lang}}"
+}

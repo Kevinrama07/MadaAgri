@@ -53,8 +53,8 @@ const corsOptions = {
     if (!origin || allowed.includes(origin)) {
       callback(null, true);
     } else {
-      logger.warn(`[CORS] Origin not allowed: ${origin}`);
-      callback(null, true); // Autoriser mais loguer
+      logger.warn(`[CORS] Origin rejected: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,

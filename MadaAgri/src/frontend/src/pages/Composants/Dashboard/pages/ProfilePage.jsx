@@ -146,16 +146,14 @@ export default function ProfilePage({ user, products = [], onOpenCreate, onOpenP
       setPosts(allPosts.filter((post) => post.email === user?.email));
       
       if (user?.id) {
-        const [followersData, followingData] = await Promise.all([
+        const [followersData, followingData, collaboratorsData] = await Promise.all([
           dataApi.fetchFollowers(user.id),
-          dataApi.fetchFollowing(user.id)
+          dataApi.fetchFollowing(user.id),
+          dataApi.fetchCollaborators(user.id)
         ]);
         setFollowers(followersData || []);
         setFollowing(followingData || []);
-        
-        const followerIds = new Set(followersData?.map(f => f.follower_id) || []);
-        const collaborators = followingData?.filter(f => followerIds.has(f.followee_id)).length || 0;
-        setCollaboratorsCount(collaborators);
+        setCollaboratorsCount(collaboratorsData?.pagination?.total || 0);
       }
     } catch (err) {
       console.error('Erreur chargement profil utilisateur', err);

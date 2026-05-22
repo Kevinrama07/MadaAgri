@@ -1,0 +1,18 @@
+{
+  "title": "AI Assistant",
+  "subtitle": "Your intelligent farming assistant",
+  "placeholder": "Ask your farming question...",
+  "send": "Send",
+  "thinking": "Assistant is thinking...",
+  "error": "Sorry, an error occurred",
+  "clearConversation": "Clear conversation",
+  "startConversation": "Start a conversation with the assistant",
+  "suggestions": "Suggestions",
+  "suggestion1": "What crops are suitable for my region?",
+  "suggestion2": "How to improve rice yield?",
+  "suggestion3": "When to plant maize?",
+  "suggestion4": "Crop disease analysis",
+  "systemPrompt": "You are an expert agricultural assistant for MadaAgri, a Malagasy agricultural platform. Always respond in the user's language. Provide accurate advice on agriculture, crops, climate, and farming techniques adapted to Madagascar.",
+  "languageDetected": "Language detected: {{lang}}",
+  "respondingIn": "Responding in {{lang}}"
+}

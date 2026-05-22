@@ -1,6 +1,8 @@
 const { body, param, query, validationResult } = require('express-validator');
 const { VALIDATION, PAGINATION } = require('../constants');
 
+const isUuid = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -67,7 +69,7 @@ const postValidators = {
   ],
   update: [
     param('id')
-      .isInt()
+      .custom(isUuid)
       .withMessage('ID invalide'),
     body('content')
       .optional()

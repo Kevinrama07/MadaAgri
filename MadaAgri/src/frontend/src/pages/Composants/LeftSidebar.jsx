@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { FiUsers, FiBarChart2, FiBookmark, FiHome, FiShoppingBag, FiMessageSquare, FiBell, FiChevronDown, FiChevronUp, FiMapPin, FiCalendar, FiTrendingUp } from 'react-icons/fi';
 import { GiWheat } from 'react-icons/gi';
 import { FaRobot } from "react-icons/fa";
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/ContextAuthentification';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +11,7 @@ import { dataApi } from '../../lib/api';
 import styles from '../../styles/Composants/LeftSidebar.module.css';
 
 export default function LeftSidebar() {
+  const { t } = useTranslation(['navigation', 'dashboard', 'common']);
   const { user } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
@@ -18,23 +20,33 @@ export default function LeftSidebar() {
     posts: 0,
     followers: 0,
     following: 0,
+    collaborators: 0,
   });
 
-  const mainMenuItems = [
-    { icon: <FiHome />, label: 'Fil d\'actualite', route: '/dashboard' },
-    { icon: <FiUsers />, label: 'Collaborateurs', route: '/dashboard/network' },
-    { icon: <FiMessageSquare />, label: 'Messages', route: '/dashboard/messages' },
-    { icon: <FiShoppingBag />, label: 'Marketplace', route: '/marketplace' },
-    { icon: <FiBarChart2 />, label: 'Tableau de bord', route: '/dashboard/stats' },
-    { icon: <FiBookmark />, label: 'Mes commandes', route: '/dashboard/orders' },
-  ];
+  const mainMenuItems = useMemo(() => [
+    { icon: <FiHome />, label: t('feed'), route: '/dashboard' },
+    { icon: <FiUsers />, label: t('collaborators'), route: '/dashboard/network' },
+    { icon: <FiMessageSquare />, label: t('messages'), route: '/dashboard/messages' },
+    { icon: <FiShoppingBag />, label: t('marketplace'), route: '/marketplace' },
+    { icon: <FiBarChart2 />, label: t('dashboard'), route: '/dashboard/stats' },
+    { icon: <FiBookmark />, label: t('myOrders'), route: '/dashboard/orders' },
+  ], [t]);
 
-  const extraMenuItems = [
-    { icon: <FaRobot />, label: 'Assistant IA', route: '/dashboard/assistant' },
-    { icon: <GiWheat />, label: 'Analyse cultures', route: '/dashboard/analysis' },
-    { icon: <FiTrendingUp />, label: 'Meteo agricole', route: '/dashboard/meteo' },
-    { icon: <FiCalendar />, label: 'Mes commandes reçues', route: '/dashboard/received-orders' },
-  ];
+  const extraMenuItems = useMemo(() => {
+    const items = [
+      { icon: <FaRobot />, label: t('aiAssistant'), route: '/dashboard/assistant' },
+      { icon: <FiTrendingUp />, label: t('agriculturalWeather'), route: '/dashboard/meteo' },
+    ];
+    
+    if (user?.role === 'farmer') {
+      items.push(
+        { icon: <GiWheat />, label: t('cropAnalysis'), route: '/dashboard/analysis' },
+        { icon: <FiCalendar />, label: t('receivedOrders'), route: '/dashboard/received-orders' }
+      );
+    }
+    
+    return items;
+  }, [user?.role, t]);
 
   const allItems = [...mainMenuItems, ...(showMore ? extraMenuItems : [])];
 
@@ -49,9 +61,10 @@ export default function LeftSidebar() {
 
     const fetchStats = async () => {
       try {
-        const [followersData, followingData, postsData] = await Promise.all([
+        const [followersData, followingData, collaboratorsData, postsData] = await Promise.all([
           dataApi.fetchFollowers(user.id),
           dataApi.fetchFollowing(user.id),
+          dataApi.fetchCollaborators(user.id),
           dataApi.fetchPosts({ q: '', sort: 'recent' }).catch(() => []),
         ]);
 
@@ -61,6 +74,7 @@ export default function LeftSidebar() {
             posts: userPosts.length,
             followers: followersData?.length || 0,
             following: followingData?.length || 0,
+            collaborators: collaboratorsData?.pagination?.total || 0,
           });
         }
       } catch (err) {
@@ -73,9 +87,10 @@ export default function LeftSidebar() {
   }, [user]);
 
   const displayStats = [
-    { label: 'Publications', value: stats.posts },
-    { label: 'Abonnes', value: stats.followers },
-    { label: 'Abonnements', value: stats.following },
+    { label: t('posts', { ns: 'dashboard' }), value: stats.posts },
+    { label: t('followers', { ns: 'dashboard' }), value: stats.followers },
+    { label: t('following', { ns: 'dashboard' }), value: stats.following },
+    { label: t('totalCollaborators', { ns: 'dashboard' }), value: stats.collaborators },
   ];
 
   return (
@@ -89,7 +104,9 @@ export default function LeftSidebar() {
         <div className={styles['user-info']}>
           <h3 className={styles['user-name']}>{user?.display_name || 'Utilisateur'}</h3>
           {user?.role && (
-            <span className={styles['user-role']}>{user.role === 'farmer' ? 'Agriculteur' : user.role === 'buyer' ? 'Acheteur' : user.role}</span>
+            <span className={styles['user-role']}>
+              {user.role === 'farmer' ? t('farmer', { ns: 'auth' }) : user.role === 'buyer' ? t('client', { ns: 'auth' }) : user.role}
+            </span>
           )}
         </div>
       </div>
@@ -122,7 +139,7 @@ export default function LeftSidebar() {
           <span className={styles['nav-icon']}>
             {showMore ? <FiChevronUp /> : <FiChevronDown />}
           </span>
-          <span className={styles['nav-label']}>{showMore ? 'Voir moins' : 'Voir plus'}</span>
+          <span className={styles['nav-label']}>{showMore ? t('showLess', { ns: 'common' }) : t('showMore', { ns: 'common' })}</span>
         </button>
       </nav>
 

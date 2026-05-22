@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FiSearch, FiTrendingUp, FiUsers, FiActivity, FiX, FiAlertTriangle, FiMail, FiFilter, FiRefreshCw } from 'react-icons/fi';
 import { AiFillFire } from 'react-icons/ai';
 import clsx from 'clsx';
@@ -13,10 +14,11 @@ import styles from './SocialFeed.module.css';
 
 // Filter Tabs Component
 function FilterTabs({ activeTab, onTabChange }) {
+  const { t } = useTranslation('common');
   const tabs = [
-    { id: 'recent', label: 'Récentes', icon: <FiActivity /> },
-    { id: 'popular', label: 'Populaires', icon: <FiTrendingUp /> },
-    { id: 'following', label: 'Abonnements', icon: <FiUsers /> }
+    { id: 'recent', label: t('recent'), icon: <FiActivity /> },
+    { id: 'popular', label: t('popular'), icon: <FiTrendingUp /> },
+    { id: 'following', label: t('subscriptions'), icon: <FiUsers /> }
   ];
 
   return (
@@ -52,6 +54,7 @@ function FilterTabs({ activeTab, onTabChange }) {
 
 export default function HomeFeed({ onUserProfileClick }) {
   const { user } = useAuth();
+  const { t } = useTranslation('common');
   const { isLoading, startLoading, stopLoading, hasShownSkeletons, markSkeletonsShown } = usePageLoading();
   
   useEffect(() => {
@@ -84,7 +87,7 @@ export default function HomeFeed({ onUserProfileClick }) {
       const list = await dataApi.fetchPosts({ sort, q: filterCulture || filterRegion });
       setPosts(list);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur chargement feed');
+      setError(e instanceof Error ? e.message : t('loadingFeed'));
       setPosts([]);
     } finally {
       stopLoading();
@@ -152,7 +155,7 @@ export default function HomeFeed({ onUserProfileClick }) {
             </div>
             <button onClick={fetchPosts} className="modern-btn modern-btn-secondary" style={{ padding: '8px 16px' }}>
               <FiRefreshCw />
-              Réessayer
+              {t('retry')}
             </button>
           </div>
         </div>
@@ -179,10 +182,10 @@ export default function HomeFeed({ onUserProfileClick }) {
               <FiMail />
             </div>
             <h3 className="modern-title" style={{ marginBottom: '8px' }}>
-              Aucune publication
+              {t('noPosts')}
             </h3>
             <p className="modern-text-muted">
-              Soyez le premier à partager une activité agricole!
+              {t('noPostsYet')}
             </p>
           </div>
         ) : (
@@ -216,7 +219,7 @@ export default function HomeFeed({ onUserProfileClick }) {
             style={{ padding: '12px 32px' }}
           >
             <FiRefreshCw />
-            Charger plus de publications
+            {t('loadMorePosts')}
           </button>
         </div>
       )}

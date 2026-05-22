@@ -1,4 +1,5 @@
 const db = require('../db');
+const { randomUUID } = require('crypto');
 
 /**
  * Algorithme de gestion des collaborations
@@ -37,12 +38,13 @@ class CollaborationAlgorithm {
    * Crée une collaboration acceptée entre deux utilisateurs
    */
   static async createAcceptedCollaboration(userA, userB, reason = 'Suivi mutuel') {
-    const [result] = await db.query(
-      `INSERT INTO collaboration_invitations (id, sender_id, recipient_id, message, status, updated_at) 
-       VALUES (UUID(), ?, ?, ?, 'accepted', NOW())`,
-      [userA, userB, reason]
+    const collabId = randomUUID();
+    await db.query(
+      `INSERT INTO collaboration_invitations (id, sender_id, recipient_id, message, status, created_at, updated_at) 
+       VALUES (?, ?, ?, ?, 'accepted', NOW(), NOW())`,
+      [collabId, userA, userB, reason]
     );
-    return result.insertId;
+    return collabId;
   }
 
   /**
@@ -58,11 +60,11 @@ class CollaborationAlgorithm {
   /**
    * Envoie une notification à un utilisateur
    */
-  static async sendNotification(userId, type, actorId, entityType, entityId, content) {
+  static async sendNotification(userId, type, actorId, actorName, actorImage, relatedType, relatedId, content) {
     await db.query(
-      `INSERT INTO notifications (user_id, type, actor_id, entity_type, entity_id, content) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [userId, type, actorId, entityType, entityId, content]
+      `INSERT INTO notifications (id, user_id, type, actor_id, actor_name, actor_image, related_type, related_id, content, priority, created_at) 
+       VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, 'normal', NOW())`,
+      [userId, type, actorId, actorName || 'Utilisateur', actorImage || null, relatedType, relatedId, content]
     );
   }
 
@@ -96,6 +98,8 @@ class CollaborationAlgorithm {
       senderId, 
       'COLLAB_ACCEPTED', 
       acceptorId, 
+      null,
+      null,
       'collaboration', 
       invitationId, 
       'a accepté votre invitation de collaboration'
@@ -131,6 +135,8 @@ class CollaborationAlgorithm {
       senderId, 
       'COLLAB_REJECTED', 
       rejectorId, 
+      null,
+      null,
       'collaboration', 
       invitationId, 
       'a refusé votre invitation de collaboration'

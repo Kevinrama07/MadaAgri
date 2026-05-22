@@ -79,7 +79,7 @@ router.put('/', authMiddleware, asyncHandler(async (req, res) => {
   const userId = req.user?.id;
   if (!userId) return res.status(401).json({ error: 'Utilisateur non authentifié.' });
 
-  const { displayName, bio, regionId, phone, profileImageUrl, language, timezone, date_format, privacy_settings, notification_settings } = req.body;
+  const { displayName, bio, regionId, phone, profileImageUrl, language, preferredLanguage, timezone, date_format, privacy_settings, notification_settings } = req.body;
   const updates = [];
   const params = [];
 
@@ -106,6 +106,9 @@ router.put('/', authMiddleware, asyncHandler(async (req, res) => {
   if (language !== undefined) {
     updates.push('language = ?');
     params.push(language);
+  } else if (preferredLanguage !== undefined) {
+    updates.push('language = ?');
+    params.push(preferredLanguage);
   }
   if (timezone !== undefined) {
     updates.push('timezone = ?');

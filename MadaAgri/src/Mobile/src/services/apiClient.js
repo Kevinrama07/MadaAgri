@@ -2,6 +2,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { STORAGE_KEYS } from '../constants/storage';
+import { getToken } from '../lib/api';
 
 function getApiUrl() {
   // 1️⃣ Vérifier la variable d'environnement
@@ -50,7 +52,12 @@ function getApiUrl() {
   return apiUrl;
 }
 
-const API_URL = getApiUrl();
+function ensureApiPath(url) {
+  const cleaned = url.replace(/\/+$/, '');
+  return cleaned.includes('/api') ? cleaned : cleaned + '/api';
+}
+
+const API_URL = ensureApiPath(getApiUrl());
 
 console.log(`
 ╔══════════════════════════════════════════════╗
@@ -77,7 +84,8 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   async (config) => {
     try {
-      const token = await AsyncStorage.getItem('authToken');
+      let token = await AsyncStorage.getItem(STORAGE_KEYS.TOKEN);
+      if (!token) token = getToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -173,7 +181,7 @@ apiClient.interceptors.response.use(
     // Erreur d'authentification
     if (error.response?.status === 401) {
       console.error('[🔐 AUTH ERROR] Token expired or invalid');
-      await AsyncStorage.removeItem('authToken');
+      await AsyncStorage.removeItem(STORAGE_KEYS.TOKEN);
     }
 
     // Log final consolidé

@@ -1,32 +1,40 @@
 .navbar {
   position: sticky;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
   background: color-mix(in srgb, var(--surface) 85%, transparent);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
-  transition: box-shadow var(--transition-fast);
+  transition: box-shadow var(--transition-fast), background-color var(--transition-fast);
+  will-change: box-shadow;
 }
 
 .navbar.scrolled {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  background: color-mix(in srgb, var(--surface) 95%, transparent);
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 24px;
   height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  position: relative;
 }
 
 .left {
   display: flex;
   align-items: center;
   gap: 32px;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .logo {
@@ -37,6 +45,12 @@
   font-size: 18px;
   color: var(--text);
   text-decoration: none;
+  flex-shrink: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.logo:hover {
+  opacity: 0.8;
 }
 
 .logoIcon {
@@ -58,6 +72,10 @@
 .navLinks {
   display: flex;
   gap: 4px;
+  flex: 1 0 auto;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
 }
 
 .navLink {
@@ -71,22 +89,28 @@
   white-space: nowrap;
   position: relative;
   letter-spacing: -0.01em;
+  border: 1px solid transparent;
+  cursor: pointer;
 }
 
 .navLink:hover {
   color: var(--text);
   background: var(--background-secondary);
+  border-color: rgba(0, 0, 0, 0.05);
 }
 
 .navLink.active {
   color: var(--primary);
   background: var(--primary-light);
   font-weight: 600;
+  border-color: var(--primary);
 }
 
 /* Productivité dropdown */
 .prodDropdown {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .prodBtn {
@@ -100,19 +124,22 @@
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
   font-family: inherit;
+  white-space: nowrap;
 }
 
 .prodBtn:hover {
   color: var(--text);
   background: var(--background-secondary);
+  border-color: rgba(0, 0, 0, 0.05);
 }
 
 .prodBtnActive {
   color: var(--primary);
   background: var(--primary-light);
+  border-color: var(--primary);
 }
 
 .chevron {
@@ -125,16 +152,18 @@
 
 .prodMenu {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 10px);
   right: 0;
   min-width: 260px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
   padding: 6px;
-  z-index: 200;
+  z-index: 1001;
   animation: dropdownSlide 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 @keyframes dropdownSlide {
@@ -191,15 +220,20 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 0 1 auto;
+  margin-left: auto;
+  padding-left: 8px;
 }
 
 .themeWrapper {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .themeBtn {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -207,23 +241,26 @@
   color: var(--text-secondary);
   transition: all var(--transition-fast);
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
 }
 
 .themeBtn:hover {
   background: var(--background-secondary);
   color: var(--text);
+  border-color: rgba(0, 0, 0, 0.05);
 }
 
 .notifWrapper {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .notifBtn {
   position: relative;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -231,48 +268,68 @@
   color: var(--text-secondary);
   transition: all var(--transition-fast);
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
 }
 
 .notifBtn:hover {
   background: var(--background-secondary);
   color: var(--text);
+  border-color: rgba(0, 0, 0, 0.05);
 }
 
 .notifBadge {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
   background: var(--error);
   color: white;
   font-size: 10px;
   font-weight: 700;
-  border-radius: 8px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
+  border: 2px solid var(--surface);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 .profileBtn {
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  padding: 2px;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.profileBtn:hover {
+  border-color: var(--primary);
 }
 
 .profileAvatar {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
   transition: all var(--transition-fast);
+  display: block;
 }
 
 .profileInitials {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   background: var(--gradient);
   color: var(--text-inverse);
   border-radius: 50%;
@@ -282,29 +339,33 @@
   font-size: 12px;
   font-weight: 700;
   transition: all var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .profileBtn:hover .profileAvatar,
 .profileBtn:hover .profileInitials {
-  transform: scale(1.05);
-  box-shadow: var(--shadow);
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .settingsBtn {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-md);
   color: var(--text-secondary);
   transition: all var(--transition-fast);
-  text-decoration: none;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
 }
 
 .settingsBtn:hover {
   background: var(--background-secondary);
   color: var(--text);
+  border-color: rgba(0, 0, 0, 0.05);
 }
 
 .loginBtn {
@@ -316,11 +377,16 @@
   border-radius: var(--radius-md);
   text-decoration: none;
   transition: all var(--transition-fast);
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
 .loginBtn:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 }
 
 .mobileToggle {

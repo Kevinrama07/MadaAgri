@@ -99,7 +99,9 @@ router.post('/login', authLimiter, asyncHandler(async (req, res) => {
         email: user.email,
         name: user.display_name,
         userType,
-        role: user.role
+        role: user.role,
+        language: user.language || 'fr',
+        profile_image_url: user.profile_image_url
       },
       token
     });
@@ -120,7 +122,7 @@ router.get('/me', authMiddleware, asyncHandler(async (req, res) => {
   console.log('[auth/me] Request from user:', userId);
   try {
     const [rows] = await pool.query(
-      `SELECT id, email, display_name, role, profile_image_url, bio, region_id, phone, created_at, updated_at,
+      `SELECT id, email, display_name, role, profile_image_url, bio, region_id, phone, language, created_at, updated_at,
         (SELECT COUNT(*) FROM follows WHERE followee_id = ?) AS followers_count,
         (SELECT COUNT(*) FROM follows WHERE follower_id = ?) AS following_count,
         (SELECT COUNT(*) FROM posts WHERE author_id = ?) AS posts_count

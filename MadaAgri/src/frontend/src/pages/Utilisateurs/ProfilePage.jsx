@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { FiMail, FiPhone, FiMapPin, FiEdit, FiCamera, FiFileText } from 'react-icons/fi';
 import { dataApi } from '../../lib/api';
@@ -6,6 +7,7 @@ import PostCard from '../Publications/PostCard';
 import styles from './ProfilePage.module.css';
 
 export default function ProfilePage({ user, onUserProfileClick }) {
+  const { t } = useTranslation(['common', 'dashboard', 'auth']);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [profileImageUrl, setProfileImageUrl] = useState(user?.profile_image_url || '/src/images/avatar.gif');
@@ -25,17 +27,17 @@ export default function ProfilePage({ user, onUserProfileClick }) {
   const [showFollowingModal, setShowFollowingModal] = useState(false);
   const [showCollaboratorsModal, setShowCollaboratorsModal] = useState(false);
 
-  const roleDisplay = { farmer: 'Agriculteur', client: 'Client', trader: 'Commercant' };
+  const roleDisplay = { farmer: t('auth:farmer'), client: t('auth:client'), trader: 'Commercant' };
 
   const handleProfileUpdated = async (url) => {
-    setProfileStatus('Enregistrement...');
+    setProfileStatus(t('common:saving'));
     try {
       await dataApi.updateProfilePicture(url);
       setProfileImageUrl(url);
-      setProfileStatus('Photo de profil mise a jour');
+      setProfileStatus(t('common:success'));
       setTimeout(() => setProfileStatus(''), 3000);
     } catch (err) {
-      setProfileStatus(err.message || 'Impossible de mettre a jour.');
+      setProfileStatus(err.message || t('common:error'));
       setTimeout(() => setProfileStatus(''), 3000);
     }
   };
@@ -49,22 +51,22 @@ export default function ProfilePage({ user, onUserProfileClick }) {
     if (!selectedFile) return;
     const allowed = ['image/jpeg', 'image/jpg', 'image/png'];
     if (!allowed.includes(selectedFile.type)) {
-      setProfileStatus('Format invalide');
+      setProfileStatus(t('common:invalid'));
       setTimeout(() => setProfileStatus(''), 3000);
       return;
     }
     if (selectedFile.size > 5 * 1024 * 1024) {
-      setProfileStatus('Taille max 5MB.');
+      setProfileStatus('Max 5MB.');
       setTimeout(() => setProfileStatus(''), 3000);
       return;
     }
     setUploading(true);
-    setProfileStatus('Upload en cours...');
+    setProfileStatus(t('common:loading'));
     try {
       const imageUrl = await dataApi.uploadImage(selectedFile);
       await handleProfileUpdated(imageUrl);
     } catch (err) {
-      setProfileStatus(err.message || 'Erreur lors de upload.');
+      setProfileStatus(err.message || t('common:error'));
       setTimeout(() => setProfileStatus(''), 3000);
     } finally {
       setUploading(false);
@@ -73,15 +75,15 @@ export default function ProfilePage({ user, onUserProfileClick }) {
   };
 
   const handleSaveProfile = async () => {
-    setProfileStatus('Enregistrement du profil...');
+    setProfileStatus(t('common:saving'));
     try {
       const updatedUser = await dataApi.updateUserProfile({ displayName, bio, location, phone, profileImageUrl });
       if (updatedUser) {
-        setProfileStatus('Profil mis a jour');
+        setProfileStatus(t('common:success'));
         setTimeout(() => { setProfileStatus(''); setShowEditModal(false); }, 2000);
       }
     } catch (err) {
-      setProfileStatus(err.message || 'Erreur lors de la sauvegarde.');
+      setProfileStatus(err.message || t('common:error'));
       setTimeout(() => setProfileStatus(''), 3000);
     }
   };
@@ -148,10 +150,10 @@ export default function ProfilePage({ user, onUserProfileClick }) {
           <div className={styles.avatarWrapper}>
             <img
               src={profileImageUrl || '/src/images/avatar.gif'}
-              alt="Profil"
+              alt={t('dashboard:myProfile')}
               className={styles.profilePicture}
               onClick={handleAvatarClick}
-              title="Cliquer pour changer"
+              title={t('dashboard:clickToChange')}
             />
             <div className={styles.cameraOverlay} onClick={handleAvatarClick}>
               <FiCamera />
@@ -175,22 +177,22 @@ export default function ProfilePage({ user, onUserProfileClick }) {
             <div className={styles.statsRow}>
               <button className={styles.statBtn} onClick={() => setShowFollowersModal(true)}>
                 <span className={styles.statNumber}>{followersCount}</span>
-                <span className={styles.statLabel}>abonn{followersCount > 1 ? '\u00e9s' : '\u00e9'}</span>
+                <span className={styles.statLabel}>{t('dashboard:followers')}</span>
               </button>
               <div className={styles.statDivider} />
               <button className={styles.statBtn} onClick={() => setShowFollowingModal(true)}>
                 <span className={styles.statNumber}>{followingCount}</span>
-                <span className={styles.statLabel}>abonnement{followingCount > 1 ? 's' : ''}</span>
+                <span className={styles.statLabel}>{t('dashboard:following')}</span>
               </button>
               <div className={styles.statDivider} />
               <button className={styles.statBtn} onClick={() => setShowCollaboratorsModal(true)}>
                 <span className={styles.statNumber}>{collaboratorsCount}</span>
-                <span className={styles.statLabel}>collaborateur{collaboratorsCount > 1 ? 's' : ''}</span>
+                <span className={styles.statLabel}>{t('dashboard:collaborators')}</span>
               </button>
               <div className={styles.statDivider} />
               <div className={styles.statItem}>
                 <span className={styles.statNumber}>{publicationsCount}</span>
-                <span className={styles.statLabel}>publication{publicationsCount > 1 ? 's' : ''}</span>
+                <span className={styles.statLabel}>{t('dashboard:publications')}</span>
               </div>
             </div>
 
@@ -212,7 +214,7 @@ export default function ProfilePage({ user, onUserProfileClick }) {
               )}
               <div className={styles.infoItem}>
                 <FiMail className={styles.infoIcon} />
-                <span>{user?.email || 'Non disponible'}</span>
+                <span>{user?.email || t('common:notAvailable')}</span>
               </div>
               {phone && (
                 <div className={styles.infoItem}>
@@ -225,7 +227,7 @@ export default function ProfilePage({ user, onUserProfileClick }) {
             {/* Edit Button */}
             <div className={styles.actionButtons}>
               <button className={clsx(styles.actionBtn, styles.editBtn)} onClick={() => setShowEditModal(true)}>
-                <FiEdit /> Modifier le profil
+                <FiEdit /> {t('dashboard:editProfile')}
               </button>
             </div>
 
@@ -236,11 +238,11 @@ export default function ProfilePage({ user, onUserProfileClick }) {
 
       {/* Publications */}
       <div className={styles.postsSection}>
-        <h3 className={styles.sectionTitle}>Publications ({publicationsCount})</h3>
+        <h3 className={styles.sectionTitle}>{t('dashboard:publications')} ({publicationsCount})</h3>
         {posts.length === 0 ? (
           <div className={styles.emptyPosts}>
             <FiFileText className={styles.emptyIcon} />
-            <p>Aucune publication pour le moment</p>
+            <p>{t('dashboard:noPosts')}</p>
           </div>
         ) : (
           <div className={styles.postsList}>
@@ -256,29 +258,29 @@ export default function ProfilePage({ user, onUserProfileClick }) {
         <div className={styles.modalOverlay} onClick={() => setShowEditModal(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h3>Modifier le profil</h3>
+              <h3>{t('dashboard:editProfile')}</h3>
               <button className={styles.modalClose} onClick={() => setShowEditModal(false)}>&times;</button>
             </div>
             <div className={styles.modalBody}>
               <label className={styles.inputLabel}>
-                Nom d'affichage
-                <input className={styles.inputField} value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Votre nom" />
+                {t('dashboard:nameLabel')}
+                <input className={styles.inputField} value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder={t('dashboard:addBio')} />
               </label>
               <label className={styles.inputLabel}>
-                Bio
-                <textarea className={clsx(styles.inputField, styles.textarea)} value={bio} rows={4} onChange={(e) => setBio(e.target.value)} placeholder="Parlez de vous..." />
+                {t('dashboard:bioLabel')}
+                <textarea className={clsx(styles.inputField, styles.textarea)} value={bio} rows={4} onChange={(e) => setBio(e.target.value)} placeholder={t('dashboard:addBio')} />
               </label>
               <label className={styles.inputLabel}>
-                Localisation
-                <input className={styles.inputField} value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ville, Pays" />
+                {t('dashboard:locationLabel')}
+                <input className={styles.inputField} value={location} onChange={(e) => setLocation(e.target.value)} placeholder={t('dashboard:locationLabel')} />
               </label>
               <label className={styles.inputLabel}>
-                Telephone
+                {t('dashboard:phoneLabel')}
                 <input className={styles.inputField} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+261 XX XX XXX XX" />
               </label>
               <div className={styles.modalActions}>
-                <button className={clsx(styles.modalBtn, styles.cancelBtn)} onClick={() => setShowEditModal(false)}>Annuler</button>
-                <button className={clsx(styles.modalBtn, styles.saveBtn)} onClick={handleSaveProfile}>Enregistrer</button>
+                <button className={clsx(styles.modalBtn, styles.cancelBtn)} onClick={() => setShowEditModal(false)}>{t('common:cancel')}</button>
+                <button className={clsx(styles.modalBtn, styles.saveBtn)} onClick={handleSaveProfile}>{t('common:save')}</button>
               </div>
             </div>
           </div>
@@ -287,13 +289,13 @@ export default function ProfilePage({ user, onUserProfileClick }) {
 
       {/* Followers Modal */}
       {showFollowersModal && (
-        <UserListModal title={`Abonn\u00e9s (${followersCount})`} users={followers} idKey="follower_id" onClose={() => setShowFollowersModal(false)} onUserClick={onUserProfileClick} />
+        <UserListModal title={`${t('dashboard:followers')} (${followersCount})`} users={followers} idKey="follower_id" onClose={() => setShowFollowersModal(false)} onUserClick={onUserProfileClick} />
       )}
       {showFollowingModal && (
-        <UserListModal title={`Abonnements (${followingCount})`} users={following} idKey="followee_id" onClose={() => setShowFollowingModal(false)} onUserClick={onUserProfileClick} />
+        <UserListModal title={`${t('dashboard:following')} (${followingCount})`} users={following} idKey="followee_id" onClose={() => setShowFollowingModal(false)} onUserClick={onUserProfileClick} />
       )}
       {showCollaboratorsModal && (
-        <UserListModal title={`Collaborateurs (${collaboratorsCount})`} users={collaborators} idKey="followee_id" onClose={() => setShowCollaboratorsModal(false)} onUserClick={onUserProfileClick} />
+        <UserListModal title={`${t('dashboard:collaborators')} (${collaboratorsCount})`} users={collaborators} idKey="followee_id" onClose={() => setShowCollaboratorsModal(false)} onUserClick={onUserProfileClick} />
       )}
     </div>
   );
@@ -309,7 +311,7 @@ function UserListModal({ title, users, idKey, onClose, onUserClick }) {
         </div>
         <div className={styles.modalBody}>
           {users.length === 0 ? (
-            <p className={styles.emptyMessage}>Aucun r\u00e9sultat</p>
+            <p className={styles.emptyMessage}>{t('common:noResults')}</p>
           ) : (
             <ul className={styles.userList}>
               {users.map((u) => (

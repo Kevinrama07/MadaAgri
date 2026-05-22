@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { FiSearch, FiCheck, FiX, FiUserPlus, FiUsers, FiTrendingUp, FiCalendar, FiAward, FiExternalLink } from 'react-icons/fi';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/ContextAuthentification';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { dataApi } from '../../lib/api';
 import styles from '../../styles/Composants/RightSidebar.module.css';
 
+const COLLABORATORS_DISPLAY_LIMIT = 5;
+
 export default function RightSidebar({ onUserProfileClick }) {
+  const { t } = useTranslation(['navigation', 'dashboard', 'common']);
   const { user } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
@@ -28,17 +32,15 @@ export default function RightSidebar({ onUserProfileClick }) {
   async function fetchData() {
     setLoading(true);
     try {
-      const [receivedInvitations, followersData, followingData] = await Promise.all([
+      const [receivedInvitations, collaboratorsData, followersData, followingData] = await Promise.all([
         dataApi.fetchReceivedInvitations().catch(() => []),
+        dataApi.fetchCollaborators(user.id).catch(() => ({ collaborators: [] })),
         dataApi.fetchFollowers(user.id).catch(() => []),
         dataApi.fetchFollowing(user.id).catch(() => []),
       ]);
       
       setInvitations(receivedInvitations || []);
-
-      const followerIds = new Set(followersData.map(f => f.follower_id));
-      const mutualFollows = followingData.filter(f => followerIds.has(f.followee_id));
-      setCollaborators(mutualFollows);
+      setCollaborators(collaboratorsData?.collaborators || []);
 
       const followingIds = new Set(followingData.map(f => f.followee_id));
       const nonFollowers = followersData.filter(f => !followingIds.has(f.follower_id));
@@ -123,7 +125,7 @@ export default function RightSidebar({ onUserProfileClick }) {
         <div className={clsx(styles['section-header'])}>
           <h3 className={clsx(styles['sidebar-title'])}>
             <FiSearch className={clsx(styles['title-icon'])} />
-            Rechercher
+            {t('search', { ns: 'navigation' })}
           </h3>
         </div>
 
@@ -131,14 +133,14 @@ export default function RightSidebar({ onUserProfileClick }) {
           <FiSearch className={clsx(styles['search-icon'])} />
           <input
             type="text"
-            placeholder="Nom, email..."
+            placeholder={t('search', { ns: 'navigation' })}
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
             className={clsx(styles['search-input'])}
           />
         </div>
 
-        {isSearching && <div className={clsx(styles['loading'])}>Recherche...</div>}
+        {isSearching && <div className={clsx(styles['loading'])}>{t('loading', { ns: 'common' })}</div>}
 
         {searchResults.length > 0 && (
           <div className={clsx(styles['search-results'])}>
@@ -168,7 +170,7 @@ export default function RightSidebar({ onUserProfileClick }) {
           <div className={clsx(styles['section-header'])}>
             <h3 className={clsx(styles['sidebar-title'])}>
               <FiUserPlus className={clsx(styles['title-icon'])} />
-              Invitations
+              {t('invitations', { ns: 'dashboard' })}
             </h3>
             <span className={clsx(styles['count-badge'])}>{invitations.length}</span>
           </div>
@@ -196,10 +198,10 @@ export default function RightSidebar({ onUserProfileClick }) {
                 </div>
                 <div className={clsx(styles['invitation-actions'])}>
                   <button className={clsx(styles['btn-accept'])} onClick={() => handleAcceptInvitation(invitation.id)}>
-                    <FiCheck /> Accepter
+                    <FiCheck /> {t('accept', { ns: 'dashboard' })}
                   </button>
                   <button className={clsx(styles['btn-reject'])} onClick={() => handleRejectInvitation(invitation.id)}>
-                    <FiX /> Refuser
+                    <FiX /> {t('decline', { ns: 'dashboard' })}
                   </button>
                 </div>
               </div>
@@ -212,24 +214,24 @@ export default function RightSidebar({ onUserProfileClick }) {
         <div className={clsx(styles['section-header'])}>
           <h3 className={clsx(styles['sidebar-title'])}>
             <FiUsers className={clsx(styles['title-icon'])} />
-            Collaborateurs
+            {t('collaborators', { ns: 'navigation' })}
           </h3>
           <span className={clsx(styles['count-badge'])}>{collaborators.length}</span>
         </div>
 
         <div className={clsx(styles['collaborators-list'])}>
           {loading ? (
-            <div className={clsx(styles['loading'])}>Chargement...</div>
+            <div className={clsx(styles['loading'])}>{t('loading', { ns: 'common' })}</div>
           ) : filteredCollaborators.length === 0 ? (
             <div className={clsx(styles['empty-state'])}>
-              <p>{searchQuery ? 'Aucun resultat' : 'Aucun collaborateur'}</p>
+              <p>{searchQuery ? t('noResults', { ns: 'common' }) : t('noCollaborators', { ns: 'dashboard' })}</p>
             </div>
           ) : (
-            filteredCollaborators.slice(0, 8).map((collaborator) => (
+            filteredCollaborators.slice(0, COLLABORATORS_DISPLAY_LIMIT).map((collaborator) => (
               <div
-                key={collaborator.id || collaborator.followee_id}
+                key={collaborator.id}
                 className={clsx(styles['collaborator-item'])}
-                onClick={() => handleUserClick(collaborator.followee_id || collaborator.id)}
+                onClick={() => handleUserClick(collaborator.id)}
               >
                 <img
                   src={collaborator.profile_image_url || '/src/images/avatar.gif'}
@@ -244,9 +246,9 @@ export default function RightSidebar({ onUserProfileClick }) {
           )}
         </div>
 
-        {collaborators.length > 8 && (
+        {collaborators.length > COLLABORATORS_DISPLAY_LIMIT && (
           <button className={clsx(styles['see-more-btn'])} onClick={() => navigate('/network')}>
-            Voir tous ({collaborators.length})
+            {t('viewAll', { ns: 'common', count: collaborators.length })}
           </button>
         )}
       </div>
@@ -256,7 +258,7 @@ export default function RightSidebar({ onUserProfileClick }) {
           <div className={clsx(styles['section-header'])}>
             <h3 className={clsx(styles['sidebar-title'])}>
               <FiUserPlus className={clsx(styles['title-icon'])} />
-              Suggestions
+              {t('suggestions', { ns: 'dashboard' })}
             </h3>
           </div>
 
@@ -273,11 +275,11 @@ export default function RightSidebar({ onUserProfileClick }) {
                     />
                     <div className={clsx(styles['suggestion-info'])}>
                       <p className={clsx(styles['suggestion-name'])}>{suggestion.display_name || suggestion.email}</p>
-                      <p className={clsx(styles['suggestion-role'])}>Vous suit</p>
+                      <p className={clsx(styles['suggestion-role'])}>{t('followsYou', { ns: 'dashboard' })}</p>
                     </div>
                   </div>
                   <button className={clsx(styles['btn-follow'])} onClick={() => handleFollow(userId)}>
-                    Suivre
+                    {t('follow', { ns: 'dashboard' })}
                   </button>
                 </div>
               );
@@ -289,7 +291,7 @@ export default function RightSidebar({ onUserProfileClick }) {
       <div className={clsx(styles['sidebar-section'], styles['tip-section'])}>
         <div className={clsx(styles['tip-icon'])}>{todayTip.icon}</div>
         <div className={clsx(styles['tip-content'])}>
-          <p className={clsx(styles['tip-title'])}>Conseil du jour</p>
+          <p className={clsx(styles['tip-title'])}>{t('todayTip', { ns: 'dashboard' })}</p>
           <p className={clsx(styles['tip-text'])}>{todayTip.text}</p>
         </div>
       </div>

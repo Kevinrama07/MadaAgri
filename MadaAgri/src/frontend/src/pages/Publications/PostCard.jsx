@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { FiMoreVertical, FiCornerDownLeft, FiEdit, FiTrash2, FiXCircle, FiCheck, FiClock, FiMessageSquare } from 'react-icons/fi';
 import { useAuth } from '../../contexts/ContextAuthentification';
@@ -6,8 +7,18 @@ import { useFadeIn, animateLikeButton, animateCounter } from '../../lib/animatio
 import { dataApi } from '../../lib/api';
 import styles from './PostCard.module.css';
 
+function getTimeAgo(date, t) {
+  const seconds = Math.floor((new Date() - date) / 1000);
+  if (seconds < 60) return t('justNow');
+  if (seconds < 3600) return t('minutesAgo', { count: Math.floor(seconds / 60) });
+  if (seconds < 86400) return t('hoursAgo', { count: Math.floor(seconds / 3600) });
+  if (seconds < 604800) return t('daysAgo', { count: Math.floor(seconds / 86400) });
+  return date.toLocaleDateString();
+}
+
 // Composant pour un commentaire individuel (récursif pour les réponses)
 function CommentItem({ comment, onReply, onUserProfileClick, level = 0 }) {
+  const { t } = useTranslation('common');
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -62,9 +73,9 @@ function CommentItem({ comment, onReply, onUserProfileClick, level = 0 }) {
             onClick={() => onUserProfileClick && onUserProfileClick(comment.user_id)}
             style={{ cursor: onUserProfileClick ? 'pointer' : 'default' }}
           >
-            {comment.display_name || 'Anonyme'}
+            {comment.display_name || t('anonymous')}
           </span>
-          <span className={clsx(styles['comment-time'])}>{getTimeAgo(new Date(comment.created_at))}</span>
+          <span className={clsx(styles['comment-time'])}>{getTimeAgo(new Date(comment.created_at), t)}</span>
         </div>
         <p className={clsx(styles['comment-content'])}>{comment.content}</p>
         
@@ -73,7 +84,7 @@ function CommentItem({ comment, onReply, onUserProfileClick, level = 0 }) {
           className={clsx(styles['reply-btn'])}
           onClick={() => setShowReplyForm(!showReplyForm)}
         >
-          <FiMessageSquare size={12} /> Répondre
+          <FiMessageSquare size={12} /> {t('reply')}
         </button>
 
         {/* Afficher le nombre de réponses */}
@@ -82,7 +93,7 @@ function CommentItem({ comment, onReply, onUserProfileClick, level = 0 }) {
             className={clsx(styles['show-replies-btn'])}
             onClick={loadReplies}
           >
-            {loadingReplies ? 'Chargement...' : `${comment.replies_count || replies.length} réponse(s)`}
+            {loadingReplies ? t('loading') : `${comment.replies_count || replies.length} ${t('reply')}(s)`}
           </button>
         )}
 
@@ -91,7 +102,7 @@ function CommentItem({ comment, onReply, onUserProfileClick, level = 0 }) {
           <div className={clsx(styles['reply-form'])}>
             <textarea
               className={clsx(styles['reply-input'])}
-              placeholder="Écrire une réponse..."
+              placeholder={t('writeReply')}
               value={replyContent}
               onChange={(e) => setReplyContent(e.target.value)}
               rows="2"
@@ -101,14 +112,14 @@ function CommentItem({ comment, onReply, onUserProfileClick, level = 0 }) {
                 className={clsx(styles['cancel-reply-btn'])}
                 onClick={() => setShowReplyForm(false)}
               >
-                Annuler
+                {t('cancel')}
               </button>
               <button 
                 className={clsx(styles['submit-reply-btn'])}
                 onClick={handleSubmitReply}
                 disabled={!replyContent.trim() || submitting}
               >
-                {submitting ? <FiClock style={{animation: 'spin 1s linear infinite'}} /> : 'Envoyer'}
+                {submitting ? <FiClock style={{animation: 'spin 1s linear infinite'}} /> : t('send')}
               </button>
             </div>
           </div>
@@ -133,17 +144,9 @@ function CommentItem({ comment, onReply, onUserProfileClick, level = 0 }) {
   );
 }
 
-function getTimeAgo(date) {
-  const seconds = Math.floor((new Date() - date) / 1000);
-  if (seconds < 60) return 'À l\'instant';
-  if (seconds < 3600) return `Il y a ${Math.floor(seconds / 60)}m`;
-  if (seconds < 86400) return `Il y a ${Math.floor(seconds / 3600)}h`;
-  if (seconds < 604800) return `Il y a ${Math.floor(seconds / 86400)}j`;
-  return date.toLocaleDateString('fr-FR');
-}
-
 export default function PostCard({ post, onLike, onUnlike, onRefresh, onUserProfileClick }) {
   const { user } = useAuth();
+  const { t } = useTranslation('common');
   const cardRef = useFadeIn();
   const likeButtonRef = useRef(null);
   const countRef = useRef(null);
@@ -192,15 +195,15 @@ export default function PostCard({ post, onLike, onUnlike, onRefresh, onUserProf
   };
 
   const postDate = new Date(post.created_at);
-  const timeAgo = getTimeAgo(postDate);
+  const timeAgo = getLocalTimeAgo(postDate);
 
-  function getTimeAgo(date) {
+  function getLocalTimeAgo(date) {
     const seconds = Math.floor((new Date() - date) / 1000);
-    if (seconds < 60) return 'À l\'instant';
-    if (seconds < 3600) return `Il y a ${Math.floor(seconds / 60)}m`;
-    if (seconds < 86400) return `Il y a ${Math.floor(seconds / 3600)}h`;
-    if (seconds < 604800) return `Il y a ${Math.floor(seconds / 86400)}j`;
-    return date.toLocaleDateString('fr-FR');
+    if (seconds < 60) return t('justNow');
+    if (seconds < 3600) return t('minutesAgo', { count: Math.floor(seconds / 60) });
+    if (seconds < 86400) return t('hoursAgo', { count: Math.floor(seconds / 3600) });
+    if (seconds < 604800) return t('daysAgo', { count: Math.floor(seconds / 86400) });
+    return date.toLocaleDateString();
   }
 
   // Load comments when showComments becomes true
@@ -230,7 +233,7 @@ export default function PostCard({ post, onLike, onUnlike, onRefresh, onUserProf
     try {
       const comment = await dataApi.createPostComment(post.id, newComment);
       // Add display_name from user context
-      setComments([...comments, { ...comment, display_name: user?.display_name || user?.email || 'Anonyme' }]);
+      setComments([...comments, { ...comment, display_name: user?.display_name || user?.email || t('anonymous') }]);
       setNewComment('');
     } catch (e) {
       console.error('Erreur envoi commentaire:', e);
@@ -267,27 +270,27 @@ export default function PostCard({ post, onLike, onUnlike, onRefresh, onUserProf
           <button
             className={clsx(styles['instagram-menu-btn'])}
             onClick={() => setShowMenu(!showMenu)}
-            title="Plus d'actions"
+            title={t('seeMore')}
           >
             <FiMoreVertical />
           </button>
           {showMenu && (
             <div className={clsx(styles['instagram-dropdown-menu'])}>
               <button type="button" className={clsx(styles['instagram-dropdown-item'])}>
-                <FiCornerDownLeft style={{marginRight: '8px'}} /> Épingler
+                <FiCornerDownLeft style={{marginRight: '8px'}} /> {t('pin')}
               </button>
               {isOwnPost && (
                 <>
                   <button type="button" className={clsx(styles['instagram-dropdown-item'])}>
-                    <FiEdit style={{marginRight: '8px'}} /> Modifier
+                    <FiEdit style={{marginRight: '8px'}} /> {t('edit')}
                   </button>
                   <button type="button" className={clsx(styles['instagram-dropdown-item'], styles['danger'])}>
-                    <FiTrash2 style={{marginRight: '8px'}} /> Supprimer
+                    <FiTrash2 style={{marginRight: '8px'}} /> {t('delete')}
                   </button>
                 </>
               )}
               <button type="button" className={clsx(styles['instagram-dropdown-item'])}>
-                <FiXCircle style={{marginRight: '8px'}} /> Signaler
+                <FiXCircle style={{marginRight: '8px'}} /> {t('report')}
               </button>
             </div>
           )}
@@ -312,8 +315,8 @@ export default function PostCard({ post, onLike, onUnlike, onRefresh, onUserProf
           ref={likeButtonRef}
           className={clsx(styles['instagram-like-btn'], { [styles['liked']]: isLiked })}
           onClick={toggleLike}
-          title={isLiked ? 'Retirer le like' : 'J\'aime'}
-          aria-label={`${isLiked ? 'Contrairement aimé' : 'Aimer ce post'} - ${likesCount} likes`}
+          title={isLiked ? t('unlike') : t('like')}
+          aria-label={`${isLiked ? t('unlike') : t('like')} - ${likesCount} likes`}
         >
           <span className={clsx(styles['instagram-heart'], { [styles['liked']]: isLiked })}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={clsx(styles['heart-svg'], { [styles['filled']]: isLiked })}>
@@ -326,8 +329,8 @@ export default function PostCard({ post, onLike, onUnlike, onRefresh, onUserProf
         <p
           className={clsx(styles['instagram-comment-btn'])}
           onClick={() => setShowComments(!showComments)}
-          title={showComments ? 'Masquer les commentaires' : 'Afficher les commentaires'}
-          aria-label={`${showComments ? 'Masquer' : 'Afficher'} les ${post.comments_count || 0} commentaires`}
+          title={showComments ? t('hideComments') : t('showComments')}
+          aria-label={`${showComments ? t('hideComments') : t('showComments')} ${post.comments_count || 0} ${t('comments')}`}
         >
           <span className={clsx(styles['instagram-comment-icon'])}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -346,11 +349,11 @@ export default function PostCard({ post, onLike, onUnlike, onRefresh, onUserProf
             {loadingComments ? (
               <div className={clsx(styles['comments-loading'])}>
                 <span className={clsx(styles['spinner-mini'])}></span>
-                <p>Chargement...</p>
+                <p>{t('loading')}</p>
               </div>
             ) : comments.length === 0 ? (
               <div className={clsx(styles['comments-empty'])}>
-                <p>Aucun commentaire pour le moment</p>
+                <p>{t('noComments')}</p>
               </div>
             ) : (
               comments.map((comment) => (
@@ -368,7 +371,7 @@ export default function PostCard({ post, onLike, onUnlike, onRefresh, onUserProf
           <div className={clsx(styles['instagram-comment-form'])}>
             <textarea
               className={clsx(styles['comment-input'])}
-              placeholder="Ajouter un commentaire..."
+              placeholder={t('writeComment')}
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               rows="2"

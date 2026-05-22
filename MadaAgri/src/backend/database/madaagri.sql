@@ -78,7 +78,8 @@ CREATE TABLE IF NOT EXISTS posts (
   visibility ENUM('public','followers','private') DEFAULT 'public',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_author_id (author_id)
 );
 
 CREATE TABLE IF NOT EXISTS post_likes (
@@ -109,14 +110,16 @@ CREATE TABLE IF NOT EXISTS follows (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (follower_id, followee_id),
   FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (followee_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (followee_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_follower_id (follower_id),
+  INDEX idx_followee_id (followee_id)
 );
 
 CREATE TABLE IF NOT EXISTS notifications (
   id VARCHAR(36) PRIMARY KEY,
-  user_id INT NOT NULL,
+  user_id VARCHAR(36) NOT NULL,
   type ENUM('message', 'collaboration', 'follow', 'like', 'comment', 'mention', 'purchase', 'order', 'order_confirmed', 'order_cancelled', 'profile_view', 'system') NOT NULL,
-  actor_id INT,
+  actor_id VARCHAR(36),
   actor_name VARCHAR(255),
   actor_image VARCHAR(500),
   content TEXT,
@@ -137,7 +140,7 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 
 CREATE TABLE IF NOT EXISTS notification_preferences (
-  user_id INT PRIMARY KEY,
+  user_id VARCHAR(36) PRIMARY KEY,
   email_enabled BOOLEAN DEFAULT 1,
   push_enabled BOOLEAN DEFAULT 1,
   sound_enabled BOOLEAN DEFAULT 1,
@@ -151,7 +154,7 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
 
 CREATE TABLE IF NOT EXISTS land_parcels (
   id VARCHAR(36) PRIMARY KEY,
-  user_id INT NOT NULL,
+  user_id VARCHAR(36) NOT NULL,
   name VARCHAR(255) NOT NULL,
   description TEXT,
   latitude DECIMAL(10, 8) NOT NULL,
@@ -178,7 +181,7 @@ CREATE TABLE IF NOT EXISTS land_parcels (
 
 CREATE TABLE IF NOT EXISTS crop_analysis_results (
   id VARCHAR(36) PRIMARY KEY,
-  user_id INT NOT NULL,
+  user_id VARCHAR(36) NOT NULL,
   parcel_id VARCHAR(36),
   image_url VARCHAR(500),
   detected_crop VARCHAR(100),
@@ -202,7 +205,8 @@ CREATE TABLE IF NOT EXISTS messages (
   is_read BOOLEAN DEFAULT FALSE,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_conversation_id (conversation_id)
 );
 
 CREATE TABLE IF NOT EXISTS deliveries (
@@ -235,7 +239,10 @@ CREATE TABLE IF NOT EXISTS collaboration_invitations (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY unique_invitation (sender_id, recipient_id),
   FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_sender_id (sender_id),
+  INDEX idx_recipient_id (recipient_id),
+  INDEX idx_status (status)
 );
 
 -- 🛒 MARKETPLACE: RESERVATIONS TABLE

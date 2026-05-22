@@ -122,6 +122,7 @@ export default function TableauDeBord() {
   };
 
   const handleUserProfileClick = (userId) => {
+    if (!userId) return;
     console.log('[TableauDeBord] User profile clicked:', userId);
     if (userId === user?.id) {
       console.log('[TableauDeBord] Own profile, redirecting to PROFILE');

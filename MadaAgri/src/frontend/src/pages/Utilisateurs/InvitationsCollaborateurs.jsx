@@ -102,7 +102,7 @@ export default function InvitationsCollaborateurs({ onUserProfileClick }) {
 
   async function fetchCollaborators() {
     const c = await dataApi.fetchCollaborators();
-    setCollaborators(c || []);
+    setCollaborators(c?.collaborators || []);
   }
 
   async function handleAccept(invitationId) {

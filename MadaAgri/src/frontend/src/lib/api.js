@@ -552,19 +552,32 @@ export const dataApi = {
     return data.suggestions;
   },
 
-  async fetchFollowers(limit = 50, offset = 0) {
-    const data = await apiFetch(`/network/followers?limit=${limit}&offset=${offset}`);
+  async fetchFollowers(userId, limit = 50, offset = 0) {
+    if (!userId) return [];
+    const path = `/follows/followers/${encodeURIComponent(userId)}?limit=${limit}&offset=${offset}`;
+    const data = await apiFetch(path);
     return data.followers;
   },
 
-  async fetchFollowing(limit = 50, offset = 0) {
-    const data = await apiFetch(`/network/following?limit=${limit}&offset=${offset}`);
+  async fetchFollowing(userId, limit = 50, offset = 0) {
+    if (!userId) return [];
+    const path = `/follows/following/${encodeURIComponent(userId)}?limit=${limit}&offset=${offset}`;
+    const data = await apiFetch(path);
     return data.following;
   },
 
-  async fetchCollaborators(limit = 50, offset = 0) {
-    const data = await apiFetch(`/network/collaborators?limit=${limit}&offset=${offset}`);
-    return data.collaborators;
+  async fetchCollaborators(userId, limit = 50, offset = 0) {
+    if (!userId) return { collaborators: [], pagination: { total: 0, limit, offset } };
+    const path = `/collaborations/collaborators/${encodeURIComponent(userId)}?limit=${limit}&offset=${offset}`;
+    const data = await apiFetch(path);
+    return {
+      collaborators: data.collaborators || [],
+      pagination: {
+        total: data.pagination?.total ?? data.total ?? 0,
+        limit: data.pagination?.limit ?? data.limit ?? limit,
+        offset: data.pagination?.offset ?? data.offset ?? offset,
+      }
+    };
   },
 
   async removeCollaboration(userId) {
@@ -575,11 +588,13 @@ export const dataApi = {
   },
 
   async fetchInvitationStatus(targetUserId) {
+    if (!targetUserId) throw new Error('targetUserId is required');
     const data = await apiFetch(`/network/invitations/status/${encodeURIComponent(targetUserId)}`);
     return data;
   },
 
   async fetchFollowStatus(userId) {
+    if (!userId) throw new Error('userId is required');
     const data = await apiFetch(`/network/follows/status/${encodeURIComponent(userId)}`);
     return data;
   },
@@ -641,11 +656,13 @@ export const dataApi = {
   },
 
   async fetchUserProfile(userId) {
+    if (!userId) throw new Error('userId is required');
     const data = await apiFetch(`/users/${encodeURIComponent(userId)}`);
     return data;
   },
 
   async fetchUserPosts(userId) {
+    if (!userId) throw new Error('userId is required');
     const data = await apiFetch(`/posts/user/${encodeURIComponent(userId)}`);
     return data.posts;
   },

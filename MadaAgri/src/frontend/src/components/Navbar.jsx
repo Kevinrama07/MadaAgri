@@ -1,31 +1,38 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/ContextAuthentification';
 import { ThemeSelector } from './ThemeSelector';
+import LanguageSwitcher from '../i18n/components/LanguageSwitcher';
 import NotificationsPanel from './NotificationsPanel';
 import { dataApi } from '../lib/api';
 import styles from './Navbar.module.css';
 
-const MAIN_BUTTONS = [
-  { key: 'feed', path: '/dashboard', label: 'Accueil' },
-  { key: 'post', path: '/dashboard/post', label: 'Publication' },
-  { key: 'network', path: '/dashboard/network', label: 'Réseau' },
-  { key: 'messages', path: '/dashboard/messages', label: 'Messages' },
-  { key: 'assistant', path: '/dashboard/assistant', label: 'Assistant' },
-  { key: 'dashboard', path: '/dashboard/stats', label: 'Tableau de bord' }
-];
+function useNavLabels() {
+  const { t } = useTranslation('navigation');
+  const MAIN_BUTTONS = [
+    { key: 'feed', path: '/dashboard', label: t('home') },
+    { key: 'post', path: '/dashboard/post', label: t('post') },
+    { key: 'network', path: '/dashboard/network', label: t('network') },
+    { key: 'messages', path: '/dashboard/messages', label: t('messages') },
+    { key: 'assistant', path: '/dashboard/assistant', label: t('assistant') },
+    { key: 'dashboard', path: '/dashboard/stats', label: t('dashboard') }
+  ];
 
-const PRODUCTIVITE_ITEMS = [
-  { key: 'create', path: '/dashboard/create', label: 'Ajouter un produit', icon: 'plus', farmerOnly: true },
-  { key: 'products', path: '/dashboard/products', label: 'Liste des produits', icon: 'grid', farmerOnly: true },
-  { key: 'marketplace', path: '/marketplace', label: 'Marketplace', icon: 'cart' },
-  { key: 'received_orders', path: '/dashboard/received-orders', label: 'Commandes reçues', icon: 'inbox', farmerOnly: true },
-  { key: 'analysis', path: '/dashboard/analysis', label: 'Analyse', icon: 'chart', farmerOnly: true },
-  { key: 'routes', path: '/dashboard/routes', label: 'Optimisation des trajets', icon: 'map', farmerOnly: true },
-  { key: 'orders', path: '/dashboard/orders', label: 'Mes commandes', icon: 'box', clientOnly: true },
-  { key: 'meteo_page', path: '/dashboard/meteo', label: 'Météo', icon: 'cloud' }
-];
+  const PRODUCTIVITE_ITEMS = [
+    { key: 'create', path: '/dashboard/create', label: t('addProduct'), icon: 'plus', farmerOnly: true },
+    { key: 'products', path: '/dashboard/products', label: t('productList'), icon: 'grid', farmerOnly: true },
+    { key: 'marketplace', path: '/marketplace', label: t('marketplace'), icon: 'cart' },
+    { key: 'received_orders', path: '/dashboard/received-orders', label: t('receivedOrders'), icon: 'inbox', farmerOnly: true },
+    { key: 'analysis', path: '/dashboard/analysis', label: t('analysis'), icon: 'chart', farmerOnly: true },
+    { key: 'routes', path: '/dashboard/routes', label: t('routeOptimization'), icon: 'map', farmerOnly: true },
+    { key: 'orders', path: '/dashboard/orders', label: t('myOrders'), icon: 'box', clientOnly: true },
+    { key: 'meteo_page', path: '/dashboard/meteo', label: t('weather'), icon: 'cloud' }
+  ];
+
+  return { MAIN_BUTTONS, PRODUCTIVITE_ITEMS, productivityLabel: t('productivity'), profileLabel: t('profile'), settingsLabel: t('settings') };
+}
 
 const navIcons = {
   grid: (
@@ -86,6 +93,7 @@ export function Navbar() {
   const location = useLocation();
   const { theme } = useTheme();
   const { user } = useAuth();
+  const { MAIN_BUTTONS, PRODUCTIVITE_ITEMS, productivityLabel, profileLabel, settingsLabel } = useNavLabels();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -173,7 +181,7 @@ export function Navbar() {
               className={`${styles.prodBtn} ${prodOpen || activeProdItem ? styles.prodBtnActive : ''}`}
               onClick={() => setProdOpen(!prodOpen)}
             >
-              Productivité
+              {productivityLabel}
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -203,6 +211,8 @@ export function Navbar() {
               </div>
             )}
           </div>
+
+          <LanguageSwitcher />
 
           <div className={styles.themeWrapper}>
             <button
@@ -244,7 +254,7 @@ export function Navbar() {
             {user.profile_image_url ? (
               <img
                 src={user.profile_image_url}
-                alt={user.display_name || 'Profil'}
+                alt={user.display_name || profileLabel}
                 className={styles.profileAvatar}
               />
             ) : (
@@ -278,7 +288,7 @@ export function Navbar() {
           ))}
 
           <div className={styles.mobileSection}>
-            <span className={styles.mobileSectionTitle}>Productivité</span>
+            <span className={styles.mobileSectionTitle}>{productivityLabel}</span>
             {filteredProdItems.map((item) => (
               <Link
                 key={item.key}
@@ -292,8 +302,8 @@ export function Navbar() {
             ))}
           </div>
 
-          <Link to="/profile" className={styles.mobileLink} onClick={() => setMobileOpen(false)}>Profil</Link>
-          <Link to="/settings" className={styles.mobileLink} onClick={() => setMobileOpen(false)}>Paramètres</Link>
+          <Link to="/profile" className={styles.mobileLink} onClick={() => setMobileOpen(false)}>{profileLabel}</Link>
+          <Link to="/settings" className={styles.mobileLink} onClick={() => setMobileOpen(false)}>{settingsLabel}</Link>
         </div>
       )}
     </nav>
